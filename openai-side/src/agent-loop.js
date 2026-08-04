@@ -45,9 +45,10 @@ async function runAgentLoop({ client, model, systemPrompt, userPrompt, tools, to
         max_output_tokens: limits.maxOutputTokensPerTurn,
       });
     } catch (err) {
-      // Opus tem "elevated cybersecurity safeguards" e pode recusar (stop_reason
-      // tipo refusal) — isso vem como conteúdo normal (200), não exceção; erros
-      // AQUI são falha de rede/API de verdade, já passaram pelo retry do SDK.
+      // Recusa de modelo (ex.: análise de segurança recusada) chega como
+      // conteúdo normal (200), não como exceção — ver checagem de `refusal`
+      // logo abaixo. Erros pegos AQUI são falha de rede/API de verdade, já
+      // passaram pelo retry do SDK.
       throw new AgentAbortedError('api_error', { message: err.message, status: err.status });
     }
 
@@ -58,6 +59,21 @@ async function runAgentLoop({ client, model, systemPrompt, userPrompt, tools, to
 
     if (resp.status === 'incomplete' || (resp.incomplete_details && resp.incomplete_details.reason)) {
       onEvent?.({ type: 'incomplete', reason: resp.incomplete_details?.reason });
+    }
+
+    const refusal = resp.output
+      .filter((o) => o.type === 'message')
+      .flatMap((o) => o.content || [])
+      .find((c) => c.type === 'refusal');
+    if (refusal) {
+      onEvent?.({ type: 'refusal', reason: refusal.refusal });
+      return {
+        finalText: refusal.refusal || '',
+        status: 'refused',
+        iterations: iter + 1,
+        usage: costTracker.summary(),
+        transcript,
+      };
     }
 
     input.push(...resp.output);

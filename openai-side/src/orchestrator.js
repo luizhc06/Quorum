@@ -67,7 +67,14 @@ async function runOrchestration({ client, agentsConfig, models, limits, scope, t
   const digestForJudge = specialistResults
     .map((r) => {
       const header = `### Relatório de "${r.agent}" (status: ${r.status})`;
-      const body = r.status === 'ok' ? r.finalText : `Este agente falhou (${r.reason || r.error}) — não produziu relatório.`;
+      let body;
+      if (r.status === 'ok') {
+        body = r.finalText;
+      } else if (r.status === 'refused') {
+        body = `Este agente RECUSOU produzir a análise (não é falha de rede/API — o modelo se negou). Texto da recusa: "${r.finalText || '(sem detalhe)'}". Trate isso como cobertura ausente nesta área, não como um relatório vazio.`;
+      } else {
+        body = `Este agente falhou (${r.reason || r.error}) — não produziu relatório.`;
+      }
       return `${header}\n\n${body}`;
     })
     .join('\n\n---\n\n');
