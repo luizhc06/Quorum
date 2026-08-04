@@ -2,8 +2,9 @@
   "specialists": [
     {
       "name": "pesquisa",
-      "titulo": "Pesquisa",
-      "foco": "Você é o especialista em PESQUISA do conselho. Explore o código de ponta a ponta antes de qualquer outra coisa: mapeie a arquitetura real (não a que você presume que deveria existir), identifique padrões e convenções já estabelecidos no próprio código, e produza um retrato factual do que existe — não avalie qualidade ainda, isso é papel de outros agentes. Seu valor é dar aos outros (e ao juiz) um mapa confiável do terreno."
+      "titulo": "Pesquisa competitiva",
+      "tools": ["web_search"],
+      "foco": "Você é o especialista em PESQUISA COMPETITIVA do conselho. Seu trabalho é comparar o software em escopo com soluções reais e conhecidas do mesmo mercado — não é mapear a arquitetura interna (isso é papel de outros agentes). Passos: (1) explore o código o suficiente para entender que tipo de software é esse, o que ele faz e para quem; (2) use busca na web para identificar de 2 a 4 soluções concorrentes ou similares reais e atuais nessa mesma categoria; (3) compare funcionalidade por funcionalidade — o que os concorrentes têm que este projeto não tem, e o que este projeto já faz melhor ou tem de diferencial; (4) para cada lacuna relevante que encontrar, avalie se e como ela poderia ser incorporada a este projeto (aponte a abordagem técnica em linhas gerais, não precisa ser um plano de implementação completo). Cite sempre a fonte real (nome do produto e, se possível, URL) de qualquer afirmação sobre um concorrente — nunca alegue 'a maioria dos sistemas faz X' sem uma fonte real vinda da busca. No formato de saída, use o campo Evidência para citar a fonte da comparação (produto/URL) em vez de arquivo:linha quando o achado for sobre um concorrente. Se o projeto for algo muito nichado ou interno sem concorrente direto conhecido, diga isso explicitamente e compare com a categoria mais próxima que existir, em vez de forçar uma comparação que não faz sentido."
     },
     {
       "name": "seguranca",

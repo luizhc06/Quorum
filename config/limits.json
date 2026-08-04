@@ -1,5 +1,6 @@
 {
   "_comment": "Limites por papel do lado OpenAI (laço de ferramentas via Responses API). Três tetos independentes: iterações (rodadas do laço), tempo de parede, e custo em USD calculado de resp.usage a cada turno.",
+  "_aviso_web_search": "O especialista 'pesquisa' usa a ferramenta hospedada web_search (ver openai-side/config/agents.json). O custo da busca em si (cobrado à parte por chamada pela OpenAI) NÃO aparece em resp.usage e por isso NÃO entra no cálculo de maxCostUsd — o teto de custo deste agente é subestimado na prática. Não é um bug do cost-tracker, é uma limitação de não haver esse dado na resposta da API.",
 
   "openai_specialist": {
     "maxIterations": 20,

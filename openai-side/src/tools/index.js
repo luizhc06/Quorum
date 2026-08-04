@@ -72,7 +72,18 @@ const TOOL_SCHEMAS = [
   },
 ];
 
-function buildToolset(scopeRoot, runCommandLimits) {
+// Ferramentas "hospedadas" da Responses API — a OpenAI executa inteiramente
+// do lado do servidor (busca na web de verdade, não conhecimento estático de
+// treino). Sem handler local: agent-loop.js só reage a output de tipo
+// "function_call", então um item "web_search_call" no output simplesmente
+// passa direto sem quebrar o laço. Custo do próprio search NÃO aparece em
+// resp.usage (só tokens) — cost-tracker.js subestima o custo real de agentes
+// que usam isso, ver nota em config/limits.json.
+const HOSTED_TOOLS = {
+  web_search: { type: 'web_search' },
+};
+
+function buildToolset(scopeRoot, runCommandLimits, extraHostedTools) {
   const guardPath = createPathGuard(scopeRoot);
   const handlers = {
     read_file: makeReadFile(guardPath),
@@ -80,7 +91,11 @@ function buildToolset(scopeRoot, runCommandLimits) {
     list_files: makeListFiles(guardPath, scopeRoot),
     run_command: makeRunCommand(scopeRoot, runCommandLimits),
   };
-  return { schemas: TOOL_SCHEMAS, handlers };
+  const hosted = (extraHostedTools || []).map((name) => {
+    if (!HOSTED_TOOLS[name]) throw new Error(`ferramenta hospedada desconhecida: "${name}"`);
+    return HOSTED_TOOLS[name];
+  });
+  return { schemas: [...TOOL_SCHEMAS, ...hosted], handlers };
 }
 
-module.exports = { buildToolset, TOOL_SCHEMAS };
+module.exports = { buildToolset, TOOL_SCHEMAS, HOSTED_TOOLS };

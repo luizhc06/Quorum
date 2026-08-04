@@ -43,7 +43,13 @@ async function runOneAgent({ client, name, model, systemPrompt, task, schemas, h
  */
 async function runOrchestration({ client, agentsConfig, models, limits, scope, task, outDir }) {
   const outputContract = fs.readFileSync(path.join(__dirname, '..', '..', 'contracts', 'output-contract.md'), 'utf8');
-  const { schemas, handlers } = buildToolset(scope, limits.run_command);
+  // Toolset base (leitura local) é compartilhado; um especialista pode pedir
+  // ferramentas hospedadas extras (ex.: "pesquisa" com web_search) via
+  // spec.tools em config/agents.json — cada um recebe seu próprio schemas
+  // array, mas os handlers locais (read_file/grep/...) são os mesmos objetos,
+  // reaproveitados entre os 5 sem recriar o path-guard a cada vez.
+  const { schemas: baseSchemas, handlers } = buildToolset(scope, limits.run_command);
+  const schemasFor = (spec) => (spec.tools?.length ? buildToolset(scope, limits.run_command, spec.tools).schemas : baseSchemas);
 
   const specialistResults = await Promise.allSettled(
     agentsConfig.specialists.map((spec) =>
@@ -53,7 +59,7 @@ async function runOrchestration({ client, agentsConfig, models, limits, scope, t
         model: models.openai_specialists,
         systemPrompt: buildSystemPrompt(spec.foco, outputContract),
         task,
-        schemas,
+        schemas: schemasFor(spec),
         handlers,
         limits: limits.openai_specialist,
         outDir,
@@ -90,7 +96,7 @@ async function runOrchestration({ client, agentsConfig, models, limits, scope, t
     model: models.openai_judge,
     systemPrompt: buildSystemPrompt(agentsConfig.judge.foco, outputContract),
     task: judgeTask,
-    schemas,
+    schemas: schemasFor(agentsConfig.judge),
     handlers,
     limits: limits.openai_judge,
     outDir,
