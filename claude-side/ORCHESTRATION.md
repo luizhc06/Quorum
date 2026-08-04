@@ -47,6 +47,40 @@ Apresente o conteúdo de `FINAL_REPORT.md` ao usuário. A partir daí, o fluxo s
 
 Cada agente carrega um status (`ok`/`failed`/`timeout`, conforme `contracts/output-contract.md`). Juízes e Líder precisam saber lidar com lentes faltando — a seção "Cobertura e limites desta rodada" do relatório final deve sempre refletir isso, nunca fingir cobertura completa.
 
+## Alimentando o painel visual (`dashboard/`) com uma rodada real
+
+O painel (`dashboard/public/`) lê `runs/<run-id>/state.json` via `GET /api/runs/:id` (servido por `dashboard/server.js`) e faz polling a cada 3s enquanto a rodada não estiver `"status":"done"`. **Não existe nenhum processo automático escrevendo esse arquivo** — durante uma rodada real, é o próprio Claude Code (orquestrador) quem cria e atualiza `runs/<run-id>/state.json` a cada passo, usando Write/Edit como em qualquer outro arquivo. Não há CLI nem script auxiliar — o schema é simples o bastante pra editar direto.
+
+Schema (todos os campos exceto `run` são opcionais/podem começar vazios):
+
+```json
+{
+  "run": { "runId": "...", "round": 1, "task": "...", "status": "running|done",
+           "startedAt": "2026-08-04T18:00:00", "parallelism": "15 agentes", "elapsed": "—", "cost": "US$ 0,00" },
+  "claudeAgents": [ { "key": "seguranca", "name": "Segurança", "model": "Sonnet 5",
+                       "state": "queued|running|done|failed|refused", "findings": 0, "lens": "texto curto", "elapsed": "—" } ],
+  "openaiAgents": [ /* mesma forma */ ],
+  "arbiters": [ { "key": "juiz-claude", "name": "Juiz Claude", "model": "Opus 5 · com leitura",
+                   "state": "...", "role": "texto", "chips": ["..."] } ],
+  "claims": [ { "text": "...", "origin": "Claude · segurança", "check": "...", "verdict": "CONFIRMADO|PARCIAL|IMPROCEDENTE|NÃO VERIFICÁVEL" } ],
+  "headline": "", "lede": "",
+  "synthBlocks": [ { "tag": "P0 · BLOQUEIA|P1 · ALTO RETORNO|DESCARTADO", "title": "...", "items": [ { "text": "...", "source": "..." } ] } ],
+  "dissent": { "text": "...", "note": "..." },
+  "activity": [ { "time": "18:03", "text": "..." } ]
+}
+```
+
+Pontos de atualização recomendados (cada um é um `Edit` no `state.json`, não precisa reescrever o arquivo inteiro):
+1. **Início da rodada**: crie o arquivo com `run` preenchido e os 15 agentes em `claudeAgents`/`openaiAgents` já listados com `"state":"queued"` — isso é o que faz a tela 01 mostrar a lista completa desde o primeiro segundo, mesmo antes de qualquer um terminar.
+2. **Cada agente que dispara**: mude o `state` dele pra `"running"`.
+3. **Cada agente que termina**: mude pra `"done"` (ou `"failed"`/`"refused"`), preencha `findings` (contagem de achados no relatório dele) e `elapsed`. Adicione uma entrada em `activity`.
+4. **Juízes**: mesma lógica em `arbiters`.
+5. **Verificação adversarial**: preencha `claims` com um item por afirmação verificada (mapeia direto do formato de saída de `verifier-adversarial.md`).
+6. **Líder/Sintetizador**: preencha `headline`, `lede`, `synthBlocks` e `dissent` (ou omita `dissent` se não houver divergência genuína nesta rodada) — isso mapeia direto do formato de saída de `leader-synthesizer.md`.
+7. **Fim**: `run.status = "done"`, `run.elapsed`/`run.cost` finais.
+
+O painel tolera campos ausentes/arrays vazios (mostra um estado vazio explicando o que falta) — não é preciso preencher tudo de uma vez.
+
 ## O que este documento NÃO cobre ainda
 
 O dashboard (`dashboard/public/`) já foi desenhado e construído com dados mockados prevendo um protocolo de debate multi-turno entre os dois lados (afirmação/contestação/concessão/confirmação/impasse) e rodadas plurais — isso é uma extensão de arquitetura ainda **não implementada** no backend real descrito acima. A sequência atual é "cada lado roda uma vez, juízes consolidam, verificação adversarial audita, líder sintetiza" — sem um mecanismo de troca de mensagens entre os agentes dos dois lados. Formalizar esse protocolo (e como ele se encaixa nesta orquestração) é trabalho futuro, não coberto por este documento nem pelas verificações da Ordem de construção do plano original.
