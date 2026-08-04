@@ -1,0 +1,22 @@
+{
+  "_comment": "Limites por papel do lado OpenAI (laço de ferramentas via Responses API). Três tetos independentes: iterações (rodadas do laço), tempo de parede, e custo em USD calculado de resp.usage a cada turno.",
+
+  "openai_specialist": {
+    "maxIterations": 20,
+    "maxWallClockMs": 300000,
+    "maxOutputTokensPerTurn": 4000,
+    "maxToolOutputChars": 20000,
+    "maxCostUsd": 1.5
+  },
+  "openai_judge": {
+    "maxIterations": 10,
+    "maxWallClockMs": 240000,
+    "maxOutputTokensPerTurn": 4000,
+    "maxToolOutputChars": 20000,
+    "maxCostUsd": 2.0
+  },
+  "run_command": {
+    "timeoutMs": 30000,
+    "maxOutputChars": 8000
+  }
+}

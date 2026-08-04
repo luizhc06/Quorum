@@ -1,0 +1,9 @@
+{
+  "name": "quorum",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Framework de orquestracao multi-agente cross-vendor (Claude + OpenAI)",
+  "scripts": {
+    "openai:install": "npm install --prefix openai-side"
+  }
+}

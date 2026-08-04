@@ -1,0 +1,12 @@
+{
+  "_comment": "IDs de modelo por papel. Nunca hardcoded em código — todo script/prompt lê daqui. Lado Claude usa os nomes curtos aceitos pela ferramenta Agent/Workflow do Claude Code (sonnet/opus/haiku). Lado OpenAI usa o model id literal da Responses API.",
+
+  "claude_specialists": "sonnet",
+  "claude_judge": "opus",
+  "claude_verifier": "sonnet",
+  "claude_leader": "opus",
+  "claude_writer_low_cost": "haiku",
+
+  "openai_specialists": "gpt-5.6-terra",
+  "openai_judge": "gpt-5.6-sol"
+}

@@ -1,0 +1,14 @@
+{
+  "name": "quorum-openai-side",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "description": "Lado OpenAI do Quorum: agentes com laco de ferramentas real via Responses API",
+  "main": "run.js",
+  "scripts": {
+    "start": "node run.js"
+  },
+  "dependencies": {
+    "openai": "^7.0.0"
+  }
+}
