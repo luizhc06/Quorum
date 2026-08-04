@@ -1,11 +1,19 @@
 {
-  "_comment": "IDs de modelo por papel. Nunca hardcoded em código — todo script/prompt lê daqui. Lado Claude usa os nomes curtos aceitos pela ferramenta Agent/Workflow do Claude Code (sonnet/opus/haiku). Lado OpenAI usa o model id literal da Responses API.",
+  "_comment": "IDs de modelo por papel. Nunca hardcoded em código — todo script/prompt lê daqui. Duas seções porque há dois jeitos de rodar o lado Claude: 'agent_tool_aliases' são os nomes curtos aceitos pela ferramenta Agent/Workflow do Claude Code (usado quando EU oriento manualmente); 'claude_engine' são os IDs literais da Messages API (usado por orchestrate.js/claude-side/engine, que roda sozinho sem mim). Lado OpenAI só tem um jeito de rodar (sempre via API), por isso só tem uma entrada.",
 
-  "claude_specialists": "sonnet",
-  "claude_judge": "opus",
-  "claude_verifier": "sonnet",
-  "claude_leader": "opus",
-  "claude_writer_low_cost": "haiku",
+  "agent_tool_aliases": {
+    "claude_specialists": "sonnet",
+    "claude_judge": "opus",
+    "claude_verifier": "sonnet",
+    "claude_leader": "opus",
+    "claude_writer_low_cost": "haiku"
+  },
+
+  "claude_specialists": "claude-sonnet-5",
+  "claude_judge": "claude-opus-5",
+  "claude_verifier": "claude-sonnet-5",
+  "claude_leader": "claude-opus-5",
+  "claude_writer_low_cost": "claude-haiku-4-5-20251001",
 
   "openai_specialists": "gpt-5.6-terra",
   "openai_judge": "gpt-5.6-sol"

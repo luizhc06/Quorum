@@ -11,28 +11,28 @@ const DEMO = {
     status: 'done', parallelism: '15 agentes', elapsed: '04:12', cost: 'US$ 0,38',
   },
   claudeAgents: [
-    { key: 'arquitetura', name: 'Arquitetura', model: 'Sonnet 5', state: 'done', findings: 3, lens: 'Mapeia módulos, acoplamento e limites de responsabilidade.', elapsed: '58s' },
-    { key: 'seguranca-c', name: 'Segurança', model: 'Sonnet 5', state: 'done', findings: 4, lens: 'Injeção, autenticação, segredos em texto plano.', elapsed: '1m 12s' },
-    { key: 'regras-negocio', name: 'Regras de negócio', model: 'Sonnet 5', state: 'done', findings: 2, lens: 'Logística, fluxo de pedido, consistência de estado.', elapsed: '49s' },
-    { key: 'usabilidade', name: 'Usabilidade', model: 'Sonnet 5', state: 'done', findings: 1, lens: 'Fricção de fluxo, feedback ao usuário, acessibilidade.', elapsed: '41s' },
-    { key: 'melhorias-c', name: 'Melhorias gerais', model: 'Sonnet 5', state: 'done', findings: 3, lens: 'Duplicação, complexidade desnecessária, simplificação.', elapsed: '55s' },
-    { key: 'engenharia', name: 'Engenharia de software', model: 'Sonnet 5', state: 'done', findings: 2, lens: 'Testabilidade, tratamento de erro, dívida técnica.', elapsed: '1m 03s' },
-    { key: 'qa', name: 'Qualidade / QA', model: 'Sonnet 5', state: 'done', findings: 2, lens: 'Cobertura de teste, casos de borda não exercitados.', elapsed: '47s' },
-    { key: 'dados', name: 'Dados', model: 'Sonnet 5', state: 'done', findings: 3, lens: 'Modelagem, migrações, integridade referencial.', elapsed: '1m 20s' },
-    { key: 'design-ui', name: 'Design / UI', model: 'Sonnet 5', state: 'done', findings: 0, lens: 'Sem superfície de UI relevante neste escopo — sinalizado e encerrado.', elapsed: '18s' },
-    { key: 'infra', name: 'Infraestrutura / Deploy', model: 'Sonnet 5', state: 'done', findings: 2, lens: 'CI/CD, gestão de segredos em produção, rollback.', elapsed: '2m 41s' },
+    { key: 'arquitetura', name: 'Arquitetura', model: 'Sonnet 5', state: 'done', findings: 3, lens: 'Mapeia módulos, acoplamento e limites de responsabilidade.', elapsed: '58s', usage: { inputTokens: 18400, outputTokens: 2100, estimatedUsd: 0.058 } },
+    { key: 'seguranca-c', name: 'Segurança', model: 'Sonnet 5', state: 'done', findings: 4, lens: 'Injeção, autenticação, segredos em texto plano.', elapsed: '1m 12s', usage: { inputTokens: 24100, outputTokens: 2800, estimatedUsd: 0.076 } },
+    { key: 'regras-negocio', name: 'Regras de negócio', model: 'Sonnet 5', state: 'done', findings: 2, lens: 'Logística, fluxo de pedido, consistência de estado.', elapsed: '49s', usage: { inputTokens: 15200, outputTokens: 1700, estimatedUsd: 0.047 } },
+    { key: 'usabilidade', name: 'Usabilidade', model: 'Sonnet 5', state: 'done', findings: 1, lens: 'Fricção de fluxo, feedback ao usuário, acessibilidade.', elapsed: '41s', usage: { inputTokens: 12800, outputTokens: 1300, estimatedUsd: 0.038 } },
+    { key: 'melhorias-c', name: 'Melhorias gerais', model: 'Sonnet 5', state: 'done', findings: 3, lens: 'Duplicação, complexidade desnecessária, simplificação.', elapsed: '55s', usage: { inputTokens: 17600, outputTokens: 1900, estimatedUsd: 0.054 } },
+    { key: 'engenharia', name: 'Engenharia de software', model: 'Sonnet 5', state: 'done', findings: 2, lens: 'Testabilidade, tratamento de erro, dívida técnica.', elapsed: '1m 03s', usage: { inputTokens: 20500, outputTokens: 2300, estimatedUsd: 0.064 } },
+    { key: 'qa', name: 'Qualidade / QA', model: 'Sonnet 5', state: 'done', findings: 2, lens: 'Cobertura de teste, casos de borda não exercitados.', elapsed: '47s', usage: { inputTokens: 14700, outputTokens: 1600, estimatedUsd: 0.045 } },
+    { key: 'dados', name: 'Dados', model: 'Sonnet 5', state: 'done', findings: 3, lens: 'Modelagem, migrações, integridade referencial.', elapsed: '1m 20s', usage: { inputTokens: 26300, outputTokens: 2900, estimatedUsd: 0.082 } },
+    { key: 'design-ui', name: 'Design / UI', model: 'Sonnet 5', state: 'done', findings: 0, lens: 'Sem superfície de UI relevante neste escopo — sinalizado e encerrado.', elapsed: '18s', usage: { inputTokens: 3200, outputTokens: 300, estimatedUsd: 0.009 } },
+    { key: 'infra', name: 'Infraestrutura / Deploy', model: 'Sonnet 5', state: 'done', findings: 2, lens: 'CI/CD, gestão de segredos em produção, rollback.', elapsed: '2m 41s', usage: { inputTokens: 34800, outputTokens: 3600, estimatedUsd: 0.106 } },
   ],
   openaiAgents: [
-    { key: 'pesquisa', name: 'Pesquisa', model: 'GPT-5.6 Terra', state: 'done', findings: 0, lens: 'Mapeamento factual da arquitetura real do repositório.', elapsed: '52s' },
-    { key: 'seguranca-o', name: 'Segurança', model: 'GPT-5.6 Terra', state: 'done', findings: 3, lens: 'Vulnerabilidades citáveis por arquivo e linha.', elapsed: '1m 08s' },
-    { key: 'bug-hunter', name: 'Bug Hunter', model: 'GPT-5.6 Terra', state: 'done', findings: 2, lens: 'Condição de corrida, exceção engolida, off-by-one.', elapsed: '1m 01s' },
-    { key: 'melhorias-o', name: 'Melhorias gerais', model: 'GPT-5.6 Terra', state: 'done', findings: 2, lens: 'Padrões já usados em um lugar, não replicados em outro.', elapsed: '46s' },
-    { key: 'dependencias', name: 'Dependências', model: 'GPT-5.6 Terra', state: 'done', findings: 1, lens: 'Supply-chain, versões travadas, ausência de lockfile.', elapsed: '2m 10s' },
+    { key: 'pesquisa', name: 'Pesquisa', model: 'GPT-5.6 Terra', state: 'done', findings: 0, lens: 'Mapeamento factual da arquitetura real do repositório.', elapsed: '52s', usage: { inputTokens: 11200, outputTokens: 1400, estimatedUsd: 0.039 } },
+    { key: 'seguranca-o', name: 'Segurança', model: 'GPT-5.6 Terra', state: 'done', findings: 3, lens: 'Vulnerabilidades citáveis por arquivo e linha.', elapsed: '1m 08s', usage: { inputTokens: 19800, outputTokens: 2200, estimatedUsd: 0.066 } },
+    { key: 'bug-hunter', name: 'Bug Hunter', model: 'GPT-5.6 Terra', state: 'done', findings: 2, lens: 'Condição de corrida, exceção engolida, off-by-one.', elapsed: '1m 01s', usage: { inputTokens: 17300, outputTokens: 1900, estimatedUsd: 0.057 } },
+    { key: 'melhorias-o', name: 'Melhorias gerais', model: 'GPT-5.6 Terra', state: 'done', findings: 2, lens: 'Padrões já usados em um lugar, não replicados em outro.', elapsed: '46s', usage: { inputTokens: 13600, outputTokens: 1500, estimatedUsd: 0.045 } },
+    { key: 'dependencias', name: 'Dependências', model: 'GPT-5.6 Terra', state: 'done', findings: 1, lens: 'Supply-chain, versões travadas, ausência de lockfile.', elapsed: '2m 10s', usage: { inputTokens: 28900, outputTokens: 3100, estimatedUsd: 0.095 } },
   ],
   arbiters: [
-    { key: 'juiz-claude', name: 'Juiz Claude', model: 'Opus 5 · com leitura', state: 'done', role: 'Consolidou os 10 relatórios, descartou 3 achados de baixa confiança, checou pessoalmente os de severidade alta antes de aceitar.', chips: ['10 relatórios lidos', '3 descartados', '15 confirmados'] },
-    { key: 'juiz-openai', name: 'Juiz OpenAI', model: 'GPT-5.6 Sol · com leitura', state: 'done', role: 'Consolidou os 5 relatórios, checou o achado de dependência travada contra o lockfile antes de aceitar.', chips: ['5 relatórios lidos', '1 rebaixado'] },
-    { key: 'lider', name: 'Líder / Sintetizador', model: 'Opus 5', state: 'done', role: 'Cruzou os dois lados e decidiu o que vai para a síntese final.', chips: ['9/12 pontos convergentes', '1 divergência aberta'] },
+    { key: 'juiz-claude', name: 'Juiz Claude', model: 'Opus 5 · com leitura', state: 'done', role: 'Consolidou os 10 relatórios, descartou 3 achados de baixa confiança, checou pessoalmente os de severidade alta antes de aceitar.', chips: ['10 relatórios lidos', '3 descartados', '15 confirmados'], usage: { inputTokens: 48200, outputTokens: 5100, estimatedUsd: 0.369 } },
+    { key: 'juiz-openai', name: 'Juiz OpenAI', model: 'GPT-5.6 Sol · com leitura', state: 'done', role: 'Consolidou os 5 relatórios, checou o achado de dependência travada contra o lockfile antes de aceitar.', chips: ['5 relatórios lidos', '1 rebaixado'], usage: { inputTokens: 31500, outputTokens: 3400, estimatedUsd: 0.26 } },
+    { key: 'lider', name: 'Líder / Sintetizador', model: 'Opus 5', state: 'done', role: 'Cruzou os dois lados e decidiu o que vai para a síntese final.', chips: ['9/12 pontos convergentes', '1 divergência aberta'], usage: { inputTokens: 22100, outputTokens: 2600, estimatedUsd: 0.176 } },
   ],
   debate: [
     { time: '14:02:11', author: 'Claude · segurança', side: 'claude', kind: 'afirmação',
@@ -110,6 +110,7 @@ const DEMO = {
     { time: '14:02', text: 'GPT · segurança confirmou o padrão de injeção em outros controllers.' },
     { time: '14:02', text: 'Claude · segurança abriu o debate com a SQL injection confirmada.' },
   ],
+  decisions: {},
 };
 
 /* ---------- estado ---------- */
@@ -125,6 +126,7 @@ const STATE = {
   currentRunId: DEMO_RUN_ID,
   data: DEMO,
   pollTimer: null,
+  editingNoteKey: null,
 };
 
 const STAGES = [
@@ -209,7 +211,8 @@ function populateRunSelector() {
   demoOpt.value = DEMO_RUN_ID;
   sel.appendChild(demoOpt);
   STATE.runsList.forEach(r => {
-    const opt = el('option', null, `${r.runId} — ${r.status === 'done' ? 'concluída' : 'em andamento'}`);
+    const statusLabel = r.status === 'done' ? 'concluída' : r.status === 'failed' ? 'falhou' : 'em andamento';
+    const opt = el('option', null, `${r.runId} — ${statusLabel}`);
     opt.value = r.runId;
     sel.appendChild(opt);
   });
@@ -252,6 +255,7 @@ function normalizeRunData(raw) {
     synthBlocks: raw.synthBlocks || [],
     dissent: raw.dissent || null,
     activity: raw.activity || [],
+    decisions: raw.decisions || {},
   };
 }
 
@@ -265,7 +269,7 @@ function startPolling() {
       const fresh = normalizeRunData(await res.json());
       STATE.data = fresh;
       render();
-      if (fresh.run.status === 'done') stopPolling();
+      if (fresh.run.status === 'done' || fresh.run.status === 'failed') stopPolling();
     } catch (e) { /* tenta de novo no próximo tick */ }
   }, POLL_MS);
 }
@@ -274,6 +278,33 @@ function stopPolling() {
 }
 
 /* ---------- render: header/nav ---------- */
+
+function computeTokenTotals(data) {
+  let claudeIn = 0, claudeOut = 0, claudeCost = 0;
+  let openaiIn = 0, openaiOut = 0, openaiCost = 0;
+  (data.claudeAgents || []).forEach((a) => { if (a.usage) { claudeIn += a.usage.inputTokens || 0; claudeOut += a.usage.outputTokens || 0; claudeCost += a.usage.estimatedUsd || 0; } });
+  (data.openaiAgents || []).forEach((a) => { if (a.usage) { openaiIn += a.usage.inputTokens || 0; openaiOut += a.usage.outputTokens || 0; openaiCost += a.usage.estimatedUsd || 0; } });
+  (data.arbiters || []).forEach((a) => {
+    if (!a.usage) return;
+    const isOpenai = (a.key || '').includes('openai');
+    if (isOpenai) { openaiIn += a.usage.inputTokens || 0; openaiOut += a.usage.outputTokens || 0; openaiCost += a.usage.estimatedUsd || 0; }
+    else { claudeIn += a.usage.inputTokens || 0; claudeOut += a.usage.outputTokens || 0; claudeCost += a.usage.estimatedUsd || 0; }
+  });
+  const claudeTotal = claudeIn + claudeOut;
+  const openaiTotal = openaiIn + openaiOut;
+  const grandTotal = claudeTotal + openaiTotal;
+  return {
+    claudeTotal, openaiTotal, grandTotal,
+    claudeCost, openaiCost, totalCost: claudeCost + openaiCost,
+    pctClaude: grandTotal ? Math.round((claudeTotal / grandTotal) * 100) : 0,
+    pctOpenai: grandTotal ? Math.round((openaiTotal / grandTotal) * 100) : 0,
+  };
+}
+function fmtTokens(n) {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+  if (n >= 1_000) return (n / 1_000).toFixed(1) + 'k';
+  return String(n);
+}
 
 function renderHeader() {
   const r = STATE.data.run || {};
@@ -284,11 +315,17 @@ function renderHeader() {
   document.getElementById('cost').textContent = r.cost || '—';
   document.getElementById('runIdHint').textContent = r.runId || '—';
 
+  const totals = computeTokenTotals(STATE.data);
+  document.getElementById('tokensTotal').textContent = totals.grandTotal ? fmtTokens(totals.grandTotal) : '—';
+  document.getElementById('pctAnthropic').textContent = totals.grandTotal ? `${totals.pctClaude}%` : '—';
+  document.getElementById('pctOpenai').textContent = totals.grandTotal ? `${totals.pctOpenai}%` : '—';
+
   const dot = document.getElementById('statusDot');
   const label = document.getElementById('statusLabel');
   const isDemo = STATE.currentRunId === DEMO_RUN_ID;
   dot.classList.toggle('demo', isDemo);
-  label.textContent = isDemo ? 'demo' : (r.status === 'done' ? 'concluída' : 'ao vivo');
+  dot.classList.toggle('failed', !isDemo && r.status === 'failed');
+  label.textContent = isDemo ? 'demo' : r.status === 'done' ? 'concluída' : r.status === 'failed' ? 'falhou' : 'ao vivo';
 }
 
 function renderTabs() {
@@ -377,8 +414,8 @@ function renderDebate() {
     </div>`;
   const wrap = document.getElementById('debateList');
   debate.forEach(m => {
-    const borderColor = m.side === 'claude' ? '#4b6b3d' : '#6b4f33';
-    const authorColor = m.side === 'claude' ? 'var(--green-3)' : 'var(--blue)';
+    const borderColor = m.side === 'claude' ? '#6b4f33' : '#2c4a5c';
+    const authorColor = m.side === 'claude' ? 'var(--accent-2)' : 'var(--blue)';
     const row = el('div', 'debate-msg');
     row.innerHTML = `
       <span class="debate-time">${escapeHtml(m.time || '')}</span>
@@ -435,11 +472,83 @@ function renderVerify() {
     const row = el('div', 'claim-row');
     row.innerHTML = `
       <div class="claim-text">${escapeHtml(c.text || '')}</div>
-      <div class="claim-origin" style="color:${(c.origin || '').startsWith('Claude') ? 'var(--green-3)' : 'var(--blue)'}">${escapeHtml(c.origin || '')}</div>
+      <div class="claim-origin" style="color:${(c.origin || '').startsWith('Claude') ? 'var(--accent-2)' : 'var(--blue)'}">${escapeHtml(c.origin || '')}</div>
       <div class="claim-check">${escapeHtml(c.check || '')}</div>
       <div><span class="verdict-pill" style="color:${vc.color};border-color:${vc.border}">${escapeHtml(c.verdict || '')}</span></div>`;
     rows.appendChild(row);
   });
+}
+
+/* ---------- decisões (implementar / revisar) por item de síntese ---------- */
+
+async function saveDecision(key, status, note) {
+  STATE.data.decisions = STATE.data.decisions || {};
+  if (status === null) {
+    delete STATE.data.decisions[key];
+  } else {
+    STATE.data.decisions[key] = { status, note: note || '', updatedAt: 'agora' };
+  }
+  STATE.editingNoteKey = null;
+  render();
+  if (STATE.currentRunId === DEMO_RUN_ID) return; // demo é só local, nada pra persistir
+  try {
+    await fetch(`/api/runs/${encodeURIComponent(STATE.currentRunId)}/decisions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, status, note: note || '' }),
+    });
+  } catch (e) {
+    // fica salvo localmente na tela; próxima rodada de polling pode sobrescrever se a escrita falhou
+  }
+}
+
+function renderSynthItem(it, key) {
+  const row = el('div', 'synth-item');
+  row.innerHTML = `
+    <div class="synth-item-text">${escapeHtml(it.text || '')}</div>
+    <div class="synth-item-source">${escapeHtml(it.source || '')}</div>`;
+
+  const decision = (STATE.data.decisions || {})[key];
+  const actions = el('div', 'item-actions');
+
+  if (STATE.editingNoteKey === key) {
+    const noteRow = el('div', 'item-note-row');
+    noteRow.innerHTML = `<input type="text" placeholder="O que não gostou ou por que não precisa…" id="noteInput-${key}">`;
+    const saveBtn = el('button', null, 'Salvar');
+    saveBtn.addEventListener('click', () => {
+      const val = document.getElementById(`noteInput-${key}`).value.trim();
+      saveDecision(key, 'revisar', val);
+    });
+    noteRow.appendChild(saveBtn);
+    actions.appendChild(noteRow);
+    row.appendChild(actions);
+    return row;
+  }
+
+  if (!decision) {
+    const implBtn = el('button', 'item-btn implementar', 'Implementar');
+    implBtn.addEventListener('click', () => saveDecision(key, 'implementar', ''));
+    const revBtn = el('button', 'item-btn revisar', 'Revisar');
+    revBtn.addEventListener('click', () => { STATE.editingNoteKey = key; render(); });
+    actions.appendChild(implBtn);
+    actions.appendChild(revBtn);
+  } else if (decision.status === 'implementar') {
+    const pill = el('span', 'item-pill implementar', '✓ Implementar <span class="undo">· desfazer</span>');
+    pill.addEventListener('click', () => saveDecision(key, null, ''));
+    actions.appendChild(pill);
+  } else if (decision.status === 'revisar') {
+    const pill = el('span', 'item-pill revisar', '⚑ Revisar <span class="undo">· desfazer</span>');
+    pill.addEventListener('click', () => saveDecision(key, null, ''));
+    actions.appendChild(pill);
+    if (decision.note) {
+      row.appendChild(actions);
+      const note = el('div', 'item-note', escapeHtml(decision.note));
+      row.appendChild(note);
+      return row;
+    }
+  }
+  row.appendChild(actions);
+  return row;
 }
 
 /* ---------- render: view 05 synth ---------- */
@@ -467,20 +576,16 @@ function renderSynth() {
   document.getElementById('btnExport').addEventListener('click', () => { STATE.exportOpen = true; STATE.copied = false; render(); });
 
   const wrap = document.getElementById('synthBlocks');
-  (STATE.data.synthBlocks || []).forEach(b => {
+  (STATE.data.synthBlocks || []).forEach((b, blockIdx) => {
     const tc = tagColor(b.tag);
     const block = el('div', 'synth-block');
-    const items = (b.items || []).map(it => `
-      <div class="synth-item">
-        <div class="synth-item-text">${escapeHtml(it.text || '')}</div>
-        <div class="synth-item-source">${escapeHtml(it.source || '')}</div>
-      </div>`).join('');
-    block.innerHTML = `
-      <div class="synth-block-head">
-        <span class="synth-tag" style="color:${tc.color};border-color:${tc.border}">${escapeHtml(b.tag || '')}</span>
-        <h3>${escapeHtml(b.title || '')}</h3>
-      </div>
-      ${items}`;
+    const head = el('div', 'synth-block-head', `
+      <span class="synth-tag" style="color:${tc.color};border-color:${tc.border}">${escapeHtml(b.tag || '')}</span>
+      <h3>${escapeHtml(b.title || '')}</h3>`);
+    block.appendChild(head);
+    (b.items || []).forEach((it, itemIdx) => {
+      block.appendChild(renderSynthItem(it, `${blockIdx}-${itemIdx}`));
+    });
     wrap.appendChild(block);
   });
 
@@ -514,7 +619,7 @@ function renderSidebar() {
     selPanel.innerHTML = `
       <div class="sel-head">
         <div>
-          <div class="sel-eyebrow">${a.side === 'claude' ? 'GRUPO CLAUDE' : 'GRUPO OPENAI'}</div>
+          <div class="sel-eyebrow" style="color:${a.side === 'claude' ? 'var(--accent-2)' : 'var(--blue)'}">${a.side === 'claude' ? 'GRUPO ANTHROPIC' : 'GRUPO OPENAI'}</div>
           <div class="sel-name">${escapeHtml(a.name)}</div>
           <div class="sel-meta">${escapeHtml(a.model || '')} · ${stateLabel(a.state)}</div>
         </div>
@@ -562,12 +667,32 @@ function renderSidebar() {
 
 /* ---------- exportação (gerada a partir dos dados carregados, reais ou demo) ---------- */
 
+function decidedItems(data, status) {
+  const decisions = data.decisions || {};
+  const out = [];
+  (data.synthBlocks || []).forEach((b, blockIdx) => {
+    (b.items || []).forEach((it, itemIdx) => {
+      const d = decisions[`${blockIdx}-${itemIdx}`];
+      if (d && d.status === status) out.push({ ...it, note: d.note });
+    });
+  });
+  return out;
+}
+
 function buildExportFormats(data) {
   const claims = data.claims || [];
   const byVerdict = (v) => claims.filter(c => c.verdict === v);
+  const toImplement = decidedItems(data, 'implementar');
+  const toReview = decidedItems(data, 'revisar');
 
   const opusLines = [];
   opusLines.push(`# Digest para síntese final — run ${data.run.runId || '—'}`, '');
+  if (toImplement.length || toReview.length) {
+    opusLines.push(`## Decisão do usuário após revisão (${toImplement.length} pra implementar, ${toReview.length} pra revisar)`);
+    toImplement.forEach(i => opusLines.push(`- [IMPLEMENTAR] ${i.text}`));
+    toReview.forEach(i => opusLines.push(`- [REVISAR${i.note ? `: ${i.note}` : ''}] ${i.text}`));
+    opusLines.push('');
+  }
   opusLines.push(`## Confirmados (${byVerdict('CONFIRMADO').length})`);
   byVerdict('CONFIRMADO').forEach(c => opusLines.push(`- ${c.text} — ${c.origin}`));
   opusLines.push('', `## Parciais (${byVerdict('PARCIAL').length})`);
@@ -594,6 +719,10 @@ function buildExportFormats(data) {
     dropped: (data.synthBlocks.find(b => b.tag === 'DESCARTADO')?.items || []).map(i => i.text),
     open_dissent: data.dissent ? [data.dissent.text] : [],
     cost_usd: data.run.cost, elapsed: data.run.elapsed,
+    user_decisions: {
+      implementar: toImplement.map(i => i.text),
+      revisar: toReview.map(i => ({ text: i.text, nota: i.note })),
+    },
   };
 
   return {
@@ -679,15 +808,73 @@ document.getElementById('draftInput').addEventListener('keydown', (e) => { if (e
 document.getElementById('btnSend').addEventListener('click', sendDraft);
 document.getElementById('runSelector').addEventListener('change', (e) => loadRun(e.target.value));
 
-function sendDraft() {
+async function sendDraft() {
   const input = document.getElementById('draftInput');
   const text = input.value.trim();
   if (!text) return;
   STATE.data.activity = STATE.data.activity || [];
-  STATE.data.activity.unshift({ time: 'agora', text: `Instrução enfileirada para o conselho: "${escapeHtml(text)}"` });
+  STATE.data.activity.unshift({ time: 'agora', text: `Instrução do usuário: "${escapeHtml(text)}"` });
   input.value = '';
   render();
+  // persiste no state.json pra não sumir no próximo polling — hoje isso é só uma
+  // anotação registrada na rodada, não interrompe nem redireciona os agentes em
+  // andamento (não existe ainda um mecanismo de "direção ao vivo" no motor).
+  if (STATE.currentRunId !== DEMO_RUN_ID) {
+    try {
+      await fetch(`/api/runs/${encodeURIComponent(STATE.currentRunId)}/notes`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }),
+      });
+    } catch (e) { /* fica só local se a escrita falhar */ }
+  }
 }
+
+/* ---------- nova rodada ---------- */
+
+document.getElementById('btnNewRound').addEventListener('click', () => {
+  document.getElementById('newRoundModal').classList.add('show');
+  document.getElementById('newRoundError').style.display = 'none';
+  document.getElementById('newRoundStatus').textContent = '';
+});
+document.getElementById('btnCloseNewRound').addEventListener('click', () => {
+  document.getElementById('newRoundModal').classList.remove('show');
+});
+document.getElementById('newRoundModal').addEventListener('click', (e) => {
+  if (e.target.id === 'newRoundModal') document.getElementById('newRoundModal').classList.remove('show');
+});
+document.getElementById('btnStartRound').addEventListener('click', async () => {
+  const scope = document.getElementById('newRoundScope').value.trim();
+  const task = document.getElementById('newRoundTask').value.trim();
+  const errBox = document.getElementById('newRoundError');
+  const statusBox = document.getElementById('newRoundStatus');
+  const btn = document.getElementById('btnStartRound');
+  errBox.style.display = 'none';
+
+  if (!scope || !task) {
+    errBox.textContent = 'Preencha a pasta do projeto e a tarefa.';
+    errBox.style.display = 'block';
+    return;
+  }
+  btn.disabled = true;
+  statusBox.textContent = 'iniciando…';
+  try {
+    const res = await fetch('/api/rounds', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scope, task }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'falha ao iniciar rodada');
+    document.getElementById('newRoundModal').classList.remove('show');
+    document.getElementById('newRoundScope').value = '';
+    document.getElementById('newRoundTask').value = '';
+    await loadRunsList();
+    await loadRun(data.runId);
+  } catch (e) {
+    errBox.textContent = e.message;
+    errBox.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    statusBox.textContent = '';
+  }
+});
 
 /* ---------- boot ---------- */
 

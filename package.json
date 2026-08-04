@@ -4,6 +4,9 @@
   "private": true,
   "description": "Framework de orquestracao multi-agente cross-vendor (Claude + OpenAI)",
   "scripts": {
-    "openai:install": "npm install --prefix openai-side"
+    "openai:install": "npm install --prefix openai-side",
+    "claude:install": "npm install --prefix claude-side/engine",
+    "install:all": "npm run openai:install && npm run claude:install",
+    "orchestrate": "node orchestrate.js"
   }
 }

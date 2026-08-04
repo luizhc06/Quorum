@@ -1,0 +1,17 @@
+{
+  "specialists": [
+    { "name": "arquitetura", "titulo": "Arquitetura", "promptFile": "arquitetura.md" },
+    { "name": "seguranca", "titulo": "Segurança", "promptFile": "seguranca.md" },
+    { "name": "regras-negocio", "titulo": "Regras de negócio", "promptFile": "regras-negocio.md" },
+    { "name": "usabilidade", "titulo": "Usabilidade", "promptFile": "usabilidade.md" },
+    { "name": "melhorias", "titulo": "Melhorias gerais", "promptFile": "melhorias.md" },
+    { "name": "engenharia-software", "titulo": "Engenharia de software", "promptFile": "engenharia-software.md" },
+    { "name": "qa", "titulo": "Qualidade / QA", "promptFile": "qa.md" },
+    { "name": "dados", "titulo": "Dados", "promptFile": "dados.md" },
+    { "name": "design-ui", "titulo": "Design / UI", "promptFile": "design-ui.md" },
+    { "name": "infraestrutura-deploy", "titulo": "Infraestrutura / Deploy", "promptFile": "infraestrutura-deploy.md" }
+  ],
+  "judge": { "name": "judge", "titulo": "Juiz Claude", "promptFile": "judge.md" },
+  "verifier": { "name": "verifier-adversarial", "titulo": "Verificador adversarial", "promptFile": "verifier-adversarial.md" },
+  "leader": { "name": "leader-synthesizer", "titulo": "Líder / Sintetizador", "promptFile": "leader-synthesizer.md" }
+}

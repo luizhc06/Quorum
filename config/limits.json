@@ -16,6 +16,35 @@
     "maxToolOutputChars": 20000,
     "maxCostUsd": 2.0
   },
+  "claude_specialist": {
+    "maxIterations": 20,
+    "maxWallClockMs": 300000,
+    "maxOutputTokensPerTurn": 4000,
+    "maxToolOutputChars": 20000,
+    "maxCostUsd": 1.5
+  },
+  "claude_judge": {
+    "maxIterations": 10,
+    "maxWallClockMs": 240000,
+    "maxOutputTokensPerTurn": 4000,
+    "maxToolOutputChars": 20000,
+    "maxCostUsd": 2.0
+  },
+  "claude_verifier": {
+    "maxIterations": 10,
+    "maxWallClockMs": 180000,
+    "maxOutputTokensPerTurn": 3000,
+    "maxToolOutputChars": 15000,
+    "maxCostUsd": 1.0
+  },
+  "claude_leader": {
+    "maxIterations": 6,
+    "maxWallClockMs": 240000,
+    "maxOutputTokensPerTurn": 4000,
+    "maxToolOutputChars": 15000,
+    "maxCostUsd": 2.0
+  },
+
   "run_command": {
     "timeoutMs": 30000,
     "maxOutputChars": 8000
