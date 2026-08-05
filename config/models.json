@@ -1,5 +1,6 @@
 {
-  "_comment": "IDs de modelo por papel. Nunca hardcoded em código — todo script/prompt lê daqui. Duas seções porque há dois jeitos de rodar o lado Claude: 'agent_tool_aliases' são os nomes curtos aceitos pela ferramenta Agent/Workflow do Claude Code (usado quando EU oriento manualmente); 'claude_engine' são os IDs literais da Messages API (usado por orchestrate.js/claude-side/engine, que roda sozinho sem mim). Lado OpenAI só tem um jeito de rodar (sempre via API), por isso só tem uma entrada.",
+  "_comment": "IDs de modelo por papel. Nunca hardcoded em código — todo script/prompt lê daqui. Duas seções porque há dois jeitos de rodar o lado Claude: 'agent_tool_aliases' são os nomes curtos aceitos pela ferramenta Agent/Workflow do Claude Code (usado quando EU oriento manualmente, sem custo de API — CAMINHO PADRÃO); 'claude_engine' são os IDs literais da Messages API (usado por orchestrate.js/claude-side/engine, que roda sozinho sem mim, mas cobra por token). Lado OpenAI tem dois provedores — ver 'openai_provider' abaixo.",
+  "_aviso_provedores": "'openai_provider': 'codex-local' (padrão, sem custo — usa `codex exec` já autenticado via `codex login` na conta ChatGPT/Codex do usuário) ou 'openai-api' (cobrado por token via Responses API, mantido pra ambientes sem Codex logado, ex. servidor/CI). Ver openai-side/src/providers/codex-local.js para as diferenças de garantia de segurança entre os dois.",
 
   "agent_tool_aliases": {
     "claude_specialists": "sonnet",
@@ -15,6 +16,7 @@
   "claude_leader": "claude-opus-5",
   "claude_writer_low_cost": "claude-haiku-4-5-20251001",
 
+  "openai_provider": "codex-local",
   "openai_specialists": "gpt-5.6-terra",
   "openai_judge": "gpt-5.6-sol"
 }

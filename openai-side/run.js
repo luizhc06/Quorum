@@ -42,12 +42,12 @@ async function main() {
     process.exit(1);
   }
 
-  const client = createClient();
   const outDir = path.resolve(args.out);
 
   if (args['agent-name']) {
-    // Modo de teste/depuração: roda UM agente avulso, útil pra validar o
-    // motor ou uma lente específica sem disparar os 5+juiz inteiros.
+    // Modo de teste/depuração do motor openai-api especificamente — sempre
+    // exige OPENAI_API_KEY, mesmo com o padrão geral agora sendo codex-local.
+    const client = createClient();
     const agentName = args['agent-name'];
     const model = args.model || models.openai_specialists;
     const systemPrompt =
@@ -84,7 +84,13 @@ async function main() {
     return;
   }
 
-  // Modo padrão: orquestra os 5 especialistas + Juiz Sol.
+  // Modo padrão: orquestra os 5 especialistas + Juiz Sol. Só cria o client
+  // da API OpenAI se algo no agents.json realmente precisar dele — com o
+  // provedor padrão (codex-local) isso nunca é necessário, então rodar sem
+  // OPENAI_API_KEY definida é o caminho normal agora, não um erro.
+  let client = null;
+  try { client = createClient(); } catch (e) { /* ok — provedor padrão não usa a API */ }
+
   const agentsConfig = loadJson(path.join(__dirname, 'config', 'agents.json'));
   console.log(`[orquestrador] escopo=${scope}`);
   console.log(`[orquestrador] tarefa: ${args.task}`);

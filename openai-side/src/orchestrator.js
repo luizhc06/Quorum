@@ -4,6 +4,7 @@ const path = require('path');
 const { runAgentLoop, AgentAbortedError } = require('./agent-loop');
 const { buildToolset } = require('./tools');
 const { writeAgentResult } = require('./log');
+const { runCodexAgent } = require('./providers/codex-local');
 
 function buildSystemPrompt(persona, outputContract) {
   return `${persona}\n\nExplore o código real dentro do escopo usando as ferramentas disponíveis antes de concluir qualquer coisa — nunca opine sem checar. Ao final, siga este contrato de saída:\n\n${outputContract}`;
@@ -34,6 +35,26 @@ async function runOneAgent({ client, name, model, systemPrompt, task, schemas, h
   }
 }
 
+// Escolhe entre os dois motores do lado OpenAI por especialista: codex-local
+// (padrão — usa `codex exec` já autenticado na conta ChatGPT, sem custo de
+// API) ou openai-api (o motor original, Responses API, cobrado por token —
+// mantido como opção pra ambientes sem Codex logado, ex. servidor/CI).
+// Ver openai-side/src/providers/codex-local.js para as diferenças de
+// garantia de segurança entre os dois.
+async function runOneAgentAny({ client, name, model, persona, task, schemas, handlers, limits, outDir, scope, provider, outputContract }) {
+  if (provider === 'codex-local') {
+    const result = await runCodexAgent({ name, model, persona, task, scope, limits, outDir, outputContract });
+    writeAgentResult(outDir, name, result);
+    return result;
+  }
+  if (!client) {
+    const result = { agent: name, model, status: 'failed', reason: 'openai_client_missing', error: 'provider "openai-api" pedido mas OPENAI_API_KEY não está definida', elapsedMs: 0 };
+    writeAgentResult(outDir, name, result);
+    return result;
+  }
+  return runOneAgent({ client, name, model, systemPrompt: buildSystemPrompt(persona, outputContract), task, schemas, handlers, limits, outDir });
+}
+
 /**
  * Roda os 5 especialistas em paralelo (Promise.allSettled — falha de um não
  * derruba os outros), depois o Juiz Sol recebendo os 5 relatórios como
@@ -43,26 +64,29 @@ async function runOneAgent({ client, name, model, systemPrompt, task, schemas, h
  */
 async function runOrchestration({ client, agentsConfig, models, limits, scope, task, outDir }) {
   const outputContract = fs.readFileSync(path.join(__dirname, '..', '..', 'contracts', 'output-contract.md'), 'utf8');
-  // Toolset base (leitura local) é compartilhado; um especialista pode pedir
-  // ferramentas hospedadas extras (ex.: "pesquisa" com web_search) via
-  // spec.tools em config/agents.json — cada um recebe seu próprio schemas
-  // array, mas os handlers locais (read_file/grep/...) são os mesmos objetos,
-  // reaproveitados entre os 5 sem recriar o path-guard a cada vez.
+  // Toolset base (leitura local) só é usado pelo provedor openai-api — o
+  // codex-local usa as ferramentas internas do próprio Codex CLI, não estas.
   const { schemas: baseSchemas, handlers } = buildToolset(scope, limits.run_command);
   const schemasFor = (spec) => (spec.tools?.length ? buildToolset(scope, limits.run_command, spec.tools).schemas : baseSchemas);
+  const providerFor = (spec) => spec.provider || models.openai_provider || 'codex-local';
 
   const specialistResults = await Promise.allSettled(
     agentsConfig.specialists.map((spec) =>
-      runOneAgent({
+      runOneAgentAny({
         client,
         name: spec.name,
-        model: models.openai_specialists,
-        systemPrompt: buildSystemPrompt(spec.foco, outputContract),
+        // codex-local: sem -m usa o modelo padrão já configurado no Codex CLI
+        // do usuário; openai-api: modelo explícito da Responses API.
+        model: providerFor(spec) === 'codex-local' ? spec.codexModel : models.openai_specialists,
+        persona: spec.foco,
         task,
         schemas: schemasFor(spec),
         handlers,
         limits: limits.openai_specialist,
         outDir,
+        scope,
+        provider: providerFor(spec),
+        outputContract,
       })
     )
   ).then((settled) => settled.map((s) => (s.status === 'fulfilled' ? s.value : { status: 'failed', reason: 'promise_rejected', error: String(s.reason) })));
@@ -90,16 +114,20 @@ async function runOrchestration({ client, agentsConfig, models, limits, scope, t
     (failedNames.length ? `Atenção: os agentes [${failedNames.join(', ')}] falharam e não produziram relatório — não finja cobertura completa.\n\n` : '') +
     `Relatórios brutos dos ${okCount}/${specialistResults.length} especialistas que concluíram:\n\n${digestForJudge}`;
 
-  const judgeResult = await runOneAgent({
+  const judgeProvider = providerFor(agentsConfig.judge);
+  const judgeResult = await runOneAgentAny({
     client,
     name: agentsConfig.judge.name,
-    model: models.openai_judge,
-    systemPrompt: buildSystemPrompt(agentsConfig.judge.foco, outputContract),
+    model: judgeProvider === 'codex-local' ? agentsConfig.judge.codexModel : models.openai_judge,
+    persona: agentsConfig.judge.foco,
     task: judgeTask,
     schemas: schemasFor(agentsConfig.judge),
     handlers,
     limits: limits.openai_judge,
     outDir,
+    scope,
+    provider: judgeProvider,
+    outputContract,
   });
 
   return { specialists: specialistResults, judge: judgeResult };

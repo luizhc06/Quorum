@@ -186,7 +186,10 @@ async function main() {
   });
 
   // --- lado OpenAI ---
-  const openaiClient = createOpenaiClient();
+  // Só cria o client da API se algo realmente precisar dele — com o
+  // provedor padrão (codex-local) isso nunca acontece.
+  let openaiClient = null;
+  try { openaiClient = createOpenaiClient(); } catch (e) { /* ok — provedor padrão não usa a API */ }
   const openaiSidePromise = runOpenaiSide({
     client: openaiClient, agentsConfig: { specialists: openaiSpecs, judge: openaiAgentsConfig.judge },
     models, limits, scope, task: args.task, outDir: path.join(outDir, 'openai-side'),
