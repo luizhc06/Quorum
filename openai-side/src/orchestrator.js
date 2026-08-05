@@ -5,6 +5,7 @@ const { runAgentLoop, AgentAbortedError } = require('./agent-loop');
 const { buildToolset } = require('./tools');
 const { writeAgentResult } = require('./log');
 const { runCodexAgent } = require('./providers/codex-local');
+const { runGroupWithMutualAid } = require('../../mutual-aid');
 
 const CONTEXT_NOTE =
   '\n\nVocê também tem acesso a um contexto extra (context_read_file/context_grep/context_list_files) — NÃO é o código do projeto, é material de referência (ex.: notas de PRs anteriores, bugs já corrigidos). Vale a pena checar antes de sugerir algo que talvez já tenha sido tentado ou decidido — mas não confunda com o escopo de código real.';
@@ -80,8 +81,22 @@ async function runOrchestration({ client, agentsConfig, models, limits, scope, t
   const schemasFor = (spec) => (spec.tools?.length ? buildToolset(scope, limits.run_command, spec.tools, contextPath).schemas : baseSchemas);
   const providerFor = (spec) => spec.provider || models.openai_provider || 'codex-local';
 
-  const specialistResults = await Promise.allSettled(
-    agentsConfig.specialists.map((spec) =>
+  // Auxílio mútuo: se um especialista ainda não terminou depois de ~55% do
+  // próprio prazo E outro do grupo já concluiu com sucesso, um "ajudante"
+  // tenta a MESMA tarefa em paralelo — usa quem terminar primeiro com
+  // sucesso. No provedor openai-api o ajudante usa gpt-5.6-luna (mais
+  // barato) com orçamento menor; no codex-local (padrão, sem custo por
+  // token) o ajudante é só uma 2ª chamada `codex exec` com prazo mais
+  // curto — ganha em velocidade, não em custo (Codex já é de graça). Ver
+  // mutual-aid.js pra limitações reais (não cancela a tentativa original).
+  const helperLimits = {
+    ...limits.openai_specialist,
+    maxIterations: Math.max(3, Math.ceil(limits.openai_specialist.maxIterations / 2)),
+    maxOutputTokensPerTurn: Math.ceil(limits.openai_specialist.maxOutputTokensPerTurn * 0.6),
+  };
+  const specialistResults = await runGroupWithMutualAid(
+    agentsConfig.specialists,
+    (spec) =>
       runOneAgentAny({
         client,
         name: spec.name,
@@ -100,9 +115,25 @@ async function runOrchestration({ client, agentsConfig, models, limits, scope, t
         provider: providerFor(spec),
         outputContract,
         hasContext: !!contextPath,
-      })
-    )
-  ).then((settled) => settled.map((s) => (s.status === 'fulfilled' ? s.value : { status: 'failed', reason: 'promise_rejected', error: String(s.reason) })));
+      }),
+    (spec) =>
+      runOneAgentAny({
+        client,
+        name: `${spec.name}-assist`,
+        model: providerFor(spec) === 'codex-local' ? spec.codexModel : 'gpt-5.6-luna',
+        persona: spec.foco,
+        task,
+        schemas: schemasFor(spec),
+        handlers,
+        limits: helperLimits,
+        outDir,
+        scope,
+        provider: providerFor(spec),
+        outputContract,
+        hasContext: !!contextPath,
+      }),
+    { staleAfterMs: Math.ceil(limits.openai_specialist.maxWallClockMs * 0.55) }
+  );
 
   const okCount = specialistResults.filter((r) => r.status === 'ok').length;
   const failedNames = specialistResults.filter((r) => r.status !== 'ok').map((r) => r.agent || '?');

@@ -4,6 +4,7 @@ const path = require('path');
 const { runAgentLoop, AgentAbortedError } = require('./agent-loop');
 const { buildToolset } = require('./tools');
 const { createTranscriptLogger } = require('./transcript');
+const { runGroupWithMutualAid } = require('../../mutual-aid');
 
 const CONTEXT_NOTE =
   '\n\nVocê também tem acesso a um contexto extra (context_read_file/context_grep/context_list_files) — NÃO é o código do projeto, é material de referência (ex.: notas de PRs anteriores, bugs já corrigidos). Vale a pena checar antes de sugerir algo que talvez já tenha sido tentado ou decidido — mas não confunda com o escopo de código real.';
@@ -69,8 +70,19 @@ async function runClaudeSide({ client, agentsConfig, models, limits, scope, task
   const outputContract = fs.readFileSync(path.join(__dirname, '..', '..', 'contracts', 'output-contract.md'), 'utf8');
   const { schemas, handlers } = buildToolset(scope, limits.run_command, contextPath);
 
-  const specialistResults = await Promise.allSettled(
-    agentsConfig.specialists.map((spec) =>
+  // Auxílio mútuo: se um especialista ainda não terminou depois de ~55% do
+  // próprio prazo E outro do grupo já concluiu com sucesso, um "ajudante"
+  // (Haiku, orçamento menor) tenta a MESMA tarefa em paralelo — usa quem
+  // terminar primeiro com sucesso. Ver mutual-aid.js pra limitações reais
+  // (não cancela a tentativa original em andamento).
+  const helperLimits = {
+    ...limits.claude_specialist,
+    maxIterations: Math.max(3, Math.ceil(limits.claude_specialist.maxIterations / 2)),
+    maxOutputTokensPerTurn: Math.ceil(limits.claude_specialist.maxOutputTokensPerTurn * 0.6),
+  };
+  const specialistResults = await runGroupWithMutualAid(
+    agentsConfig.specialists,
+    (spec) =>
       runOneAgent({
         client,
         name: spec.name,
@@ -82,9 +94,38 @@ async function runClaudeSide({ client, agentsConfig, models, limits, scope, task
         limits: limits.claude_specialist,
         outDir,
         onStateChange: (u) => onAgentUpdate?.(spec.name, u),
-      })
-    )
-  ).then((settled) => settled.map((s) => (s.status === 'fulfilled' ? s.value : { status: 'failed', reason: 'promise_rejected', error: String(s.reason) })));
+      }),
+    (spec) =>
+      runOneAgent({
+        client,
+        name: `${spec.name}-assist`,
+        model: models.claude_writer_low_cost,
+        systemPrompt: buildSystemPrompt(loadPersona(spec), outputContract, !!contextPath),
+        task,
+        schemas,
+        handlers,
+        limits: helperLimits,
+        outDir,
+      }),
+    {
+      staleAfterMs: Math.ceil(limits.claude_specialist.maxWallClockMs * 0.55),
+      onHelperTriggered: (spec) => onAgentUpdate?.(spec.name, { helperTriggered: true }),
+    }
+  );
+  // Estado final autoritativo por especialista — sobrescreve qualquer
+  // atualização intermediária conflitante (ex.: se o ajudante venceu, a
+  // tentativa original ainda pode terminar depois e emitir seu próprio
+  // onStateChange; isso garante que o painel reflita quem realmente venceu).
+  agentsConfig.specialists.forEach((spec, i) => {
+    const r = specialistResults[i];
+    onAgentUpdate?.(spec.name, {
+      state: r.status === 'ok' ? 'done' : r.status,
+      findings: countFindings(r.finalText),
+      usage: r.usage,
+      elapsedMs: r.elapsedMs,
+      assisted: (r.agent || '').endsWith('-assist'),
+    });
+  });
 
   const okCount = specialistResults.filter((r) => r.status === 'ok').length;
   const failedNames = specialistResults.filter((r) => r.status !== 'ok').map((r) => r.agent || '?');

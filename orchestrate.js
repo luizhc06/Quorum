@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 'use strict';
-// Ponto de entrada de uma rodada Quorum completa e automática: os dois lados
-// (Claude via claude-side/engine, OpenAI via openai-side/src) rodam em
+// Ponto de entrada de uma rodada Quorum completa e automática: o Líder faz
+// um kickoff (pesquisa rápida + monta o brief da rodada), depois os três
+// grupos (Claude via claude-side/engine, OpenAI via openai-side/src,
+// NVIDIA/Hermes via openai-side/src/providers/nvidia-solenne) rodam em
 // paralelo, escrevendo o progresso ao vivo em runs/<run-id>/state.json —
 // é isso que o painel (dashboard/) lê via polling. Nenhuma parte deste
 // script depende de uma conversa ativa do Claude Code: uso
@@ -139,7 +141,7 @@ async function main() {
       { key: 'juiz-claude', name: 'Juiz Claude', model: 'Opus 5 · com leitura', state: 'queued', role: 'Aguardando os especialistas Claude.', chips: [] },
       { key: 'juiz-openai', name: 'Juiz OpenAI', model: 'GPT-5.6 Sol · com leitura', state: 'queued', role: 'Aguardando os especialistas OpenAI.', chips: [] },
       { key: 'juiz-nvidia', name: 'Juiz NVIDIA', model: 'Sonnet 5 · com leitura', state: 'queued', role: 'Aguardando o Hermes.', chips: [] },
-      { key: 'lider', name: 'Líder / Sintetizador', model: 'Opus 5', state: 'queued', role: 'Aguardando os três lados — também faz a verificação cruzada agora.', chips: [] },
+      { key: 'lider', name: 'Líder / Sintetizador', model: 'Opus 5', state: 'queued', role: 'Vai pesquisar e montar o brief da rodada antes de liberar os grupos.', chips: [] },
     ];
     state.judgeReports = { claude: '', openai: '', nvidia: '' };
     state.headline = ''; state.lede = ''; state.synthBlocks = []; state.dissent = null;
@@ -172,11 +174,44 @@ async function main() {
     });
   }
 
-  // --- lado Claude ---
   const claudeClient = createClaudeClient();
+  const outputContract = fs.readFileSync(path.join(__dirname, 'contracts', 'output-contract.md'), 'utf8');
+  const { schemas: claudeSchemas, handlers: claudeHandlers } = buildClaudeToolset(scope, limits.run_command, contextPath);
+
+  // --- Líder: kickoff (pesquisa rápida + monta o brief da rodada) ---
+  // Antes dos 3 grupos rodarem, o Líder mesmo confere o código (e o
+  // contexto extra, se houver) e produz o brief que os grupos vão receber
+  // como tarefa — isso É a "liberação": não existe um gate separado
+  // esperando aprovação humana no meio da rodada automática, o brief
+  // pronto já é o sinal de "pode ir". Se o kickoff falhar, cai pra tarefa
+  // original sem brief refinado — a rodada não trava por isso.
+  updateArbiter('lider', { state: 'running', role: 'Pesquisando o código (e contexto extra, se houver) pra montar o brief da rodada.' });
+  pushActivity('Líder começou o kickoff — vai definir o brief antes de liberar os grupos.');
+  const kickoffTask =
+    `Tarefa pedida pelo usuário para esta rodada do conselho:\n\n"${args.task}"\n\n` +
+    `Antes de liberar os 3 grupos de especialistas (${claudeSpecs.length} Claude, ${openaiSpecs.length} OpenAI, ${nvidiaSpecs.length} NVIDIA/Hermes — todos recebem o MESMO brief que você produzir, já que as lentes Claude/OpenAI são espelhadas), faça uma pesquisa rápida: explore a estrutura geral do código no escopo (list_files, alguns read_file/grep pontuais)` +
+    (contextPath ? ' e do contexto extra disponível (context_list_files/context_read_file/context_grep)' : '') +
+    ` o suficiente pra entender o projeto e calibrar o brief — não precisa ser exaustivo, isso é trabalho dos especialistas depois.\n\n` +
+    `Produza um BRIEF final (ainda não é o relatório, não há achados nesta etapa) que os 3 grupos vão receber como a tarefa deles. O brief deve: (1) esclarecer/expandir a tarefa original se ela for vaga, mantendo a intenção do usuário; (2) apontar, se você notou algo relevante na pesquisa rápida, onde os especialistas devem focar; (3) mencionar explicitamente se algo no contexto extra parece relevante (ex. uma decisão ou correção anterior relacionada), se houver contexto extra disponível. Responda SÓ com o texto do brief final, pronto pra ser repassado — sem preâmbulo, sem comentário sobre o processo.`;
+  const kickoffResult = await runOneClaudeAgent({
+    client: claudeClient, name: 'leader-kickoff', model: models.claude_leader,
+    systemPrompt: buildSystemPrompt(loadPersona(claudeAgentsConfig.leader), outputContract, !!contextPath),
+    task: kickoffTask, schemas: claudeSchemas, handlers: claudeHandlers,
+    limits: limits.claude_leader_kickoff, outDir,
+  });
+  const roundTask = kickoffResult.status === 'ok' && kickoffResult.finalText.trim() ? kickoffResult.finalText.trim() : args.task;
+  patchState(statePath, (state) => { state.roundBrief = kickoffResult.status === 'ok' ? kickoffResult.finalText : null; });
+  updateArbiter('lider', {
+    role: kickoffResult.status === 'ok'
+      ? 'Brief pronto — grupos liberados, aguardando os relatórios.'
+      : `Kickoff falhou (${kickoffResult.reason || kickoffResult.error || kickoffResult.status}) — grupos liberados com a tarefa original, sem brief refinado.`,
+  });
+  pushActivity(kickoffResult.status === 'ok' ? 'Líder liberou os 3 grupos — brief da rodada pronto.' : 'Líder não conseguiu montar o brief — seguindo com a tarefa original mesmo assim.');
+
+  // --- lado Claude ---
   const claudeSidePromise = runClaudeSide({
     client: claudeClient, agentsConfig: { specialists: claudeSpecs, judge: claudeAgentsConfig.judge },
-    models, limits, scope, task: args.task, outDir: path.join(outDir, 'claude-side'), contextPath,
+    models, limits, scope, task: roundTask, outDir: path.join(outDir, 'claude-side'), contextPath,
     onAgentUpdate: (name, u) => {
       if (u.state) {
         updateAgent('claude', name, { state: u.state, findings: u.findings ?? undefined, usage: u.usage, elapsed: u.elapsedMs ? fmtElapsed(u.elapsedMs) : undefined });
@@ -199,7 +234,7 @@ async function main() {
   try { openaiClient = createOpenaiClient(); } catch (e) { /* ok — provedor padrão não usa a API */ }
   const openaiSidePromise = runOpenaiSide({
     client: openaiClient, agentsConfig: { specialists: openaiSpecs, judge: openaiAgentsConfig.judge },
-    models, limits, scope, task: args.task, outDir: path.join(outDir, 'openai-side'), contextPath,
+    models, limits, scope, task: roundTask, outDir: path.join(outDir, 'openai-side'), contextPath,
   }).then((r) => {
     // openai-side/src/orchestrator.js não expõe callback por agente (motor mais antigo,
     // sem live-update) — refletimos o resultado final de uma vez quando chega.
@@ -224,7 +259,7 @@ async function main() {
   // volta 'nvidia_key_missing' individualmente e a rodada segue normal.
   const nvidiaSidePromise = nvidiaSpecs.length
     ? runNvidiaSide({
-        agentsConfig: { specialists: nvidiaSpecs }, models, limits, scope, task: args.task,
+        agentsConfig: { specialists: nvidiaSpecs }, models, limits, scope, task: roundTask,
         outDir: path.join(outDir, 'nvidia-side'), contextPath,
         onAgentUpdate: (name, u) => {
           if (u.state) {
@@ -249,9 +284,6 @@ async function main() {
   });
 
   const [claudeSide, openaiSide, nvidiaSide] = await Promise.all([claudeSidePromise, openaiSidePromise, nvidiaSidePromise]);
-
-  const outputContract = fs.readFileSync(path.join(__dirname, 'contracts', 'output-contract.md'), 'utf8');
-  const { schemas: claudeSchemas, handlers: claudeHandlers } = buildClaudeToolset(scope, limits.run_command, contextPath);
 
   // --- Juiz NVIDIA (Sonnet 5, sobre o(s) relatório(s) bruto(s) do Hermes) —
   // agora simétrico com os outros dois: todo grupo tem juiz próprio. Sem

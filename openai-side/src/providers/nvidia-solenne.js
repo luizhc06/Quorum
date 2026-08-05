@@ -5,6 +5,7 @@ const OpenAI = require('openai');
 const { buildToolset } = require('../tools');
 const { writeAgentResult } = require('../log');
 const { runNvidiaAgentLoop, AgentAbortedError } = require('./nvidia-agent-loop');
+const { runGroupWithMutualAid } = require('../../../mutual-aid');
 
 // Grupo NVIDIA/Hermes: 3º grupo de especialistas do conselho, de um
 // fornecedor de modelo independente dos outros dois (Anthropic e OpenAI) —
@@ -97,16 +98,31 @@ async function runNvidiaSide({ agentsConfig, models, limits, scope, task, outDir
   const client = createSolenneClient();
   const { schemas, handlers } = buildToolset(scope, limits.run_command, undefined, contextPath);
 
-  const specialistResults = await Promise.allSettled(
-    (agentsConfig.specialists || []).map((spec) =>
+  // Auxílio mútuo (ver mutual-aid.js) — hoje o grupo só tem 1 especialista,
+  // então isso fica inerte na prática (não há outro pra provar que dá pra
+  // terminar), mas já vem pronto pra quando o grupo crescer.
+  const helperLimits = {
+    ...limits.nvidia_specialist,
+    maxIterations: Math.max(3, Math.ceil(limits.nvidia_specialist.maxIterations / 2)),
+    maxOutputTokensPerTurn: Math.ceil(limits.nvidia_specialist.maxOutputTokensPerTurn * 0.6),
+  };
+  const specialistResults = await runGroupWithMutualAid(
+    agentsConfig.specialists || [],
+    (spec) =>
       runNvidiaAgent({
         client, name: spec.name, model: spec.model || models.nvidia_specialists, persona: spec.foco, task,
         schemas, handlers, limits: limits.nvidia_specialist, outDir, outputContract,
         hasContext: !!contextPath,
         onStateChange: (u) => onAgentUpdate?.(spec.name, u),
-      })
-    )
-  ).then((settled) => settled.map((s) => (s.status === 'fulfilled' ? s.value : { status: 'failed', reason: 'promise_rejected', error: String(s.reason) })));
+      }),
+    (spec) =>
+      runNvidiaAgent({
+        client, name: `${spec.name}-assist`, model: spec.model || models.nvidia_specialists, persona: spec.foco, task,
+        schemas, handlers, limits: helperLimits, outDir, outputContract,
+        hasContext: !!contextPath,
+      }),
+    { staleAfterMs: Math.ceil(limits.nvidia_specialist.maxWallClockMs * 0.55) }
+  );
 
   return { specialists: specialistResults };
 }
