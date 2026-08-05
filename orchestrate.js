@@ -18,7 +18,7 @@ const { buildToolset: buildClaudeToolset } = require('./claude-side/engine/tools
 
 const { createClient: createOpenaiClient } = require('./openai-side/src/client');
 const { runOrchestration: runOpenaiSide } = require('./openai-side/src/orchestrator');
-const { runSolenneAgent } = require('./openai-side/src/providers/nvidia-solenne');
+const { runNvidiaSide } = require('./openai-side/src/providers/nvidia-solenne');
 
 function parseArgs(argv) {
   const out = {};
@@ -113,6 +113,7 @@ async function main() {
   }
   const claudeSpecs = [...claudeAgentsConfig.specialists, ...extra.claude];
   const openaiSpecs = [...openaiAgentsConfig.specialists, ...extra.openai];
+  const nvidiaSpecs = openaiAgentsConfig.nvidia?.specialists || [];
 
   const startedAt = Date.now();
 
@@ -120,7 +121,7 @@ async function main() {
     state.run = {
       runId, round: 1, task: args.task, status: 'running',
       startedAt: new Date(startedAt).toISOString(),
-      parallelism: `${claudeSpecs.length + openaiSpecs.length} agentes`,
+      parallelism: `${claudeSpecs.length + openaiSpecs.length + nvidiaSpecs.length} agentes`,
       elapsed: '00:00', cost: 'US$ 0,00',
     };
     state.claudeAgents = claudeSpecs.map((s) => ({
@@ -131,11 +132,14 @@ async function main() {
       key: s.name, name: s.titulo || s.name, model: s.model ? s.model : 'GPT-5.6 Terra',
       state: 'queued', findings: 0, lens: s.foco ? s.foco.slice(0, 140) : '', elapsed: '—',
     }));
+    state.nvidiaAgents = nvidiaSpecs.map((s) => ({
+      key: s.name, name: s.titulo || s.name, model: s.model ? s.model : 'Nemotron 3 Super',
+      state: 'queued', findings: 0, lens: s.foco ? s.foco.slice(0, 140) : '', elapsed: '—',
+    }));
     state.arbiters = [
       { key: 'juiz-claude', name: 'Juiz Claude', model: 'Opus 5 · com leitura', state: 'queued', role: 'Aguardando os especialistas Claude.', chips: [] },
       { key: 'juiz-openai', name: 'Juiz OpenAI', model: 'GPT-5.6 Sol · com leitura', state: 'queued', role: 'Aguardando os especialistas OpenAI.', chips: [] },
       { key: 'verificador', name: 'Verificação adversarial', model: 'Sonnet 5', state: 'queued', role: 'Aguardando o Juiz OpenAI.', chips: [] },
-      { key: 'solenne', name: 'Solenne (NVIDIA)', model: 'Nemotron 3 Super · 3º parecer', state: 'queued', role: 'Aguardando os dois juízes.', chips: [] },
       { key: 'lider', name: 'Líder / Sintetizador', model: 'Opus 5', state: 'queued', role: 'Aguardando os dois lados.', chips: [] },
     ];
     state.claims = [];
@@ -157,7 +161,7 @@ async function main() {
   }
   function updateAgent(side, key, patch) {
     patchState(statePath, (state) => {
-      const list = side === 'claude' ? state.claudeAgents : state.openaiAgents;
+      const list = side === 'claude' ? state.claudeAgents : side === 'openai' ? state.openaiAgents : state.nvidiaAgents;
       const agent = (list || []).find((a) => a.key === key);
       if (agent) Object.assign(agent, patch);
     });
@@ -215,41 +219,37 @@ async function main() {
     return r;
   });
 
-  // marca todos como "running" já de cara — os dois motores rodam os especialistas
+  // --- Grupo NVIDIA/Hermes — roda em paralelo com Claude/OpenAI, não
+  // depois: é um 3º grupo de especialistas (sem juiz próprio), não um
+  // juiz. Se NVIDIA_API_KEY não estiver configurada, cada especialista
+  // volta 'nvidia_key_missing' individualmente e a rodada segue normal.
+  const nvidiaSidePromise = nvidiaSpecs.length
+    ? runNvidiaSide({
+        agentsConfig: { specialists: nvidiaSpecs }, models, limits, scope, task: args.task,
+        outDir: path.join(outDir, 'nvidia-side'),
+        onAgentUpdate: (name, u) => {
+          if (u.state) {
+            updateAgent('nvidia', name, { state: u.state, findings: u.findings ?? undefined, usage: u.usage, elapsed: u.elapsedMs ? fmtElapsed(u.elapsedMs) : undefined });
+            if (u.state === 'running') pushActivity(`Hermes (NVIDIA) · ${name} começou.`);
+            if (u.state === 'done') pushActivity(`Hermes (NVIDIA) · ${name} concluiu — ${u.findings ?? 0} achado(s).`);
+            if (u.state === 'failed') pushActivity(`Hermes (NVIDIA) · ${name} falhou.`);
+            if (u.state === 'skipped') pushActivity(`Hermes (NVIDIA) · ${name} pulado — chave não configurada.`);
+          }
+        },
+      })
+    : Promise.resolve({ specialists: [] });
+
+  // marca todos como "running" já de cara — os três grupos rodam os especialistas
   // em paralelo internamente (Promise.allSettled), não dá pra saber o instante exato
   // que cada um começa sem instrumentar mais fundo; "running" desde o início é uma
   // aproximação honesta (todos disparam juntos).
   patchState(statePath, (state) => {
     (state.claudeAgents || []).forEach((a) => { a.state = 'running'; });
     (state.openaiAgents || []).forEach((a) => { a.state = 'running'; });
+    (state.nvidiaAgents || []).forEach((a) => { a.state = 'running'; });
   });
 
-  const [claudeSide, openaiSide] = await Promise.all([claudeSidePromise, openaiSidePromise]);
-
-  // --- Solenne (NVIDIA, 3º parecer independente) — dispara em paralelo com a
-  // verificação adversarial abaixo, já que as duas só dependem dos dois
-  // juízes e não uma da outra; o await fica lá embaixo, perto do líder.
-  updateArbiter('solenne', { state: 'running', role: 'Lendo os dois pareceres pra dar uma opinião independente.' });
-  pushActivity('Solenne (NVIDIA) começou seu parecer.');
-  const solennePromise = runSolenneAgent({
-    persona: openaiAgentsConfig.solenne.foco,
-    task:
-      `## Relatório do Juiz Claude\n\n${claudeSide.judge.status === 'ok' ? claudeSide.judge.finalText : `(status: ${claudeSide.judge.status})`}\n\n` +
-      `## Relatório do Juiz OpenAI\n\n${openaiSide.judge.status === 'ok' ? openaiSide.judge.finalText : `(status: ${openaiSide.judge.status})`}`,
-    model: models.solenne_model,
-  }).then((result) => {
-    if (result.status === 'ok') {
-      updateArbiter('solenne', { state: 'done', role: 'Deu seu parecer independente sobre os dois lados.' });
-      pushActivity('Solenne (NVIDIA) concluiu seu parecer.');
-    } else if (result.reason === 'nvidia_key_missing') {
-      updateArbiter('solenne', { state: 'skipped', role: 'NVIDIA_API_KEY não configurada — fora desta rodada.' });
-      pushActivity('Solenne (NVIDIA) pulada — chave não configurada.');
-    } else {
-      updateArbiter('solenne', { state: 'failed', role: `Falhou: ${result.error || result.reason}` });
-      pushActivity(`Solenne (NVIDIA) falhou: ${result.error || result.reason}.`);
-    }
-    return result;
-  });
+  const [claudeSide, openaiSide, nvidiaSide] = await Promise.all([claudeSidePromise, openaiSidePromise, nvidiaSidePromise]);
 
   // --- verificação adversarial (Claude, sobre o relatório do Juiz OpenAI) ---
   updateArbiter('verificador', { state: 'running', role: 'Lendo o código pra confirmar ou refutar os achados do Juiz OpenAI.' });
@@ -283,18 +283,21 @@ async function main() {
     pushActivity(`Verificação adversarial concluída — ${claims.length} afirmações checadas.`);
   }
 
-  const solenneResult = await solennePromise;
+  const nvidiaOk = nvidiaSide.specialists.filter((r) => r.status === 'ok');
+  const nvidiaDigest = nvidiaOk.length
+    ? nvidiaOk.map((r) => `### Relatório de "${r.agent}" (Grupo NVIDIA/Hermes)\n\n${r.finalText}`).join('\n\n---\n\n')
+    : '';
 
   // --- líder / sintetizador ---
-  updateArbiter('lider', { state: 'running', role: 'Cruzando os dois lados pra decidir o que vai para a síntese final.' });
+  updateArbiter('lider', { state: 'running', role: 'Cruzando os três lados pra decidir o que vai para a síntese final.' });
   pushActivity('Líder/Sintetizador começou.');
   const leaderPersona = loadPersona(claudeAgentsConfig.leader);
   const leaderTask =
     `## Relatório do Juiz Claude\n\n${claudeSide.judge.status === 'ok' ? claudeSide.judge.finalText : `(status: ${claudeSide.judge.status})`}\n\n` +
     `## Relatório do Juiz OpenAI (com veredictos da verificação adversarial anexados)\n\n${openaiSide.judge.status === 'ok' ? openaiSide.judge.finalText : `(status: ${openaiSide.judge.status})`}\n\n` +
     (claims.length ? `## Veredictos da verificação adversarial\n\n${claims.map((c) => `- [${c.verdict}] ${c.text} — ${c.check}`).join('\n')}\n\n` : '') +
-    (solenneResult.status === 'ok' ? `## Parecer da Solenne (3º voto, fornecedor independente — NVIDIA)\n\n${solenneResult.finalText}\n\n` : '') +
-    `Produza o relatório final seguindo exatamente o formato pedido no seu prompt de sistema (headline, lede, blocos P0/P1/DESCARTADO, e uma seção de divergência não resolvida se houver). Se a Solenne discordou de algo que os outros dois juízes concordaram, trate isso como candidato a divergência não resolvida.`;
+    (nvidiaDigest ? `## Relatório(s) do Grupo NVIDIA/Hermes (especialista de fornecedor independente, escopo básico, SEM juiz próprio nem verificação adversarial — confira você mesmo antes de citar)\n\n${nvidiaDigest}\n\n` : '') +
+    `Produza o relatório final seguindo exatamente o formato pedido no seu prompt de sistema (headline, lede, blocos P0/P1/DESCARTADO, e uma seção de divergência não resolvida se houver).`;
 
   const { schemas: leaderSchemas, handlers: leaderHandlers } = buildClaudeToolset(scope, limits.run_command);
   const leaderResult = await runOneClaudeAgent({

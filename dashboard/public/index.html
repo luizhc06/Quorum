@@ -19,6 +19,7 @@
   --amber:#d99b52; --amber-2:#c9a13a;
   --blue:#7fa9c9; --blue-2:#4f8fa8;
   --purple:#8a7fc9; --pink:#a86f9c;
+  --nvidia:#9dbb4f; --nvidia-2:#7fa03e;
   --serif:'Spectral',Georgia,serif; --sans:'IBM Plex Sans',system-ui,sans-serif; --mono:'IBM Plex Mono',monospace;
 }
 *{box-sizing:border-box}
@@ -91,8 +92,10 @@ main{min-height:0;overflow-y:auto;padding:24px 28px 96px}
 .agent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:12px}
 .agent-card{appearance:none;text-align:left;cursor:pointer;background:var(--bg-6);border:1px solid var(--border-2);border-radius:6px;padding:13px 14px 12px;display:flex;flex-direction:column;gap:9px;min-height:118px;font-family:var(--sans)}
 .agent-card.openai{background:#110f0b}
+.agent-card.nvidia{background:#0f110b}
 .agent-card:hover{border-color:#6b4f33}
 .agent-card.openai:hover{border-color:#2c4a5c}
+.agent-card.nvidia:hover{border-color:#4a5a2c}
 .agent-top{display:flex;align-items:flex-start;gap:10px}
 .agent-dot{flex:0 0 auto;width:20px;height:20px;border-radius:50%;margin-top:1px}
 .agent-mid{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -286,6 +289,17 @@ aside{min-height:0;border-left:1px solid var(--border);background:#0a0908;displa
             <span class="group-done" id="openaiDone" style="color:var(--accent-5)"></span>
           </div>
           <div class="agent-grid" id="openaiGrid"></div>
+        </section>
+
+        <section>
+          <div class="group-head">
+            <div class="group-head-left">
+              <h2>Grupo NVIDIA / Hermes</h2>
+              <span class="sub">fornecedor independente · Nemotron 3 Super 120B · escopo básico, sem juiz próprio</span>
+            </div>
+            <span class="group-done" id="nvidiaDone" style="color:var(--nvidia)"></span>
+          </div>
+          <div class="agent-grid" id="nvidiaGrid"></div>
         </section>
 
         <section>

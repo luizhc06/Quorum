@@ -20,6 +20,6 @@
   "openai_specialists": "gpt-5.6-terra",
   "openai_judge": "gpt-5.6-sol",
 
-  "_aviso_solenne": "Terceira voz do conselho, fornecedor independente (NVIDIA, não Anthropic nem OpenAI) — plano free, sem custo por token, só limite de 40 requisições/min. Precisa de NVIDIA_API_KEY no .env; se ausente, a rodada segue sem ela (arbiter 'solenne' marca failed/nvidia_key_missing, não derruba o resto). Ver openai-side/src/providers/nvidia-solenne.js.",
-  "solenne_model": "nvidia/nemotron-3-super-120b-a12b"
+  "_aviso_nvidia": "Grupo NVIDIA/Hermes: 3º grupo de especialistas do conselho, fornecedor de modelo independente (NVIDIA, não Anthropic nem OpenAI) — reduz viés compartilhado entre fornecedores. Plano free, sem custo por token, só limite de 40 requisições/min. Roda em paralelo com os grupos Claude/OpenAI (não é um juiz — escopo de tarefa deliberadamente mais leve, ver openai-side/config/agents.json → 'nvidia'). Precisa de NVIDIA_API_KEY no .env; se ausente, a rodada segue sem ele (agentes marcam failed/nvidia_key_missing, não derruba o resto). Ver openai-side/src/providers/nvidia-solenne.js.",
+  "nvidia_specialists": "nvidia/nemotron-3-super-120b-a12b"
 }

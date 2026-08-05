@@ -8,7 +8,7 @@ const POLL_MS = 3000;
 const DEMO = {
   run: {
     runId: 'a3f0-2608', round: 2, task: 'demo — exemplo ilustrativo, não é uma rodada real',
-    status: 'done', parallelism: '15 agentes', elapsed: '04:12', cost: 'US$ 0,38',
+    status: 'done', parallelism: '16 agentes', elapsed: '04:12', cost: 'US$ 0,38',
   },
   claudeAgents: [
     { key: 'arquitetura', name: 'Arquitetura', model: 'Sonnet 5', state: 'done', findings: 3, lens: 'Mapeia módulos, acoplamento e limites de responsabilidade.', elapsed: '58s', usage: { inputTokens: 18400, outputTokens: 2100, estimatedUsd: 0.058 } },
@@ -28,6 +28,9 @@ const DEMO = {
     { key: 'bug-hunter', name: 'Bug Hunter', model: 'GPT-5.6 Terra', state: 'done', findings: 2, lens: 'Condição de corrida, exceção engolida, off-by-one.', elapsed: '1m 01s', usage: { inputTokens: 17300, outputTokens: 1900, estimatedUsd: 0.057 } },
     { key: 'melhorias-o', name: 'Melhorias gerais', model: 'GPT-5.6 Terra', state: 'done', findings: 2, lens: 'Padrões já usados em um lugar, não replicados em outro.', elapsed: '46s', usage: { inputTokens: 13600, outputTokens: 1500, estimatedUsd: 0.045 } },
     { key: 'dependencias', name: 'Dependências', model: 'GPT-5.6 Terra', state: 'done', findings: 1, lens: 'Supply-chain, versões travadas, ausência de lockfile.', elapsed: '2m 10s', usage: { inputTokens: 28900, outputTokens: 3100, estimatedUsd: 0.095 } },
+  ],
+  nvidiaAgents: [
+    { key: 'hermes-docs', name: 'Documentação & Legibilidade (Hermes)', model: 'Nemotron 3 Super', state: 'done', findings: 1, lens: 'README/comentários batendo com o código real, nomes que escondem o que fazem.', elapsed: '31s', usage: { source: 'plano free NVIDIA (sem custo)' } },
   ],
   arbiters: [
     { key: 'juiz-claude', name: 'Juiz Claude', model: 'Opus 5 · com leitura', state: 'done', role: 'Consolidou os 10 relatórios, descartou 3 achados de baixa confiança, checou pessoalmente os de severidade alta antes de aceitar.', chips: ['10 relatórios lidos', '3 descartados', '15 confirmados'], usage: { inputTokens: 48200, outputTokens: 5100, estimatedUsd: 0.369 } },
@@ -249,6 +252,7 @@ function normalizeRunData(raw) {
     run: raw.run || {},
     claudeAgents: raw.claudeAgents || [],
     openaiAgents: raw.openaiAgents || [],
+    nvidiaAgents: raw.nvidiaAgents || [],
     arbiters: raw.arbiters || [],
     debate: raw.debate || [],
     claims: raw.claims || [],
@@ -351,7 +355,7 @@ function renderTabs() {
 /* ---------- render: view 01 conselho ---------- */
 
 function agentCard(agent, side) {
-  const card = el('button', `agent-card${side === 'openai' ? ' openai' : ''}`);
+  const card = el('button', `agent-card${side === 'openai' ? ' openai' : side === 'nvidia' ? ' nvidia' : ''}`);
   card.innerHTML = `
     <div class="agent-top">
       <span class="agent-dot" style="background:${stateColor(agent.state)}"></span>
@@ -369,7 +373,7 @@ function agentCard(agent, side) {
 
 function renderConselho() {
   const container = document.getElementById('view-conselho');
-  const hasAny = STATE.data.claudeAgents.length || STATE.data.openaiAgents.length;
+  const hasAny = STATE.data.claudeAgents.length || STATE.data.openaiAgents.length || STATE.data.nvidiaAgents.length;
   if (!hasAny) {
     container.innerHTML = '';
     container.appendChild(emptyState('Nenhuma rodada iniciada ainda para este run. O painel atualiza sozinho assim que os agentes começarem.'));
@@ -380,9 +384,12 @@ function renderConselho() {
   STATE.data.claudeAgents.forEach(a => cGrid.appendChild(agentCard(a, 'claude')));
   const oGrid = document.getElementById('openaiGrid'); oGrid.innerHTML = '';
   STATE.data.openaiAgents.forEach(a => oGrid.appendChild(agentCard(a, 'openai')));
+  const nGrid = document.getElementById('nvidiaGrid'); nGrid.innerHTML = '';
+  STATE.data.nvidiaAgents.forEach(a => nGrid.appendChild(agentCard(a, 'nvidia')));
 
   document.getElementById('claudeDone').textContent = `${STATE.data.claudeAgents.filter(a => a.state === 'done').length}/${STATE.data.claudeAgents.length} concluídos`;
   document.getElementById('openaiDone').textContent = `${STATE.data.openaiAgents.filter(a => a.state === 'done').length}/${STATE.data.openaiAgents.length} concluídos`;
+  document.getElementById('nvidiaDone').textContent = `${STATE.data.nvidiaAgents.filter(a => a.state === 'done').length}/${STATE.data.nvidiaAgents.length} concluídos`;
 
   const aGrid = document.getElementById('arbiterGrid'); aGrid.innerHTML = '';
   STATE.data.arbiters.forEach(a => {
@@ -712,7 +719,7 @@ function buildExportFormats(data) {
 
   const jsonObj = {
     run: data.run.runId, round: data.run.round,
-    agents: { claude: data.claudeAgents.length, openai: data.openaiAgents.length, juizes_e_lider: data.arbiters.length },
+    agents: { claude: data.claudeAgents.length, openai: data.openaiAgents.length, nvidia: data.nvidiaAgents.length, juizes_e_lider: data.arbiters.length },
     verdicts: {
       confirmados: byVerdict('CONFIRMADO').length, parciais: byVerdict('PARCIAL').length,
       improcedentes: byVerdict('IMPROCEDENTE').length, nao_verificaveis: byVerdict('NÃO VERIFICÁVEL').length,

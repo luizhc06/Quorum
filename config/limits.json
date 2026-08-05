@@ -44,6 +44,13 @@
     "maxToolOutputChars": 15000,
     "maxCostUsd": 2.0
   },
+  "nvidia_specialist": {
+    "_comment": "Sem maxCostUsd — plano free da NVIDIA não cobra por token, só limita taxa (40 req/min). Iterações/tempo mais curtos que os outros grupos: tarefa deliberadamente básica (ver openai-side/config/agents.json → 'nvidia').",
+    "maxIterations": 8,
+    "maxWallClockMs": 120000,
+    "maxOutputTokensPerTurn": 2500,
+    "maxToolOutputChars": 15000
+  },
 
   "run_command": {
     "timeoutMs": 30000,
