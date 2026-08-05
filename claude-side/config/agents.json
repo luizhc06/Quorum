@@ -1,17 +1,18 @@
 {
+  "_comment": "Lista de especialistas ESPELHADA com openai-side/config/agents.json — mesmas 10 lentes nos dois grupos (mesmo 'name'), pra comparação real entre fornecedores no mesmo tópico (ver [[project_quorum_lentes_espelhadas]]). Cortamos usabilidade/design-ui (baixo sinal — design-ui frequentemente não encontra nada) e pesquisa competitiva (mais posicionamento de produto que qualidade de código) pra caber bug-hunter e dependências dentro do teto de 10. 'model' explícito usa Haiku nas lentes mais mecânicas (qa, dependências) — o resto fica no padrão (Sonnet 5).",
   "specialists": [
     { "name": "arquitetura", "titulo": "Arquitetura", "promptFile": "arquitetura.md" },
     { "name": "seguranca", "titulo": "Segurança", "promptFile": "seguranca.md" },
     { "name": "regras-negocio", "titulo": "Regras de negócio", "promptFile": "regras-negocio.md" },
-    { "name": "usabilidade", "titulo": "Usabilidade", "promptFile": "usabilidade.md" },
+    { "name": "bug-hunter", "titulo": "Bug Hunter", "foco": "Você é o BUG HUNTER do conselho. Procure defeitos funcionais reais: condição de corrida, off-by-one, tratamento de erro que engole exceção, null/undefined não tratado, lógica que diverge do que o próprio código ao redor sugere ser a intenção. Prefira poucos achados bem fundamentados a uma lista longa de suposições." },
     { "name": "melhorias", "titulo": "Melhorias gerais", "promptFile": "melhorias.md" },
     { "name": "engenharia-software", "titulo": "Engenharia de software", "promptFile": "engenharia-software.md" },
-    { "name": "qa", "titulo": "Qualidade / QA", "promptFile": "qa.md" },
+    { "name": "qa", "titulo": "Qualidade / QA", "promptFile": "qa.md", "model": "claude-haiku-4-5-20251001" },
     { "name": "dados", "titulo": "Dados", "promptFile": "dados.md" },
-    { "name": "design-ui", "titulo": "Design / UI", "promptFile": "design-ui.md" },
+    { "name": "dependencias", "titulo": "Dependências", "model": "claude-haiku-4-5-20251001", "foco": "Você é o especialista em DEPENDÊNCIAS/SUPPLY CHAIN do conselho. Examine arquivos de manifesto de pacote (package.json, composer.json, requirements.txt, etc — o que existir no escopo) via read_file/grep, procure versões travadas antigas, dependências não usadas ou não declaradas, ausência de lockfile, e sinais de risco pelo que você já sabe sobre pacotes conhecidos. IMPORTANTE: você não tem acesso a `npm`/`composer` via run_command (limitação de ambiente, não escolha sua) — nunca finja ter rodado uma auditoria automatizada; baseie-se só no que o manifesto e o código revelam. Diferente do agente de Segurança, seu foco é risco de terceiros, não vulnerabilidade no código próprio." },
     { "name": "infraestrutura-deploy", "titulo": "Infraestrutura / Deploy", "promptFile": "infraestrutura-deploy.md" }
   ],
   "judge": { "name": "judge", "titulo": "Juiz Claude", "promptFile": "judge.md" },
-  "verifier": { "name": "verifier-adversarial", "titulo": "Verificador adversarial", "promptFile": "verifier-adversarial.md" },
+  "judgeNvidia": { "name": "judge-nvidia", "titulo": "Juiz NVIDIA (Sonnet 5)", "promptFile": "judge-nvidia.md" },
   "leader": { "name": "leader-synthesizer", "titulo": "Líder / Sintetizador", "promptFile": "leader-synthesizer.md" }
 }

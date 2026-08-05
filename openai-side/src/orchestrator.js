@@ -76,8 +76,10 @@ async function runOrchestration({ client, agentsConfig, models, limits, scope, t
         client,
         name: spec.name,
         // codex-local: sem -m usa o modelo padrão já configurado no Codex CLI
-        // do usuário; openai-api: modelo explícito da Responses API.
-        model: providerFor(spec) === 'codex-local' ? spec.codexModel : models.openai_specialists,
+        // do usuário (spec.model, se houver, é ignorado — Codex não
+        // necessariamente aceita qualquer id de modelo da API); openai-api:
+        // spec.model (ex. gpt-5.6-luna nas lentes mais baratas) ou o padrão.
+        model: providerFor(spec) === 'codex-local' ? spec.codexModel : (spec.model || models.openai_specialists),
         persona: spec.foco,
         task,
         schemas: schemasFor(spec),

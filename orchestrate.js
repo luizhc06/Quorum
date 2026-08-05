@@ -67,12 +67,6 @@ function extractFindingBlocks(markdown) {
   if (current) blocks.push(current.join('\n'));
   return blocks;
 }
-function chunkRoundRobin(items, n) {
-  const chunks = Array.from({ length: n }, () => []);
-  items.forEach((item, i) => chunks[i % n].push(item));
-  return chunks;
-}
-
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (!args.scope || !args.task || !args['run-id'] || !args.out) {
@@ -139,10 +133,10 @@ async function main() {
     state.arbiters = [
       { key: 'juiz-claude', name: 'Juiz Claude', model: 'Opus 5 · com leitura', state: 'queued', role: 'Aguardando os especialistas Claude.', chips: [] },
       { key: 'juiz-openai', name: 'Juiz OpenAI', model: 'GPT-5.6 Sol · com leitura', state: 'queued', role: 'Aguardando os especialistas OpenAI.', chips: [] },
-      { key: 'verificador', name: 'Verificação adversarial', model: 'Sonnet 5', state: 'queued', role: 'Aguardando o Juiz OpenAI.', chips: [] },
-      { key: 'lider', name: 'Líder / Sintetizador', model: 'Opus 5', state: 'queued', role: 'Aguardando os dois lados.', chips: [] },
+      { key: 'juiz-nvidia', name: 'Juiz NVIDIA', model: 'Sonnet 5 · com leitura', state: 'queued', role: 'Aguardando o Hermes.', chips: [] },
+      { key: 'lider', name: 'Líder / Sintetizador', model: 'Opus 5', state: 'queued', role: 'Aguardando os três lados — também faz a verificação cruzada agora.', chips: [] },
     ];
-    state.claims = [];
+    state.judgeReports = { claude: '', openai: '', nvidia: '' };
     state.headline = ''; state.lede = ''; state.synthBlocks = []; state.dissent = null;
     state.activity = [{ time: nowLabel(), text: `Rodada iniciada: "${args.task}"` }];
     state.decisions = state.decisions || {};
@@ -251,59 +245,53 @@ async function main() {
 
   const [claudeSide, openaiSide, nvidiaSide] = await Promise.all([claudeSidePromise, openaiSidePromise, nvidiaSidePromise]);
 
-  // --- verificação adversarial (Claude, sobre o relatório do Juiz OpenAI) ---
-  updateArbiter('verificador', { state: 'running', role: 'Lendo o código pra confirmar ou refutar os achados do Juiz OpenAI.' });
-  pushActivity('Verificação adversarial começou.');
   const outputContract = fs.readFileSync(path.join(__dirname, 'contracts', 'output-contract.md'), 'utf8');
-  const { schemas: verifierSchemas, handlers: verifierHandlers } = buildClaudeToolset(scope, limits.run_command);
-  const findingBlocks = openaiSide.judge.status === 'ok' ? extractFindingBlocks(openaiSide.judge.finalText) : [];
-  const VERIFIER_COUNT = Math.min(3, Math.max(1, findingBlocks.length));
-  const chunks = chunkRoundRobin(findingBlocks, VERIFIER_COUNT).filter((c) => c.length);
+  const { schemas: claudeSchemas, handlers: claudeHandlers } = buildClaudeToolset(scope, limits.run_command);
 
-  let claims = [];
-  if (chunks.length === 0) {
-    updateArbiter('verificador', { state: 'done', role: 'Nada pra verificar — o Juiz OpenAI não produziu achados citáveis nesta rodada.' });
-    pushActivity('Verificação adversarial encerrada — nenhum achado do lado OpenAI pra checar.');
-  } else {
-    const verifierPersona = loadPersona(claudeAgentsConfig.verifier);
-    const verifierResults = await Promise.all(
-      chunks.map((chunk, i) =>
-        runOneClaudeAgent({
-          client: claudeClient, name: `verificador-${i + 1}`, model: models.claude_verifier,
-          systemPrompt: buildSystemPrompt(verifierPersona, outputContract),
-          task: `Verifique os achados abaixo, um a um, no formato pedido:\n\n${chunk.join('\n\n---\n\n')}`,
-          schemas: verifierSchemas, handlers: verifierHandlers, limits: limits.claude_verifier,
-          outDir: path.join(outDir, 'claude-side'),
-        })
-      )
-    );
-    claims = parseVerifierOutput(verifierResults);
-    patchState(statePath, (state) => { state.claims = claims; });
-    updateArbiter('verificador', { state: 'done', role: `Verificou ${claims.length} afirmações do Juiz OpenAI.`, chips: [`${claims.length} checadas`] });
-    pushActivity(`Verificação adversarial concluída — ${claims.length} afirmações checadas.`);
-  }
-
+  // --- Juiz NVIDIA (Sonnet 5, sobre o(s) relatório(s) bruto(s) do Hermes) —
+  // agora simétrico com os outros dois: todo grupo tem juiz próprio. Sem
+  // etapa de verificação adversarial separada — esse trabalho passou pro
+  // Líder, sobre os três lados de uma vez (ver leader-synthesizer.md).
+  updateArbiter('juiz-nvidia', { state: 'running', role: 'Consolidando o(s) relatório(s) do Hermes.' });
+  pushActivity('Juiz NVIDIA começou.');
   const nvidiaOk = nvidiaSide.specialists.filter((r) => r.status === 'ok');
   const nvidiaDigest = nvidiaOk.length
-    ? nvidiaOk.map((r) => `### Relatório de "${r.agent}" (Grupo NVIDIA/Hermes)\n\n${r.finalText}`).join('\n\n---\n\n')
-    : '';
+    ? nvidiaOk.map((r) => `### Relatório de "${r.agent}"\n\n${r.finalText}`).join('\n\n---\n\n')
+    : '(nenhum especialista do Grupo NVIDIA/Hermes concluiu com sucesso nesta rodada)';
+  const judgeNvidiaResult = await runOneClaudeAgent({
+    client: claudeClient, name: 'judge-nvidia', model: models.claude_verifier,
+    systemPrompt: buildSystemPrompt(loadPersona(claudeAgentsConfig.judgeNvidia), outputContract),
+    task: `Relatório(s) bruto(s) do especialista Hermes:\n\n${nvidiaDigest}`,
+    schemas: claudeSchemas, handlers: claudeHandlers, limits: limits.claude_verifier,
+    outDir: path.join(outDir, 'claude-side'),
+  });
+  updateArbiter('juiz-nvidia', { state: judgeNvidiaResult.status === 'ok' ? 'done' : judgeNvidiaResult.status, role: 'Consolidou o relatório do Grupo NVIDIA/Hermes.' });
+  pushActivity(`Juiz NVIDIA concluiu (status: ${judgeNvidiaResult.status}).`);
 
-  // --- líder / sintetizador ---
-  updateArbiter('lider', { state: 'running', role: 'Cruzando os três lados pra decidir o que vai para a síntese final.' });
+  patchState(statePath, (state) => {
+    state.judgeReports = {
+      claude: claudeSide.judge.status === 'ok' ? claudeSide.judge.finalText : `(status: ${claudeSide.judge.status})`,
+      openai: openaiSide.judge.status === 'ok' ? openaiSide.judge.finalText : `(status: ${openaiSide.judge.status})`,
+      nvidia: judgeNvidiaResult.status === 'ok' ? judgeNvidiaResult.finalText : `(status: ${judgeNvidiaResult.status})`,
+    };
+  });
+
+  // --- líder / sintetizador — agora também faz a verificação cruzada dos
+  // três lados (ver leader-synthesizer.md), não existe mais uma etapa
+  // separada de verificação adversarial ---
+  updateArbiter('lider', { state: 'running', role: 'Cruzando os três lados e conferindo achados de severidade alta.' });
   pushActivity('Líder/Sintetizador começou.');
   const leaderPersona = loadPersona(claudeAgentsConfig.leader);
   const leaderTask =
     `## Relatório do Juiz Claude\n\n${claudeSide.judge.status === 'ok' ? claudeSide.judge.finalText : `(status: ${claudeSide.judge.status})`}\n\n` +
-    `## Relatório do Juiz OpenAI (com veredictos da verificação adversarial anexados)\n\n${openaiSide.judge.status === 'ok' ? openaiSide.judge.finalText : `(status: ${openaiSide.judge.status})`}\n\n` +
-    (claims.length ? `## Veredictos da verificação adversarial\n\n${claims.map((c) => `- [${c.verdict}] ${c.text} — ${c.check}`).join('\n')}\n\n` : '') +
-    (nvidiaDigest ? `## Relatório(s) do Grupo NVIDIA/Hermes (especialista de fornecedor independente, escopo básico, SEM juiz próprio nem verificação adversarial — confira você mesmo antes de citar)\n\n${nvidiaDigest}\n\n` : '') +
+    `## Relatório do Juiz OpenAI\n\n${openaiSide.judge.status === 'ok' ? openaiSide.judge.finalText : `(status: ${openaiSide.judge.status})`}\n\n` +
+    `## Relatório do Juiz NVIDIA\n\n${judgeNvidiaResult.status === 'ok' ? judgeNvidiaResult.finalText : `(status: ${judgeNvidiaResult.status})`}\n\n` +
     `Produza o relatório final seguindo exatamente o formato pedido no seu prompt de sistema (headline, lede, blocos P0/P1/DESCARTADO, e uma seção de divergência não resolvida se houver).`;
 
-  const { schemas: leaderSchemas, handlers: leaderHandlers } = buildClaudeToolset(scope, limits.run_command);
   const leaderResult = await runOneClaudeAgent({
     client: claudeClient, name: 'leader-synthesizer', model: models.claude_leader,
     systemPrompt: buildSystemPrompt(leaderPersona, outputContract),
-    task: leaderTask, schemas: leaderSchemas, handlers: leaderHandlers,
+    task: leaderTask, schemas: claudeSchemas, handlers: claudeHandlers,
     limits: limits.claude_leader || limits.claude_judge, outDir,
   });
 
@@ -328,25 +316,9 @@ async function main() {
   }
 }
 
-// --- parsers tolerantes: o formato pedido no prompt do líder é o contrato,
+// --- parser tolerante: o formato pedido no prompt do líder é o contrato,
 // mas o parser não pode quebrar a rodada se o texto vier levemente diferente
 // — nesse caso o painel simplesmente mostra menos detalhe, nunca trava.
-function parseVerifierOutput(results) {
-  const claims = [];
-  for (const r of results) {
-    if (r.status !== 'ok' || !r.finalText) continue;
-    const blocks = r.finalText.split(/\n(?=### )/).filter((b) => b.trim().startsWith('###'));
-    for (const block of blocks) {
-      const title = (block.match(/^###\s*(.+)/) || [, block.slice(0, 80)])[1].trim();
-      const verdict = (block.match(/\*\*Veredicto:\*\*\s*(CONFIRMADO|PARCIAL|IMPROCEDENTE|NÃO VERIFICÁVEL)/i) || [, 'NÃO VERIFICÁVEL'])[1].toUpperCase();
-      const evidencia = (block.match(/\*\*Evidência checada:\*\*\s*(.+)/) || [, ''])[1].trim();
-      const justificativa = (block.match(/\*\*Justificativa:\*\*\s*(.+)/) || [, ''])[1].trim();
-      claims.push({ text: title, origin: 'GPT · especialista', check: justificativa || evidencia || '(sem justificativa extraída)', verdict });
-    }
-  }
-  return claims;
-}
-
 function parseLeaderOutput(text) {
   const headline = (text.match(/^#\s+(.+)/m) || [, ''])[1].trim();
   const afterHeadline = text.split(/^#\s+.+$/m)[1] || '';

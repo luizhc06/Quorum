@@ -8,34 +8,40 @@ const POLL_MS = 3000;
 const DEMO = {
   run: {
     runId: 'a3f0-2608', round: 2, task: 'demo — exemplo ilustrativo, não é uma rodada real',
-    status: 'done', parallelism: '16 agentes', elapsed: '04:12', cost: 'US$ 0,38',
+    status: 'done', parallelism: '21 agentes', elapsed: '04:12', cost: 'US$ 0,38',
   },
   claudeAgents: [
     { key: 'arquitetura', name: 'Arquitetura', model: 'Sonnet 5', state: 'done', findings: 3, lens: 'Mapeia módulos, acoplamento e limites de responsabilidade.', elapsed: '58s', usage: { inputTokens: 18400, outputTokens: 2100, estimatedUsd: 0.058 } },
-    { key: 'seguranca-c', name: 'Segurança', model: 'Sonnet 5', state: 'done', findings: 4, lens: 'Injeção, autenticação, segredos em texto plano.', elapsed: '1m 12s', usage: { inputTokens: 24100, outputTokens: 2800, estimatedUsd: 0.076 } },
+    { key: 'seguranca', name: 'Segurança', model: 'Sonnet 5', state: 'done', findings: 4, lens: 'Injeção, autenticação, segredos em texto plano.', elapsed: '1m 12s', usage: { inputTokens: 24100, outputTokens: 2800, estimatedUsd: 0.076 } },
     { key: 'regras-negocio', name: 'Regras de negócio', model: 'Sonnet 5', state: 'done', findings: 2, lens: 'Logística, fluxo de pedido, consistência de estado.', elapsed: '49s', usage: { inputTokens: 15200, outputTokens: 1700, estimatedUsd: 0.047 } },
-    { key: 'usabilidade', name: 'Usabilidade', model: 'Sonnet 5', state: 'done', findings: 1, lens: 'Fricção de fluxo, feedback ao usuário, acessibilidade.', elapsed: '41s', usage: { inputTokens: 12800, outputTokens: 1300, estimatedUsd: 0.038 } },
-    { key: 'melhorias-c', name: 'Melhorias gerais', model: 'Sonnet 5', state: 'done', findings: 3, lens: 'Duplicação, complexidade desnecessária, simplificação.', elapsed: '55s', usage: { inputTokens: 17600, outputTokens: 1900, estimatedUsd: 0.054 } },
-    { key: 'engenharia', name: 'Engenharia de software', model: 'Sonnet 5', state: 'done', findings: 2, lens: 'Testabilidade, tratamento de erro, dívida técnica.', elapsed: '1m 03s', usage: { inputTokens: 20500, outputTokens: 2300, estimatedUsd: 0.064 } },
-    { key: 'qa', name: 'Qualidade / QA', model: 'Sonnet 5', state: 'done', findings: 2, lens: 'Cobertura de teste, casos de borda não exercitados.', elapsed: '47s', usage: { inputTokens: 14700, outputTokens: 1600, estimatedUsd: 0.045 } },
+    { key: 'bug-hunter', name: 'Bug Hunter', model: 'Sonnet 5', state: 'done', findings: 2, lens: 'Condição de corrida, exceção engolida, off-by-one.', elapsed: '1m 01s', usage: { inputTokens: 17300, outputTokens: 1900, estimatedUsd: 0.057 } },
+    { key: 'melhorias', name: 'Melhorias gerais', model: 'Sonnet 5', state: 'done', findings: 3, lens: 'Duplicação, complexidade desnecessária, simplificação.', elapsed: '55s', usage: { inputTokens: 17600, outputTokens: 1900, estimatedUsd: 0.054 } },
+    { key: 'engenharia-software', name: 'Engenharia de software', model: 'Sonnet 5', state: 'done', findings: 2, lens: 'Testabilidade, tratamento de erro, dívida técnica.', elapsed: '1m 03s', usage: { inputTokens: 20500, outputTokens: 2300, estimatedUsd: 0.064 } },
+    { key: 'qa', name: 'Qualidade / QA', model: 'Haiku 4.5', state: 'done', findings: 2, lens: 'Cobertura de teste, casos de borda não exercitados.', elapsed: '22s', usage: { inputTokens: 14700, outputTokens: 1600, estimatedUsd: 0.008 } },
     { key: 'dados', name: 'Dados', model: 'Sonnet 5', state: 'done', findings: 3, lens: 'Modelagem, migrações, integridade referencial.', elapsed: '1m 20s', usage: { inputTokens: 26300, outputTokens: 2900, estimatedUsd: 0.082 } },
-    { key: 'design-ui', name: 'Design / UI', model: 'Sonnet 5', state: 'done', findings: 0, lens: 'Sem superfície de UI relevante neste escopo — sinalizado e encerrado.', elapsed: '18s', usage: { inputTokens: 3200, outputTokens: 300, estimatedUsd: 0.009 } },
-    { key: 'infra', name: 'Infraestrutura / Deploy', model: 'Sonnet 5', state: 'done', findings: 2, lens: 'CI/CD, gestão de segredos em produção, rollback.', elapsed: '2m 41s', usage: { inputTokens: 34800, outputTokens: 3600, estimatedUsd: 0.106 } },
+    { key: 'dependencias', name: 'Dependências', model: 'Haiku 4.5', state: 'done', findings: 1, lens: 'Supply-chain, versões travadas, ausência de lockfile.', elapsed: '28s', usage: { inputTokens: 28900, outputTokens: 3100, estimatedUsd: 0.016 } },
+    { key: 'infraestrutura-deploy', name: 'Infraestrutura / Deploy', model: 'Sonnet 5', state: 'done', findings: 2, lens: 'CI/CD, gestão de segredos em produção, rollback.', elapsed: '2m 41s', usage: { inputTokens: 34800, outputTokens: 3600, estimatedUsd: 0.106 } },
   ],
   openaiAgents: [
-    { key: 'pesquisa', name: 'Pesquisa', model: 'GPT-5.6 Terra', state: 'done', findings: 0, lens: 'Mapeamento factual da arquitetura real do repositório.', elapsed: '52s', usage: { inputTokens: 11200, outputTokens: 1400, estimatedUsd: 0.039 } },
-    { key: 'seguranca-o', name: 'Segurança', model: 'GPT-5.6 Terra', state: 'done', findings: 3, lens: 'Vulnerabilidades citáveis por arquivo e linha.', elapsed: '1m 08s', usage: { inputTokens: 19800, outputTokens: 2200, estimatedUsd: 0.066 } },
+    { key: 'arquitetura', name: 'Arquitetura', model: 'GPT-5.6 Terra', state: 'done', findings: 2, lens: 'Mapeia módulos, acoplamento e limites de responsabilidade.', elapsed: '1m 02s', usage: { inputTokens: 18900, outputTokens: 2000, estimatedUsd: 0.062 } },
+    { key: 'seguranca', name: 'Segurança', model: 'GPT-5.6 Terra', state: 'done', findings: 3, lens: 'Vulnerabilidades citáveis por arquivo e linha.', elapsed: '1m 08s', usage: { inputTokens: 19800, outputTokens: 2200, estimatedUsd: 0.066 } },
+    { key: 'regras-negocio', name: 'Regras de negócio', model: 'GPT-5.6 Terra', state: 'done', findings: 1, lens: 'Logística, fluxo de pedido, consistência de estado.', elapsed: '51s', usage: { inputTokens: 15600, outputTokens: 1700, estimatedUsd: 0.051 } },
     { key: 'bug-hunter', name: 'Bug Hunter', model: 'GPT-5.6 Terra', state: 'done', findings: 2, lens: 'Condição de corrida, exceção engolida, off-by-one.', elapsed: '1m 01s', usage: { inputTokens: 17300, outputTokens: 1900, estimatedUsd: 0.057 } },
-    { key: 'melhorias-o', name: 'Melhorias gerais', model: 'GPT-5.6 Terra', state: 'done', findings: 2, lens: 'Padrões já usados em um lugar, não replicados em outro.', elapsed: '46s', usage: { inputTokens: 13600, outputTokens: 1500, estimatedUsd: 0.045 } },
-    { key: 'dependencias', name: 'Dependências', model: 'GPT-5.6 Terra', state: 'done', findings: 1, lens: 'Supply-chain, versões travadas, ausência de lockfile.', elapsed: '2m 10s', usage: { inputTokens: 28900, outputTokens: 3100, estimatedUsd: 0.095 } },
+    { key: 'melhorias', name: 'Melhorias gerais', model: 'GPT-5.6 Terra', state: 'done', findings: 2, lens: 'Padrões já usados em um lugar, não replicados em outro.', elapsed: '46s', usage: { inputTokens: 13600, outputTokens: 1500, estimatedUsd: 0.045 } },
+    { key: 'engenharia-software', name: 'Engenharia de software', model: 'GPT-5.6 Terra', state: 'done', findings: 1, lens: 'Testabilidade, tratamento de erro, dívida técnica.', elapsed: '58s', usage: { inputTokens: 19100, outputTokens: 2100, estimatedUsd: 0.063 } },
+    { key: 'qa', name: 'Qualidade / QA', model: 'GPT-5.6 Luna', state: 'done', findings: 1, lens: 'Cobertura de teste, casos de borda não exercitados.', elapsed: '19s', usage: { inputTokens: 14200, outputTokens: 1500, estimatedUsd: 0.005 } },
+    { key: 'dados', name: 'Dados', model: 'GPT-5.6 Terra', state: 'done', findings: 2, lens: 'Modelagem, migrações, integridade referencial.', elapsed: '1m 15s', usage: { inputTokens: 25100, outputTokens: 2700, estimatedUsd: 0.082 } },
+    { key: 'dependencias', name: 'Dependências', model: 'GPT-5.6 Luna', state: 'done', findings: 1, lens: 'Supply-chain, versões travadas, ausência de lockfile.', elapsed: '25s', usage: { inputTokens: 28900, outputTokens: 3100, estimatedUsd: 0.009 } },
+    { key: 'infraestrutura-deploy', name: 'Infraestrutura / Deploy', model: 'GPT-5.6 Terra', state: 'done', findings: 2, lens: 'CI/CD, gestão de segredos em produção, rollback.', elapsed: '2m 05s', usage: { inputTokens: 32100, outputTokens: 3400, estimatedUsd: 0.104 } },
   ],
   nvidiaAgents: [
     { key: 'hermes-docs', name: 'Documentação & Legibilidade (Hermes)', model: 'Nemotron 3 Super', state: 'done', findings: 1, lens: 'README/comentários batendo com o código real, nomes que escondem o que fazem.', elapsed: '31s', usage: { source: 'plano free NVIDIA (sem custo)' } },
   ],
   arbiters: [
     { key: 'juiz-claude', name: 'Juiz Claude', model: 'Opus 5 · com leitura', state: 'done', role: 'Consolidou os 10 relatórios, descartou 3 achados de baixa confiança, checou pessoalmente os de severidade alta antes de aceitar.', chips: ['10 relatórios lidos', '3 descartados', '15 confirmados'], usage: { inputTokens: 48200, outputTokens: 5100, estimatedUsd: 0.369 } },
-    { key: 'juiz-openai', name: 'Juiz OpenAI', model: 'GPT-5.6 Sol · com leitura', state: 'done', role: 'Consolidou os 5 relatórios, checou o achado de dependência travada contra o lockfile antes de aceitar.', chips: ['5 relatórios lidos', '1 rebaixado'], usage: { inputTokens: 31500, outputTokens: 3400, estimatedUsd: 0.26 } },
-    { key: 'lider', name: 'Líder / Sintetizador', model: 'Opus 5', state: 'done', role: 'Cruzou os dois lados e decidiu o que vai para a síntese final.', chips: ['9/12 pontos convergentes', '1 divergência aberta'], usage: { inputTokens: 22100, outputTokens: 2600, estimatedUsd: 0.176 } },
+    { key: 'juiz-openai', name: 'Juiz OpenAI', model: 'GPT-5.6 Sol · com leitura', state: 'done', role: 'Consolidou os 10 relatórios, checou o achado de dependência travada contra o lockfile antes de aceitar.', chips: ['10 relatórios lidos', '1 rebaixado'], usage: { inputTokens: 31500, outputTokens: 3400, estimatedUsd: 0.26 } },
+    { key: 'juiz-nvidia', name: 'Juiz NVIDIA', model: 'Sonnet 5 · com leitura', state: 'done', role: 'Consolidou o relatório do Hermes.', chips: ['1 relatório lido'], usage: { inputTokens: 4200, outputTokens: 600, estimatedUsd: 0.024 } },
+    { key: 'lider', name: 'Líder / Sintetizador', model: 'Opus 5', state: 'done', role: 'Cruzou os três lados, verificou pessoalmente os achados de severidade alta, decidiu o que vai para a síntese final.', chips: ['9/12 pontos convergentes', '1 divergência aberta'], usage: { inputTokens: 22100, outputTokens: 2600, estimatedUsd: 0.176 } },
   ],
   debate: [
     { time: '14:02:11', author: 'Claude · segurança', side: 'claude', kind: 'afirmação',
@@ -62,20 +68,11 @@ const DEMO = {
     { time: '14:12:40', author: 'Claude · arquitetura', side: 'claude', kind: 'impasse',
       text: 'Não temos como resolver isso lendo mais código — os dois lados têm evidência válida, e o desempate depende de uma projeção de negócio que nenhum agente tem. Isso vai para divergência aberta na síntese.', evidence: null },
   ],
-  claims: [
-    { text: 'SQL injection em /api/pedidos/buscar via numero_nf sem escape.', origin: 'Claude · segurança', check: 'Verificador leu o arquivo, reproduziu o payload em ambiente isolado.', verdict: 'CONFIRMADO' },
-    { text: '.env.production copiado para dentro do artefato de build publicado.', origin: 'Claude · infra-deploy', check: 'Verificador abriu o artefato do último CI run, confirmou o arquivo presente.', verdict: 'CONFIRMADO' },
-    { text: 'Nenhum dos 4 controllers vizinhos escapa esse mesmo parâmetro.', origin: 'GPT · segurança', check: 'Verificador checou os 4 arquivos citados, confirma o padrão em 3 de 4.', verdict: 'PARCIAL' },
-    { text: 'Condição de corrida no worker de confirmação de entrega sob picos.', origin: 'GPT · bug-hunter', check: 'Verificador não conseguiu reproduzir sem acesso a carga real de produção.', verdict: 'NÃO VERIFICÁVEL' },
-    { text: 'Dependência left-pad-like travada em versão com CVE conhecido.', origin: 'GPT · dependências', check: 'Verificador confirmou a versão travada; CVE citado é de severidade baixa, não crítica como o relatório original sugeriu.', verdict: 'PARCIAL' },
-    { text: 'Falta de camada de acesso a dados única é urgência de deploy.', origin: 'Claude · arquitetura', check: 'Retirado pelo próprio agente durante o debate — virou melhoria P1.', verdict: 'IMPROCEDENTE' },
-    { text: 'Índice ausente na tabela de eventos exige migração imediata.', origin: 'Claude · dados', check: 'Evidência do índice é real; a urgência depende de projeção de negócio, não de código — virou divergência aberta.', verdict: 'PARCIAL' },
-    { text: 'Timeout de sessão de 30 dias é excessivo para dados sensíveis.', origin: 'Claude · segurança', check: 'Verificador confirmou o valor no config, e que o dado exposto é de fato sensível.', verdict: 'CONFIRMADO' },
-    { text: 'Duplicação de lógica de cálculo de frete em 3 controllers.', origin: 'GPT · melhorias', check: 'Verificador localizou os 3 pontos citados, confirma duplicação quase literal.', verdict: 'CONFIRMADO' },
-    { text: 'Ausência de teste para o fluxo de reenvio de pedido original.', origin: 'Claude · qa', check: 'Verificador confirmou ausência via grep na suíte de testes.', verdict: 'CONFIRMADO' },
-    { text: 'Botão de reenvio não dá feedback visual durante a chamada.', origin: 'Claude · usabilidade', check: 'Verificador confirmou lendo o componente — nenhum estado de loading implementado.', verdict: 'CONFIRMADO' },
-    { text: 'Módulo de relatórios importa um pacote não usado em nenhum lugar.', origin: 'GPT · dependências', check: 'Verificador não encontrou o import citado no arquivo apontado — referência incorreta.', verdict: 'IMPROCEDENTE' },
-  ],
+  judgeReports: {
+    claude: '## Resumo\nConsolidação dos 10 especialistas Claude. 2 achados de severidade alta checados pessoalmente antes de aceitar.\n\n## Achados\n\n### SQL injection em /api/pedidos/buscar\n- Severidade: alto\n- Evidência: app/Controllers/PedidoController.php:212\n- Confiança: alta (reli o arquivo pessoalmente)\n\n(relatório completo omitido no exemplo demo)',
+    openai: '## Resumo\nConsolidação dos 10 especialistas GPT/Codex. Confirmo o achado de SQL injection do lado Claude a partir de ângulo diferente.\n\n## Achados\n\n### .env.production copiado no build\n- Severidade: alto\n- Evidência: ci/build.yml:34\n- Confiança: alta\n\n(relatório completo omitido no exemplo demo)',
+    nvidia: '## Resumo\nO Hermes revisou documentação/legibilidade. 1 achado confirmado.\n\n## Achados\n\n### README desatualizado sobre o fluxo de reenvio\n- Severidade: baixo\n- Evidência: README.md:88\n- Confiança: média',
+  },
   headline: 'Deploy pode seguir, com um bloqueio: segredos ainda saem no build.',
   lede: 'Os dois grupos convergiram em 9 dos 12 pontos materiais. A divergência que importa é sobre o custo de migrar o schema agora — e ela não é resolvível com leitura de código, precisa de um número seu.',
   synthBlocks: [
@@ -139,7 +136,11 @@ const STAGES = [
     return `${total} agentes · ${done} concluídos`;
   } },
   { key: 'debate', num: '02', title: 'Debate cruzado', state: () => `${(STATE.data.debate || []).length} mensagens` },
-  { key: 'verify', num: '04', title: 'Verificação adversarial', state: () => `${(STATE.data.claims || []).length} afirmações` },
+  { key: 'verify', num: '04', title: 'Juízes', state: () => {
+    const jr = STATE.data.judgeReports || {};
+    const n = ['claude', 'openai', 'nvidia'].filter((k) => jr[k]).length;
+    return n ? `${n}/3 relatórios` : 'aguardando';
+  } },
   { key: 'synth', num: '05', title: 'Síntese Opus', state: () => STATE.data.headline ? (STATE.data.dissent ? '1 divergência aberta' : 'sem divergência') : 'aguardando' },
 ];
 
@@ -254,6 +255,7 @@ function normalizeRunData(raw) {
     openaiAgents: raw.openaiAgents || [],
     nvidiaAgents: raw.nvidiaAgents || [],
     arbiters: raw.arbiters || [],
+    judgeReports: raw.judgeReports || { claude: '', openai: '', nvidia: '' },
     debate: raw.debate || [],
     claims: raw.claims || [],
     headline: raw.headline || '',
@@ -444,47 +446,31 @@ function renderDebate() {
 
 function renderVerify() {
   const view = document.getElementById('view-verify');
-  const claims = STATE.data.claims || [];
-  if (!claims.length) {
+  const jr = STATE.data.judgeReports || {};
+  if (!jr.claude && !jr.openai && !jr.nvidia) {
     view.innerHTML = '';
-    view.appendChild(emptyState('Nenhuma afirmação verificada ainda nesta rodada. Esta tela popula assim que a verificação adversarial concluir.'));
+    view.appendChild(emptyState('Nenhum juiz concluiu ainda nesta rodada. Esta tela popula conforme cada grupo termina.'));
     return;
   }
-  const counts = { CONFIRMADO: 0, PARCIAL: 0, IMPROCEDENTE: 0, 'NÃO VERIFICÁVEL': 0 };
-  claims.forEach(c => { counts[c.verdict] = (counts[c.verdict] || 0) + 1; });
-  const summaryDefs = [
-    ['CONFIRMADOS', counts.CONFIRMADO], ['PARCIAIS', counts.PARCIAL],
-    ['IMPROCEDENTES', counts.IMPROCEDENTE], ['NÃO VERIFICÁVEL', counts['NÃO VERIFICÁVEL']],
+  const panels = [
+    { key: 'claude', label: 'Juiz Claude', color: 'var(--accent-2)' },
+    { key: 'openai', label: 'Juiz OpenAI', color: 'var(--blue)' },
+    { key: 'nvidia', label: 'Juiz NVIDIA', color: 'var(--nvidia)' },
   ];
   view.innerHTML = `
     <div style="display:flex;flex-direction:column;gap:16px">
-      <p class="verify-lede">Verificação adversarial: antes de qualquer coisa do lado OpenAI virar recomendação, um agente Claude tenta derrubá-la lendo a fonte. O inverso também roda — o lado GPT audita os achados Claude.</p>
-      <div class="verdict-summary" id="verdictSummary"></div>
-      <div class="claims-table">
-        <div class="claims-head"><div>AFIRMAÇÃO</div><div>ORIGEM</div><div>CHECAGEM</div><div>VEREDICTO</div></div>
-        <div id="claimsRows"></div>
-      </div>
+      <p class="verify-lede">A verificação cruzada entre os três lados agora é feita pelo Líder/Sintetizador (não há mais uma etapa separada com veredito por afirmação) — aqui embaixo estão os relatórios consolidados que ele recebe de cada grupo, antes da síntese final.</p>
+      <div id="judgeReportPanels" style="display:flex;flex-direction:column;gap:14px"></div>
     </div>`;
-
-  const summary = document.getElementById('verdictSummary');
-  summaryDefs.forEach(([label, n]) => {
-    const vc = verdictColor(label === 'CONFIRMADOS' ? 'CONFIRMADO' : label === 'PARCIAIS' ? 'PARCIAL' : label === 'IMPROCEDENTES' ? 'IMPROCEDENTE' : 'X');
-    const box = el('div', 'verdict-stat');
-    box.style.borderColor = vc.border;
-    box.innerHTML = `<span class="verdict-n" style="color:${vc.color}">${n}</span><span class="verdict-label">${label}</span>`;
-    summary.appendChild(box);
-  });
-
-  const rows = document.getElementById('claimsRows');
-  claims.forEach(c => {
-    const vc = verdictColor(c.verdict);
-    const row = el('div', 'claim-row');
-    row.innerHTML = `
-      <div class="claim-text">${escapeHtml(c.text || '')}</div>
-      <div class="claim-origin" style="color:${(c.origin || '').startsWith('Claude') ? 'var(--accent-2)' : 'var(--blue)'}">${escapeHtml(c.origin || '')}</div>
-      <div class="claim-check">${escapeHtml(c.check || '')}</div>
-      <div><span class="verdict-pill" style="color:${vc.color};border-color:${vc.border}">${escapeHtml(c.verdict || '')}</span></div>`;
-    rows.appendChild(row);
+  const wrap = document.getElementById('judgeReportPanels');
+  panels.forEach(p => {
+    const text = jr[p.key];
+    const card = el('div', 'judge-report-card');
+    card.style.cssText = 'border:1px solid var(--border-2);border-radius:8px;padding:14px 16px;background:var(--bg-6)';
+    card.innerHTML = `
+      <div style="font-size:13px;font-weight:600;color:${p.color};margin-bottom:8px">${p.label}</div>
+      <div style="white-space:pre-wrap;font-size:12.5px;line-height:1.6;color:var(--text-3);max-height:340px;overflow-y:auto">${text ? escapeHtml(text) : '<span style="color:var(--text-9)">aguardando…</span>'}</div>`;
+    wrap.appendChild(card);
   });
 }
 
