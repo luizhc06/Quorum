@@ -1,6 +1,6 @@
 {
-  "_comment": "IDs de modelo por papel. Nunca hardcoded em código — todo script/prompt lê daqui. Duas seções porque há dois jeitos de rodar o lado Claude: 'agent_tool_aliases' são os nomes curtos aceitos pela ferramenta Agent/Workflow do Claude Code (usado quando EU oriento manualmente, sem custo de API — CAMINHO PADRÃO); 'claude_engine' são os IDs literais da Messages API (usado por orchestrate.js/claude-side/engine, que roda sozinho sem mim, mas cobra por token). Lado OpenAI tem dois provedores — ver 'openai_provider' abaixo.",
-  "_aviso_provedores": "'openai_provider': 'codex-local' (padrão, sem custo — usa `codex exec` já autenticado via `codex login` na conta ChatGPT/Codex do usuário) ou 'openai-api' (cobrado por token via Responses API, mantido pra ambientes sem Codex logado, ex. servidor/CI). Ver openai-side/src/providers/codex-local.js para as diferenças de garantia de segurança entre os dois.",
+  "_comment": "IDs de modelo por papel. Nunca hardcoded em código — todo script/prompt lê daqui. Duas seções porque há dois jeitos de rodar o lado Claude: 'agent_tool_aliases' são os nomes curtos aceitos pela ferramenta Agent/Workflow do Claude Code (usado quando EU oriento manualmente, dentro de uma conversa ativa comigo); os IDs literais logo abaixo (claude_specialists, claude_judge etc.) são usados por orchestrate.js/claude-side/engine, que roda SOZINHO, sem conversa ativa comigo — desde 05/08/2026 isso também não tem custo de API por padrão (ver 'claude_provider' abaixo), mesma lógica que o lado OpenAI já tinha com 'openai_provider'/codex-local.",
+  "_aviso_provedores": "'claude_provider': 'claude-code-local' (padrão, sem custo — usa `claude -p` já autenticado na assinatura Claude Code do usuário) ou 'claude-api' (cobrado por token via Messages API, exige ANTHROPIC_API_KEY, mantido pra ambientes sem Claude Code logado, ex. servidor/CI). Ver claude-side/engine/providers/claude-code-local.js. 'openai_provider': 'codex-local' (padrão, sem custo — usa `codex exec` já autenticado via `codex login` na conta ChatGPT/Codex do usuário) ou 'openai-api' (cobrado por token via Responses API, mesma lógica de fallback). Ver openai-side/src/providers/codex-local.js para as diferenças de garantia de segurança entre os dois lados.",
 
   "agent_tool_aliases": {
     "claude_specialists": "sonnet",
@@ -15,6 +15,8 @@
   "claude_verifier": "claude-sonnet-5",
   "claude_leader": "claude-opus-5",
   "claude_writer_low_cost": "claude-haiku-4-5-20251001",
+
+  "claude_provider": "claude-code-local",
 
   "openai_provider": "codex-local",
   "openai_specialists": "gpt-5.6-terra",

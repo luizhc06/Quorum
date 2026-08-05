@@ -15,7 +15,7 @@ const path = require('path');
 require('./env').loadEnvFile(__dirname);
 
 const { createClient: createClaudeClient } = require('./claude-side/engine/client');
-const { runClaudeSide, runOneAgent: runOneClaudeAgent, buildSystemPrompt, loadPersona } = require('./claude-side/engine/orchestrator');
+const { runClaudeSide, runOneAgentAny: runOneClaudeAgent, buildSystemPrompt, loadPersona } = require('./claude-side/engine/orchestrator');
 const { buildToolset: buildClaudeToolset } = require('./claude-side/engine/tools');
 
 const { createClient: createOpenaiClient } = require('./openai-side/src/client');
@@ -126,8 +126,15 @@ async function main() {
       elapsed: '00:00', cost: 'US$ 0,00',
     };
     state.claudeAgents = claudeSpecs.map((s) => ({
+      // Bug pré-existente (não é novo): specs com "foco" inline (bug-hunter)
+      // mostravam a lente no card; specs com "promptFile" (arquitetura,
+      // segurança, regras-negócio, engenharia-software, dados) ficavam com
+      // o card vazio, porque s.foco é undefined nesse caso — loadPersona(s)
+      // lê o .md quando não há foco inline, mesma função que o motor já usa
+      // pra montar o system prompt de verdade, então o texto mostrado bate
+      // com o que o agente realmente recebe.
       key: s.name, name: s.titulo || s.name, model: s.model ? s.model : 'Sonnet 5',
-      state: 'queued', findings: 0, lens: s.foco ? s.foco.slice(0, 140) : '', elapsed: '—',
+      state: 'queued', findings: 0, lens: loadPersona(s).slice(0, 140), elapsed: '—',
     }));
     state.openaiAgents = openaiSpecs.map((s) => ({
       key: s.name, name: s.titulo || s.name, model: s.model ? s.model : 'GPT-5.6 Terra',
@@ -174,7 +181,14 @@ async function main() {
     });
   }
 
-  const claudeClient = createClaudeClient();
+  // Só cria o client da Messages API se algo realmente precisar dele — com
+  // o provedor padrão (claude-code-local) isso nunca acontece, e não faz
+  // sentido exigir ANTHROPIC_API_KEY (cobrada por token) só pra rodar via
+  // `claude -p` (assinatura). Espelha o mesmo padrão já usado pro lado
+  // OpenAI logo abaixo.
+  let claudeClient = null;
+  try { claudeClient = createClaudeClient(); } catch (e) { /* ok — provedor padrão não usa a API */ }
+  const claudeProvider = models.claude_provider || 'claude-code-local';
   const outputContract = fs.readFileSync(path.join(__dirname, 'contracts', 'output-contract.md'), 'utf8');
   const { schemas: claudeSchemas, handlers: claudeHandlers } = buildClaudeToolset(scope, limits.run_command, contextPath);
 
@@ -197,7 +211,7 @@ async function main() {
     client: claudeClient, name: 'leader-kickoff', model: models.claude_leader,
     systemPrompt: buildSystemPrompt(loadPersona(claudeAgentsConfig.leader), outputContract, !!contextPath),
     task: kickoffTask, schemas: claudeSchemas, handlers: claudeHandlers,
-    limits: limits.claude_leader_kickoff, outDir,
+    limits: limits.claude_leader_kickoff, outDir, scope, contextPath, provider: claudeProvider,
   });
   const roundTask = kickoffResult.status === 'ok' && kickoffResult.finalText.trim() ? kickoffResult.finalText.trim() : args.task;
   patchState(statePath, (state) => { state.roundBrief = kickoffResult.status === 'ok' ? kickoffResult.finalText : null; });
@@ -300,7 +314,7 @@ async function main() {
     systemPrompt: buildSystemPrompt(loadPersona(claudeAgentsConfig.judgeNvidia), outputContract, !!contextPath),
     task: `Relatório(s) bruto(s) do especialista Hermes:\n\n${nvidiaDigest}`,
     schemas: claudeSchemas, handlers: claudeHandlers, limits: limits.claude_verifier,
-    outDir: path.join(outDir, 'claude-side'),
+    outDir: path.join(outDir, 'claude-side'), scope, contextPath, provider: claudeProvider,
   });
   updateArbiter('juiz-nvidia', { state: judgeNvidiaResult.status === 'ok' ? 'done' : judgeNvidiaResult.status, role: 'Consolidou o relatório do Grupo NVIDIA/Hermes.' });
   pushActivity(`Juiz NVIDIA concluiu (status: ${judgeNvidiaResult.status}).`);
@@ -329,7 +343,7 @@ async function main() {
     client: claudeClient, name: 'leader-synthesizer', model: models.claude_leader,
     systemPrompt: buildSystemPrompt(leaderPersona, outputContract, !!contextPath),
     task: leaderTask, schemas: claudeSchemas, handlers: claudeHandlers,
-    limits: limits.claude_leader || limits.claude_judge, outDir,
+    limits: limits.claude_leader || limits.claude_judge, outDir, scope, contextPath, provider: claudeProvider,
   });
 
   if (leaderResult.status === 'ok') {

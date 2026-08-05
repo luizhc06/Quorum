@@ -4,6 +4,7 @@ const path = require('path');
 const { runAgentLoop, AgentAbortedError } = require('./agent-loop');
 const { buildToolset } = require('./tools');
 const { createTranscriptLogger } = require('./transcript');
+const { runClaudeCodeAgent } = require('./providers/claude-code-local');
 const { runGroupWithMutualAid } = require('../../mutual-aid');
 
 const CONTEXT_NOTE =
@@ -60,6 +61,38 @@ async function runOneAgent({ client, name, model, systemPrompt, task, schemas, h
   }
 }
 
+// Escolhe entre os dois motores do lado Claude por especialista:
+// claude-code-local (padrão — usa `claude -p` já autenticado na assinatura
+// do usuário, sem custo de API) ou claude-api (o motor original, Messages
+// API, cobrado por token via ANTHROPIC_API_KEY — mantido pra ambientes sem
+// Claude Code logado, ex. servidor/CI). Espelha exatamente
+// openai-side/src/orchestrator.js → runOneAgentAny. Ver
+// claude-side/engine/providers/claude-code-local.js pras diferenças de
+// garantia de segurança entre os dois.
+async function runOneAgentAny({ client, name, model, systemPrompt, task, schemas, handlers, limits, outDir, scope, contextPath, provider, onStateChange }) {
+  if (provider === 'claude-code-local') {
+    onStateChange?.({ state: 'running' });
+    const result = await runClaudeCodeAgent({ name, model, systemPrompt, task, scope, contextPath, limits, outDir });
+    fs.mkdirSync(outDir, { recursive: true });
+    fs.writeFileSync(path.join(outDir, `${name}.json`), JSON.stringify(result, null, 2));
+    onStateChange?.({
+      state: result.status === 'ok' ? 'done' : result.status,
+      findings: countFindings(result.finalText),
+      usage: result.usage,
+      elapsedMs: result.elapsedMs,
+    });
+    return result;
+  }
+  if (!client) {
+    const result = { agent: name, model, status: 'failed', reason: 'claude_client_missing', error: 'provider "claude-api" pedido mas ANTHROPIC_API_KEY não está definida', elapsedMs: 0 };
+    fs.mkdirSync(outDir, { recursive: true });
+    fs.writeFileSync(path.join(outDir, `${name}.json`), JSON.stringify(result, null, 2));
+    onStateChange?.({ state: 'failed', elapsedMs: 0 });
+    return result;
+  }
+  return runOneAgent({ client, name, model, systemPrompt, task, schemas, handlers, limits, outDir, onStateChange });
+}
+
 /**
  * Roda os especialistas Claude em paralelo (falha de um não derruba os
  * outros) e depois o Juiz. Espelha openai-side/src/orchestrator.js — mesma
@@ -80,10 +113,11 @@ async function runClaudeSide({ client, agentsConfig, models, limits, scope, task
     maxIterations: Math.max(3, Math.ceil(limits.claude_specialist.maxIterations / 2)),
     maxOutputTokensPerTurn: Math.ceil(limits.claude_specialist.maxOutputTokensPerTurn * 0.6),
   };
+  const providerFor = (spec) => spec.provider || models.claude_provider || 'claude-code-local';
   const specialistResults = await runGroupWithMutualAid(
     agentsConfig.specialists,
     (spec) =>
-      runOneAgent({
+      runOneAgentAny({
         client,
         name: spec.name,
         model: spec.model || models.claude_specialists,
@@ -93,19 +127,25 @@ async function runClaudeSide({ client, agentsConfig, models, limits, scope, task
         handlers,
         limits: limits.claude_specialist,
         outDir,
+        scope,
+        contextPath,
+        provider: providerFor(spec),
         onStateChange: (u) => onAgentUpdate?.(spec.name, u),
       }),
     (spec) =>
-      runOneAgent({
+      runOneAgentAny({
         client,
         name: `${spec.name}-assist`,
-        model: models.claude_writer_low_cost,
+        model: providerFor(spec) === 'claude-code-local' ? (spec.model || models.claude_specialists) : models.claude_writer_low_cost,
         systemPrompt: buildSystemPrompt(loadPersona(spec), outputContract, !!contextPath),
         task,
         schemas,
         handlers,
         limits: helperLimits,
         outDir,
+        scope,
+        contextPath,
+        provider: providerFor(spec),
       }),
     {
       staleAfterMs: Math.ceil(limits.claude_specialist.maxWallClockMs * 0.55),
@@ -146,7 +186,8 @@ async function runClaudeSide({ client, agentsConfig, models, limits, scope, task
     (failedNames.length ? `Atenção: os agentes [${failedNames.join(', ')}] falharam e não produziram relatório — não finja cobertura completa.\n\n` : '') +
     `Relatórios brutos dos ${okCount}/${specialistResults.length} especialistas que concluíram:\n\n${digestForJudge}`;
 
-  const judgeResult = await runOneAgent({
+  const judgeProvider = providerFor(agentsConfig.judge);
+  const judgeResult = await runOneAgentAny({
     client,
     name: agentsConfig.judge.name,
     model: agentsConfig.judge.model || models.claude_judge,
@@ -156,10 +197,13 @@ async function runClaudeSide({ client, agentsConfig, models, limits, scope, task
     handlers,
     limits: limits.claude_judge,
     outDir,
+    scope,
+    contextPath,
+    provider: judgeProvider,
     onStateChange: (u) => onAgentUpdate?.(agentsConfig.judge.name, u),
   });
 
   return { specialists: specialistResults, judge: judgeResult };
 }
 
-module.exports = { runClaudeSide, runOneAgent, buildSystemPrompt, loadPersona };
+module.exports = { runClaudeSide, runOneAgent, runOneAgentAny, buildSystemPrompt, loadPersona };

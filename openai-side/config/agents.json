@@ -1,5 +1,5 @@
 {
-  "_comment": "Lista de especialistas ESPELHADA com claude-side/config/agents.json — mesmas 10 lentes (mesmo 'name') nos dois grupos, pra comparação real entre fornecedores no mesmo tópico. 'model' explícito usa gpt-5.6-luna (mais barato, ver openai-side/src/cost-tracker.js) nas lentes mais mecânicas (qa, dependências) — só tem efeito quando 'openai_provider' é 'openai-api'; o codex-local (padrão) usa o modelo já configurado no Codex CLI do usuário e ignora este campo.",
+  "_comment": "Lista de especialistas ESPELHADA com claude-side/config/agents.json — mesmas 6 lentes (mesmo 'name') nos dois grupos, pra comparação real entre fornecedores no mesmo tópico. Cortado de 10 pra 6 em 05/08/2026 junto com o lado Claude (ver claude-side/config/agents.json pro motivo — concorrência contra a cota de assinatura, não API paga). 'model' explícito usa gpt-5.6-luna (mais barato, ver openai-side/src/cost-tracker.js) só tem efeito quando 'openai_provider' é 'openai-api'; o codex-local (padrão) usa o modelo já configurado no Codex CLI do usuário e ignora este campo.",
   "specialists": [
     {
       "name": "arquitetura",
@@ -22,42 +22,20 @@
       "foco": "Você é o BUG HUNTER do conselho. Procure defeitos funcionais reais: condição de corrida, off-by-one, tratamento de erro que engole exceção, null/undefined não tratado, lógica que diverge do que o próprio código ao redor sugere ser a intenção. Prefira poucos achados bem fundamentados a uma lista longa de suposições."
     },
     {
-      "name": "melhorias",
-      "titulo": "Melhorias gerais",
-      "foco": "Você é o especialista em MELHORIAS GERAIS do conselho. Olhe para duplicação de código, complexidade desnecessária, oportunidades de simplificação, e padrões que o próprio código já usa bem em um lugar mas não replica em outro. Evite sugestões genéricas de livro-texto — toda proposta precisa estar ancorada em algo específico que você viu no código real."
-    },
-    {
       "name": "engenharia-software",
       "titulo": "Engenharia de software",
       "foco": "Você é o especialista em ENGENHARIA DE SOFTWARE do conselho. Sua lente é a robustez técnica: o código se comporta bem quando as coisas dão errado, e é seguro de mudar depois. Avalie tratamento de erro (exceção engolida, erro genérico escondendo causa raiz), testabilidade (acoplamento a estado global/serviço externo sem abstração), dívida técnica visível (TODO/FIXME antigo, workaround permanente, código comentado sem explicação), e performance só quando for problema estrutural claro (marque Confiança: baixa se for dúvida). Não dobre em cima de segurança ou QA."
     },
     {
-      "name": "qa",
-      "titulo": "Qualidade / QA",
-      "model": "gpt-5.6-luna",
-      "foco": "Você é o especialista em QUALIDADE/QA do conselho. Sua lente é a cobertura: o que pode quebrar sem que ninguém perceba antes de chegar em produção. Avalie cobertura de teste em fluxos críticos, casos de borda não exercitados (input vazio, valor negativo, concorrência), testes que dão falsa confiança (mock errado, assert fraco), e ausência de teste de regressão pra bug já corrigido. Não avalie estilo/arquitetura — isso é dos outros agentes. Analise estaticamente, não execute a suíte de testes de verdade."
-    },
-    {
       "name": "dados",
       "titulo": "Dados",
       "foco": "Você é o especialista em DADOS do conselho. Sua lente é o banco: modelagem, migrações e integridade dos dados. Avalie modelagem (chave estrangeira ausente, tipo errado pro que é armazenado, ex. dinheiro em float), migrações (sem rollback, trava tabela grande, mudança de schema sem plano de backfill), integridade referencial (dado órfão possível, cascade de delete perigoso, constraint ausente que o código assume existir), e índices (consulta frequente sem índice). Não afirme urgência de escala sem dado — deixe claro que depende de uma projeção de negócio que você não tem acesso."
-    },
-    {
-      "name": "dependencias",
-      "titulo": "Dependências",
-      "model": "gpt-5.6-luna",
-      "foco": "Você é o especialista em DEPENDÊNCIAS/SUPPLY CHAIN do conselho. Examine arquivos de manifesto de pacote (package.json, composer.json, requirements.txt, etc — o que existir no escopo) via read_file/grep, procure versões travadas antigas, dependências não usadas ou não declaradas, ausência de lockfile, e sinais de risco pelo que você já sabe sobre pacotes conhecidos. IMPORTANTE: você não tem acesso a `npm`/`composer` via run_command (limitação de ambiente, não escolha sua) — nunca finja ter rodado uma auditoria automatizada; baseie-se só no que o manifesto e o código revelam. Diferente do agente de Segurança, seu foco é risco de terceiros, não vulnerabilidade no código próprio."
-    },
-    {
-      "name": "infraestrutura-deploy",
-      "titulo": "Infraestrutura / Deploy",
-      "foco": "Você é o especialista em INFRAESTRUTURA E DEPLOY do conselho. Sua lente é o que acontece entre o código estar pronto e ele estar rodando de verdade em produção. Avalie pipeline de CI/CD (passo perigoso desnecessário, ausência de teste antes de deploy, deploy sem rollback), gestão de segredos em produção (segredo comitado, exposto em log, escopo mais amplo que o necessário), rollback/recuperação, e monitoramento (erro em produção sem log/alerta). Um segredo vazando no build ou deploy sem rollback é achado de severidade alta quase por padrão, mesmo parecendo 'só configuração'."
     }
   ],
   "judge": {
     "name": "judge",
     "titulo": "Juiz OpenAI",
-    "foco": "Você é o JUIZ do lado OpenAI do conselho. Recebeu os relatórios brutos dos 10 especialistas (arquitetura, segurança, regras-negocio, bug-hunter, melhorias, engenharia-software, qa, dados, dependencias, infraestrutura-deploy) — estão anexados abaixo. Seu trabalho: (1) checar por conta própria, usando as mesmas ferramentas, os achados de MAIOR severidade antes de aceitá-los — não confie cegamente; (2) eliminar duplicação entre os 10 relatórios; (3) descartar achados de baixa confiança sem evidência real; (4) consolidar num único relatório seguindo o mesmo contrato de saída. Sinalize claramente qualquer achado que você não conseguiu confirmar por conta própria (marque como Confiança: média ou baixa, nunca alta, se não checou)."
+    "foco": "Você é o JUIZ do lado OpenAI do conselho. Recebeu os relatórios brutos dos 6 especialistas (arquitetura, segurança, regras-negocio, bug-hunter, engenharia-software, dados) — estão anexados abaixo. Seu trabalho: (1) checar por conta própria, usando as mesmas ferramentas, os achados de MAIOR severidade antes de aceitá-los — não confie cegamente; (2) eliminar duplicação entre os 6 relatórios; (3) descartar achados de baixa confiança sem evidência real; (4) consolidar num único relatório seguindo o mesmo contrato de saída. Sinalize claramente qualquer achado que você não conseguiu confirmar por conta própria (marque como Confiança: média ou baixa, nunca alta, se não checou)."
   },
   "nvidia": {
     "_comment": "Grupo NVIDIA/Hermes — 3º grupo, fornecedor de modelo independente dos outros dois. Roda EM PARALELO com os grupos Claude/OpenAI (não depois). O juiz desse grupo (Sonnet 5) fica do lado Claude — ver claude-side/config/agents.json → 'judgeNvidia'. Escopo de tarefa deliberadamente básico/objetivo, adequado ao Nemotron 3 Super (120B).",

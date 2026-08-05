@@ -2,44 +2,46 @@
   "_comment": "Limites por papel do lado OpenAI (laço de ferramentas via Responses API). Três tetos independentes: iterações (rodadas do laço), tempo de parede, e custo em USD calculado de resp.usage a cada turno.",
   "_aviso_web_search": "O especialista 'pesquisa' usa a ferramenta hospedada web_search (ver openai-side/config/agents.json). O custo da busca em si (cobrado à parte por chamada pela OpenAI) NÃO aparece em resp.usage e por isso NÃO entra no cálculo de maxCostUsd — o teto de custo deste agente é subestimado na prática. Não é um bug do cost-tracker, é uma limitação de não haver esse dado na resposta da API.",
 
+  "_aviso_wallclock_local": "maxWallClockMs aumentado em 05/08/2026 (achado ao vivo, run 20260805-a547b0): sob claude-code-local/codex-local (padrão desde a troca de motor) os tetos antigos, calibrados pro motor via API direta em processo, causaram timeout em 1 especialista Claude (nos dois lados do mutual-aid), 1 especialista OpenAI e o Juiz OpenAI inteiro. maxIterations/maxOutputTokensPerTurn/maxToolOutputChars continuam existindo só pro fallback -api (a CLI local ignora esses campos, só respeita maxWallClockMs e maxCostUsd via --max-budget-usd).",
+
   "openai_specialist": {
     "maxIterations": 20,
-    "maxWallClockMs": 300000,
+    "maxWallClockMs": 480000,
     "maxOutputTokensPerTurn": 4000,
     "maxToolOutputChars": 20000,
     "maxCostUsd": 1.5
   },
   "openai_judge": {
     "maxIterations": 10,
-    "maxWallClockMs": 240000,
+    "maxWallClockMs": 360000,
     "maxOutputTokensPerTurn": 4000,
     "maxToolOutputChars": 20000,
     "maxCostUsd": 2.0
   },
   "claude_specialist": {
     "maxIterations": 20,
-    "maxWallClockMs": 300000,
+    "maxWallClockMs": 480000,
     "maxOutputTokensPerTurn": 4000,
     "maxToolOutputChars": 20000,
     "maxCostUsd": 1.5
   },
   "claude_judge": {
     "maxIterations": 10,
-    "maxWallClockMs": 240000,
+    "maxWallClockMs": 360000,
     "maxOutputTokensPerTurn": 4000,
     "maxToolOutputChars": 20000,
     "maxCostUsd": 2.0
   },
   "claude_verifier": {
     "maxIterations": 10,
-    "maxWallClockMs": 180000,
+    "maxWallClockMs": 240000,
     "maxOutputTokensPerTurn": 3000,
     "maxToolOutputChars": 15000,
     "maxCostUsd": 1.0
   },
   "claude_leader": {
     "maxIterations": 6,
-    "maxWallClockMs": 240000,
+    "maxWallClockMs": 360000,
     "maxOutputTokensPerTurn": 4000,
     "maxToolOutputChars": 15000,
     "maxCostUsd": 2.0
@@ -47,15 +49,15 @@
   "claude_leader_kickoff": {
     "_comment": "Fase inicial do Líder — pesquisa rápida (código + contexto extra) pra montar o brief da rodada, ANTES dos 3 grupos rodarem. Mais enxuto que claude_leader (que faz a síntese final): não precisa explorar fundo, só calibrar direção.",
     "maxIterations": 8,
-    "maxWallClockMs": 150000,
+    "maxWallClockMs": 240000,
     "maxOutputTokensPerTurn": 2000,
     "maxToolOutputChars": 15000,
     "maxCostUsd": 1.0
   },
   "nvidia_specialist": {
-    "_comment": "Sem maxCostUsd — plano free da NVIDIA não cobra por token, só limita taxa (40 req/min). Iterações/tempo mais curtos que os outros grupos: tarefa deliberadamente básica (ver openai-side/config/agents.json → 'nvidia').",
-    "maxIterations": 8,
-    "maxWallClockMs": 120000,
+    "_comment": "Sem maxCostUsd — plano free da NVIDIA não cobra por token, só limita taxa (40 req/min). maxIterations/maxWallClockMs aumentados em 05/08/2026: Hermes bateu max_iterations_exceeded em 27s sem produzir texto final nem registrar chamada de ferramenta no transcript (run 20260805-a547b0) — sintoma ainda não investigado a fundo, este aumento é paliativo, não correção da causa raiz.",
+    "maxIterations": 16,
+    "maxWallClockMs": 180000,
     "maxOutputTokensPerTurn": 2500,
     "maxToolOutputChars": 15000
   },
