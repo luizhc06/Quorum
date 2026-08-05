@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1040" font-family="'IBM Plex Sans','Segoe UI',sans-serif">
+  <defs>
+    <marker id="arrow-claude" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#e0a55c"/>
+    </marker>
+    <marker id="arrow-openai" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#7fa9c9"/>
+    </marker>
+    <marker id="arrow-nvidia" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#9dbb4f"/>
+    </marker>
+    <marker id="arrow-neutral" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#86806f"/>
+    </marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#d99b52"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1440" height="1040" fill="#0c0b09"/>
+
+  <text x="720" y="42" text-anchor="middle" font-size="26" font-weight="600" fill="#f2ece0">Quorum — Fluxo do Conselho</text>
+  <text x="720" y="66" text-anchor="middle" font-size="13" fill="#86806f">3 grupos de especialistas em paralelo → juízes → verificação adversarial → síntese final</text>
+
+  <!-- ===== Linha 1: grupos de especialistas (paralelo) ===== -->
+  <g>
+    <rect x="40" y="94" width="430" height="150" rx="8" fill="#121109" stroke="#2c2921"/>
+    <rect x="40" y="94" width="5" height="150" rx="2" fill="#e0a55c"/>
+    <text x="62" y="122" font-size="17" font-weight="600" fill="#e0a55c">Grupo Claude</text>
+    <text x="62" y="142" font-size="12" fill="#b5ad9d">10 especialistas · Sonnet 5 · leitura completa do repo</text>
+    <text x="62" y="166" font-size="11" fill="#86806f">arquitetura · segurança · regras de negócio · usabilidade</text>
+    <text x="62" y="184" font-size="11" fill="#86806f">melhorias · engenharia de software · QA · dados</text>
+    <text x="62" y="202" font-size="11" fill="#86806f">design/UI · infraestrutura &amp; deploy</text>
+    <text x="62" y="226" font-size="11" fill="#605a4f" font-style="italic">via Agent tool (Claude Code, dentro do Max — sem custo extra)</text>
+  </g>
+
+  <g>
+    <rect x="505" y="94" width="430" height="150" rx="8" fill="#110f0b" stroke="#2c2921"/>
+    <rect x="505" y="94" width="5" height="150" rx="2" fill="#7fa9c9"/>
+    <text x="527" y="122" font-size="17" font-weight="600" fill="#7fa9c9">Grupo OpenAI / Codex</text>
+    <text x="527" y="142" font-size="12" fill="#b5ad9d">5 especialistas · GPT-5.6 Terra</text>
+    <text x="527" y="166" font-size="11" fill="#86806f">pesquisa competitiva · segurança</text>
+    <text x="527" y="184" font-size="11" fill="#86806f">bug-hunter · melhorias gerais</text>
+    <text x="527" y="202" font-size="11" fill="#86806f">dependências / supply-chain</text>
+    <text x="527" y="226" font-size="11" fill="#605a4f" font-style="italic">via codex-local (plano ChatGPT já pago — sem custo de API)</text>
+  </g>
+
+  <g>
+    <rect x="970" y="94" width="430" height="150" rx="8" fill="#0f110b" stroke="#2c2921"/>
+    <rect x="970" y="94" width="5" height="150" rx="2" fill="#9dbb4f"/>
+    <text x="992" y="122" font-size="17" font-weight="600" fill="#9dbb4f">Grupo NVIDIA / Hermes</text>
+    <text x="992" y="142" font-size="12" fill="#b5ad9d">1 especialista · Nemotron 3 Super 120B</text>
+    <text x="992" y="166" font-size="11" fill="#86806f">documentação &amp; legibilidade</text>
+    <text x="992" y="184" font-size="11" fill="#86806f">fornecedor de modelo independente</text>
+    <text x="992" y="202" font-size="11" fill="#86806f">(reduz viés compartilhado entre fornecedores)</text>
+    <text x="992" y="226" font-size="11" fill="#605a4f" font-style="italic">via plano free NVIDIA NIM (40 req/min — sem custo)</text>
+  </g>
+
+  <!-- ===== Setas linha 1 → linha 2 ===== -->
+  <path d="M255,244 L255,286" stroke="#e0a55c" stroke-width="1.6" fill="none" marker-end="url(#arrow-claude)"/>
+  <path d="M720,244 L720,286" stroke="#7fa9c9" stroke-width="1.6" fill="none" marker-end="url(#arrow-openai)"/>
+
+  <!-- ===== Linha 2: juízes (só Claude e OpenAI — NVIDIA não tem juiz) ===== -->
+  <g>
+    <rect x="40" y="290" width="430" height="80" rx="8" fill="#121109" stroke="#e0a55c" stroke-width="1.2"/>
+    <text x="62" y="317" font-size="15" font-weight="600" fill="#f2ece0">Juiz Claude</text>
+    <text x="62" y="337" font-size="11" fill="#b5ad9d">Opus 5 · com leitura própria do código</text>
+    <text x="62" y="354" font-size="11" fill="#86806f">Consolida os 10 relatórios, descarta baixa confiança</text>
+  </g>
+
+  <g>
+    <rect x="505" y="290" width="430" height="80" rx="8" fill="#110f0b" stroke="#7fa9c9" stroke-width="1.2"/>
+    <text x="527" y="317" font-size="15" font-weight="600" fill="#f2ece0">Juiz OpenAI</text>
+    <text x="527" y="337" font-size="11" fill="#b5ad9d">GPT-5.6 Sol · com leitura própria do código</text>
+    <text x="527" y="354" font-size="11" fill="#86806f">Consolida os 5 relatórios antes de aceitar achados</text>
+  </g>
+
+  <text x="1185" y="270" text-anchor="middle" font-size="11" fill="#9dbb4f" font-style="italic">sem juiz próprio —</text>
+  <text x="1185" y="284" text-anchor="middle" font-size="11" fill="#9dbb4f" font-style="italic">relatório bruto segue direto</text>
+
+  <!-- ===== Seta Juiz OpenAI → Verificação ===== -->
+  <path d="M720,370 L720,406" stroke="#7fa9c9" stroke-width="1.6" fill="none" marker-end="url(#arrow-openai)"/>
+  <text x="736" y="392" font-size="10" fill="#605a4f">achados brutos</text>
+
+  <!-- ===== Linha 3: verificação adversarial (só sobre o Juiz OpenAI) ===== -->
+  <g>
+    <rect x="505" y="410" width="430" height="76" rx="8" fill="#110f0b" stroke="#d99b52" stroke-width="1.2"/>
+    <text x="527" y="436" font-size="15" font-weight="600" fill="#f2ece0">Verificação Adversarial</text>
+    <text x="527" y="455" font-size="11" fill="#b5ad9d">1-3 agentes Sonnet 5, em paralelo</text>
+    <text x="527" y="472" font-size="11" fill="#86806f">Confere no código real os achados do Juiz OpenAI</text>
+  </g>
+
+  <!-- ===== Setas de convergência pro Líder ===== -->
+  <path d="M255,370 C255,470 420,530 550,556" stroke="#e0a55c" stroke-width="1.4" fill="none" stroke-dasharray="1,0" marker-end="url(#arrow-claude)"/>
+  <text x="310" y="470" font-size="10" fill="#8b7350" font-style="italic">direto — sem verificação cruzada ainda</text>
+
+  <path d="M720,486 L720,556" stroke="#d99b52" stroke-width="1.6" fill="none" marker-end="url(#arrow-amber)"/>
+
+  <path d="M1185,244 C1150,340 990,440 890,556" stroke="#9dbb4f" stroke-width="1.4" fill="none" stroke-dasharray="6,5" marker-end="url(#arrow-nvidia)"/>
+  <text x="1000" y="380" font-size="10" fill="#7a9a48" font-style="italic">relatório bruto — sem juiz nem verificação</text>
+
+  <!-- ===== Líder / Sintetizador ===== -->
+  <g>
+    <rect x="505" y="560" width="430" height="110" rx="8" fill="#121109" stroke="#8fae76" stroke-width="1.6"/>
+    <rect x="505" y="560" width="5" height="110" rx="2" fill="#8fae76"/>
+    <text x="527" y="590" font-size="17" font-weight="600" fill="#f2ece0">Líder / Sintetizador</text>
+    <text x="527" y="610" font-size="11" fill="#b5ad9d">Opus 5 · com leitura própria do código</text>
+    <text x="527" y="628" font-size="11" fill="#86806f">Cruza os 3 lados, resolve divergência, decide o que</text>
+    <text x="527" y="644" font-size="11" fill="#86806f">entra na síntese final — sinaliza o que não bateu</text>
+    <text x="527" y="661" font-size="10" fill="#605a4f" font-style="italic">trata achados sem juiz/verificação com mais cautela</text>
+  </g>
+
+  <!-- ===== Seta Líder → Relatório Final ===== -->
+  <path d="M720,670 L720,702" stroke="#8fae76" stroke-width="1.8" fill="none" marker-end="url(#arrow-neutral)"/>
+
+  <!-- ===== Relatório Final ===== -->
+  <g>
+    <rect x="430" y="706" width="580" height="150" rx="8" fill="#121109" stroke="#e6e0d4" stroke-width="1.2"/>
+    <text x="452" y="734" font-size="17" font-weight="600" fill="#f2ece0">Relatório Final</text>
+    <text x="452" y="758" font-size="12" fill="#b5ad9d">Headline + lede — resumo executivo em 1 parágrafo</text>
+    <text x="452" y="778" font-size="12" fill="#d4694a">P0 · BLOQUEIA — precisa de ação antes de seguir</text>
+    <text x="452" y="798" font-size="12" fill="#d99b52">P1 · ALTO RETORNO — vale a pena, não é urgente</text>
+    <text x="452" y="818" font-size="12" fill="#605a4f">DESCARTADO — com motivo, nunca silenciosamente</text>
+    <text x="452" y="838" font-size="12" fill="#8a7fc9">Divergência aberta — quando os lados não batem</text>
+  </g>
+
+  <!-- ===== Painel ao vivo ===== -->
+  <path d="M720,856 L720,892" stroke="#605a4f" stroke-width="1.4" fill="none" stroke-dasharray="4,4" marker-end="url(#arrow-neutral)"/>
+  <g>
+    <rect x="540" y="896" width="360" height="60" rx="6" fill="#0e0d0a" stroke="#33302a" stroke-dasharray="4,4"/>
+    <text x="720" y="920" text-anchor="middle" font-size="13" fill="#e6e0d4">Painel ao vivo — localhost:7331</text>
+    <text x="720" y="940" text-anchor="middle" font-size="11" fill="#86806f">runs/&lt;id&gt;/state.json → polling a cada 3s</text>
+  </g>
+
+  <!-- ===== Legenda ===== -->
+  <g font-size="11">
+    <rect x="40" y="978" width="14" height="14" rx="3" fill="#e0a55c"/>
+    <text x="60" y="990" fill="#b5ad9d">Claude</text>
+    <rect x="140" y="978" width="14" height="14" rx="3" fill="#7fa9c9"/>
+    <text x="160" y="990" fill="#b5ad9d">OpenAI / Codex</text>
+    <rect x="290" y="978" width="14" height="14" rx="3" fill="#9dbb4f"/>
+    <text x="310" y="990" fill="#b5ad9d">NVIDIA / Hermes</text>
+    <rect x="430" y="978" width="14" height="14" rx="3" fill="#d99b52"/>
+    <text x="450" y="990" fill="#b5ad9d">Verificação adversarial</text>
+
+    <line x1="40" y1="1012" x2="70" y2="1012" stroke="#86806f" stroke-width="1.6"/>
+    <text x="78" y="1016" fill="#86806f">sólido = passou por juiz/verificação</text>
+    <line x1="330" y1="1012" x2="360" y2="1012" stroke="#86806f" stroke-width="1.6" stroke-dasharray="6,5"/>
+    <text x="368" y="1016" fill="#86806f">tracejado = relatório bruto, sem checagem</text>
+  </g>
+</svg>
