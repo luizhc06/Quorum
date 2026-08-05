@@ -414,7 +414,11 @@ aside{min-height:0;border-left:1px solid var(--border);background:#0a0908;displa
             <label>TAREFA PARA O CONSELHO</label>
             <textarea id="newRoundTask" rows="3" placeholder="Ex.: revisar segurança e regras de negócio do módulo de pedidos"></textarea>
           </div>
-          <div class="form-hint">Usa os 15 agentes padrão (10 Anthropic + 5 OpenAI). Pedir agentes extras avulsos ainda não tem UI aqui — dá pra pedir direto pro Claude Code numa conversa por enquanto.</div>
+          <div class="form-field">
+            <label>CONTEXTO EXTRA (opcional — ex. vault do Obsidian)</label>
+            <input type="text" id="newRoundContextPath" placeholder="C:\Users\...\Vault (deixe vazio se não tiver)">
+          </div>
+          <div class="form-hint">Usa os 21 agentes padrão (10 Anthropic + 10 OpenAI + 1 NVIDIA/Hermes). Pedir agentes extras avulsos ainda não tem UI aqui — dá pra pedir direto pro Claude Code numa conversa por enquanto. Contexto extra: só funciona pros grupos Claude e NVIDIA/Hermes hoje — o grupo OpenAI usa o Codex CLI por padrão, que ainda não suporta uma segunda pasta de contexto.</div>
           <div class="form-error" id="newRoundError" style="display:none"></div>
         </div>
       </div>

@@ -83,7 +83,58 @@ const HOSTED_TOOLS = {
   web_search: { type: 'web_search' },
 };
 
-function buildToolset(scopeRoot, runCommandLimits, extraHostedTools) {
+// Schemas do contexto extra (--context-path) — read_file/grep/list_files
+// de novo, mas com nome e descrição próprios pra deixar claro pro modelo
+// que isso NÃO é o código do projeto: é material de referência (ex. vault
+// do Obsidian com notas de PR/bug anteriores). Só existem quando uma
+// rodada passa --context-path; sem isso o Quorum continua genérico.
+const CONTEXT_TOOL_SCHEMAS = [
+  {
+    type: 'function',
+    name: 'context_read_file',
+    description: 'Lê um arquivo dentro do contexto extra (NÃO é o código do projeto — é material de referência, ex.: notas de PRs anteriores, bugs já corrigidos).',
+    parameters: {
+      type: 'object',
+      properties: { file_path: { type: 'string', description: 'Caminho relativo à raiz do contexto extra, ou absoluto dentro dela.' } },
+      required: ['file_path'],
+      additionalProperties: false,
+    },
+    strict: true,
+  },
+  {
+    type: 'function',
+    name: 'context_grep',
+    description: 'Busca um padrão de texto (regex) recursivamente nos arquivos do contexto extra (não é o código do projeto).',
+    parameters: {
+      type: 'object',
+      properties: {
+        pattern: { type: 'string', description: 'Expressão regular a buscar (case-insensitive).' },
+        path: { type: ['string', 'null'], description: 'Subpasta onde buscar. null = raiz do contexto extra.' },
+        glob: { type: ['string', 'null'], description: 'Filtro simples de nome de arquivo, ex: "*.md". null = todos.' },
+      },
+      required: ['pattern', 'path', 'glob'],
+      additionalProperties: false,
+    },
+    strict: true,
+  },
+  {
+    type: 'function',
+    name: 'context_list_files',
+    description: 'Lista arquivos e pastas dentro do contexto extra, recursivamente até uma profundidade máxima (não é o código do projeto).',
+    parameters: {
+      type: 'object',
+      properties: {
+        path: { type: ['string', 'null'], description: 'Subpasta a listar. null = raiz do contexto extra.' },
+        max_depth: { type: ['integer', 'null'], description: 'Profundidade máxima de recursão. null = 3.' },
+      },
+      required: ['path', 'max_depth'],
+      additionalProperties: false,
+    },
+    strict: true,
+  },
+];
+
+function buildToolset(scopeRoot, runCommandLimits, extraHostedTools, contextPath) {
   const guardPath = createPathGuard(scopeRoot);
   const handlers = {
     read_file: makeReadFile(guardPath),
@@ -95,7 +146,17 @@ function buildToolset(scopeRoot, runCommandLimits, extraHostedTools) {
     if (!HOSTED_TOOLS[name]) throw new Error(`ferramenta hospedada desconhecida: "${name}"`);
     return HOSTED_TOOLS[name];
   });
-  return { schemas: [...TOOL_SCHEMAS, ...hosted], handlers };
+
+  let contextSchemas = [];
+  if (contextPath) {
+    const guardContext = createPathGuard(contextPath);
+    handlers.context_read_file = makeReadFile(guardContext);
+    handlers.context_grep = makeGrep(guardContext, contextPath);
+    handlers.context_list_files = makeListFiles(guardContext, contextPath);
+    contextSchemas = CONTEXT_TOOL_SCHEMAS;
+  }
+
+  return { schemas: [...TOOL_SCHEMAS, ...hosted, ...contextSchemas], handlers };
 }
 
 module.exports = { buildToolset, TOOL_SCHEMAS, HOSTED_TOOLS };

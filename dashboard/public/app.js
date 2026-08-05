@@ -839,6 +839,7 @@ document.getElementById('newRoundModal').addEventListener('click', (e) => {
 document.getElementById('btnStartRound').addEventListener('click', async () => {
   const scope = document.getElementById('newRoundScope').value.trim();
   const task = document.getElementById('newRoundTask').value.trim();
+  const contextPath = document.getElementById('newRoundContextPath').value.trim();
   const errBox = document.getElementById('newRoundError');
   const statusBox = document.getElementById('newRoundStatus');
   const btn = document.getElementById('btnStartRound');
@@ -853,13 +854,14 @@ document.getElementById('btnStartRound').addEventListener('click', async () => {
   statusBox.textContent = 'iniciando…';
   try {
     const res = await fetch('/api/rounds', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scope, task }),
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scope, task, contextPath: contextPath || undefined }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'falha ao iniciar rodada');
     document.getElementById('newRoundModal').classList.remove('show');
     document.getElementById('newRoundScope').value = '';
     document.getElementById('newRoundTask').value = '';
+    document.getElementById('newRoundContextPath').value = '';
     await loadRunsList();
     await loadRun(data.runId);
   } catch (e) {

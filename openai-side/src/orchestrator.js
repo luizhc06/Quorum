@@ -6,8 +6,11 @@ const { buildToolset } = require('./tools');
 const { writeAgentResult } = require('./log');
 const { runCodexAgent } = require('./providers/codex-local');
 
-function buildSystemPrompt(persona, outputContract) {
-  return `${persona}\n\nExplore o código real dentro do escopo usando as ferramentas disponíveis antes de concluir qualquer coisa — nunca opine sem checar. Ao final, siga este contrato de saída:\n\n${outputContract}`;
+const CONTEXT_NOTE =
+  '\n\nVocê também tem acesso a um contexto extra (context_read_file/context_grep/context_list_files) — NÃO é o código do projeto, é material de referência (ex.: notas de PRs anteriores, bugs já corrigidos). Vale a pena checar antes de sugerir algo que talvez já tenha sido tentado ou decidido — mas não confunda com o escopo de código real.';
+
+function buildSystemPrompt(persona, outputContract, hasContext) {
+  return `${persona}\n\nExplore o código real dentro do escopo usando as ferramentas disponíveis antes de concluir qualquer coisa — nunca opine sem checar. Ao final, siga este contrato de saída:\n\n${outputContract}${hasContext ? CONTEXT_NOTE : ''}`;
 }
 
 async function runOneAgent({ client, name, model, systemPrompt, task, schemas, handlers, limits, outDir }) {
@@ -41,8 +44,15 @@ async function runOneAgent({ client, name, model, systemPrompt, task, schemas, h
 // mantido como opção pra ambientes sem Codex logado, ex. servidor/CI).
 // Ver openai-side/src/providers/codex-local.js para as diferenças de
 // garantia de segurança entre os dois.
-async function runOneAgentAny({ client, name, model, persona, task, schemas, handlers, limits, outDir, scope, provider, outputContract }) {
+async function runOneAgentAny({ client, name, model, persona, task, schemas, handlers, limits, outDir, scope, provider, outputContract, hasContext }) {
   if (provider === 'codex-local') {
+    // Limitação conhecida: o Codex CLI usa suas próprias ferramentas
+    // internas confinadas só a --cd <scope> — não há como estender pra uma
+    // segunda raiz (--context-path) sem mexer no sandbox dele. Com
+    // codex-local (o padrão), o contexto extra simplesmente não chega
+    // pros especialistas OpenAI ainda; só funciona com o provedor
+    // openai-api. Não finjo cobertura completa — documentado aqui e no
+    // relatório de qualquer rodada que usar --context-path.
     const result = await runCodexAgent({ name, model, persona, task, scope, limits, outDir, outputContract });
     writeAgentResult(outDir, name, result);
     return result;
@@ -52,7 +62,7 @@ async function runOneAgentAny({ client, name, model, persona, task, schemas, han
     writeAgentResult(outDir, name, result);
     return result;
   }
-  return runOneAgent({ client, name, model, systemPrompt: buildSystemPrompt(persona, outputContract), task, schemas, handlers, limits, outDir });
+  return runOneAgent({ client, name, model, systemPrompt: buildSystemPrompt(persona, outputContract, hasContext), task, schemas, handlers, limits, outDir });
 }
 
 /**
@@ -62,12 +72,12 @@ async function runOneAgentAny({ client, name, model, persona, task, schemas, han
  * log.js — é isso que o lado Claude lê depois, nunca chamando a API OpenAI
  * diretamente.
  */
-async function runOrchestration({ client, agentsConfig, models, limits, scope, task, outDir }) {
+async function runOrchestration({ client, agentsConfig, models, limits, scope, task, outDir, contextPath }) {
   const outputContract = fs.readFileSync(path.join(__dirname, '..', '..', 'contracts', 'output-contract.md'), 'utf8');
   // Toolset base (leitura local) só é usado pelo provedor openai-api — o
   // codex-local usa as ferramentas internas do próprio Codex CLI, não estas.
-  const { schemas: baseSchemas, handlers } = buildToolset(scope, limits.run_command);
-  const schemasFor = (spec) => (spec.tools?.length ? buildToolset(scope, limits.run_command, spec.tools).schemas : baseSchemas);
+  const { schemas: baseSchemas, handlers } = buildToolset(scope, limits.run_command, undefined, contextPath);
+  const schemasFor = (spec) => (spec.tools?.length ? buildToolset(scope, limits.run_command, spec.tools, contextPath).schemas : baseSchemas);
   const providerFor = (spec) => spec.provider || models.openai_provider || 'codex-local';
 
   const specialistResults = await Promise.allSettled(
@@ -89,6 +99,7 @@ async function runOrchestration({ client, agentsConfig, models, limits, scope, t
         scope,
         provider: providerFor(spec),
         outputContract,
+        hasContext: !!contextPath,
       })
     )
   ).then((settled) => settled.map((s) => (s.status === 'fulfilled' ? s.value : { status: 'failed', reason: 'promise_rejected', error: String(s.reason) })));
@@ -112,7 +123,7 @@ async function runOrchestration({ client, agentsConfig, models, limits, scope, t
     .join('\n\n---\n\n');
 
   const judgeTask =
-    `Tarefa original dada aos 5 especialistas: ${task}\n\n` +
+    `Tarefa original dada aos ${agentsConfig.specialists.length} especialistas: ${task}\n\n` +
     (failedNames.length ? `Atenção: os agentes [${failedNames.join(', ')}] falharam e não produziram relatório — não finja cobertura completa.\n\n` : '') +
     `Relatórios brutos dos ${okCount}/${specialistResults.length} especialistas que concluíram:\n\n${digestForJudge}`;
 
@@ -130,6 +141,7 @@ async function runOrchestration({ client, agentsConfig, models, limits, scope, t
     scope,
     provider: judgeProvider,
     outputContract,
+    hasContext: !!contextPath,
   });
 
   return { specialists: specialistResults, judge: judgeResult };

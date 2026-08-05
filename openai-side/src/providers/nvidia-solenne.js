@@ -31,11 +31,14 @@ function createSolenneClient() {
   return new OpenAI({ apiKey, baseURL: BASE_URL, maxRetries: 3 });
 }
 
-function buildSystemPrompt(persona, outputContract) {
-  return `${persona}\n\nExplore o código real dentro do escopo usando as ferramentas disponíveis antes de concluir qualquer coisa — nunca opine sem checar. Ao final, siga este contrato de saída:\n\n${outputContract}`;
+const CONTEXT_NOTE =
+  '\n\nVocê também tem acesso a um contexto extra (context_read_file/context_grep/context_list_files) — NÃO é o código do projeto, é material de referência (ex.: notas de PRs anteriores, bugs já corrigidos). Vale a pena checar antes de sugerir algo que talvez já tenha sido tentado ou decidido — mas não confunda com o escopo de código real.';
+
+function buildSystemPrompt(persona, outputContract, hasContext) {
+  return `${persona}\n\nExplore o código real dentro do escopo usando as ferramentas disponíveis antes de concluir qualquer coisa — nunca opine sem checar. Ao final, siga este contrato de saída:\n\n${outputContract}${hasContext ? CONTEXT_NOTE : ''}`;
 }
 
-async function runNvidiaAgent({ client, name, model, persona, task, schemas, handlers, limits, outDir, outputContract, onStateChange }) {
+async function runNvidiaAgent({ client, name, model, persona, task, schemas, handlers, limits, outDir, outputContract, hasContext, onStateChange }) {
   const startedAt = Date.now();
   const resolvedModel = model || DEFAULT_MODEL;
   onStateChange?.({ state: 'running' });
@@ -52,7 +55,7 @@ async function runNvidiaAgent({ client, name, model, persona, task, schemas, han
   }
   try {
     const loopResult = await runNvidiaAgentLoop({
-      client, model: resolvedModel, systemPrompt: buildSystemPrompt(persona, outputContract), userPrompt: task,
+      client, model: resolvedModel, systemPrompt: buildSystemPrompt(persona, outputContract, hasContext), userPrompt: task,
       tools: schemas, toolHandlers: handlers, limits,
     });
     const result = {
@@ -89,16 +92,17 @@ async function runNvidiaAgent({ client, name, model, persona, task, schemas, han
  * especialistas, mas para por aí — o Líder consome os relatórios brutos
  * direto (ver orchestrate.js).
  */
-async function runNvidiaSide({ agentsConfig, models, limits, scope, task, outDir, onAgentUpdate }) {
+async function runNvidiaSide({ agentsConfig, models, limits, scope, task, outDir, onAgentUpdate, contextPath }) {
   const outputContract = fs.readFileSync(path.join(__dirname, '..', '..', '..', 'contracts', 'output-contract.md'), 'utf8');
   const client = createSolenneClient();
-  const { schemas, handlers } = buildToolset(scope, limits.run_command);
+  const { schemas, handlers } = buildToolset(scope, limits.run_command, undefined, contextPath);
 
   const specialistResults = await Promise.allSettled(
     (agentsConfig.specialists || []).map((spec) =>
       runNvidiaAgent({
         client, name: spec.name, model: spec.model || models.nvidia_specialists, persona: spec.foco, task,
         schemas, handlers, limits: limits.nvidia_specialist, outDir, outputContract,
+        hasContext: !!contextPath,
         onStateChange: (u) => onAgentUpdate?.(spec.name, u),
       })
     )

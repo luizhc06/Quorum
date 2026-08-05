@@ -70,7 +70,7 @@ function extractFindingBlocks(markdown) {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (!args.scope || !args.task || !args['run-id'] || !args.out) {
-    console.error('Uso: node orchestrate.js --scope <dir> --task "<descrição>" --run-id <id> --out runs/<id> [--extra-agents \'{"claude":[...],"openai":[...]}\']');
+    console.error('Uso: node orchestrate.js --scope <dir> --task "<descrição>" --run-id <id> --out runs/<id> [--context-path <dir>] [--extra-agents \'{"claude":[...],"openai":[...]}\']');
     process.exit(1);
   }
 
@@ -79,6 +79,11 @@ async function main() {
   fs.mkdirSync(outDir, { recursive: true });
   const statePath = path.join(outDir, 'state.json');
   const scope = path.resolve(args.scope);
+  // Contexto extra opcional (ex.: vault do Obsidian) — genérico, não
+  // hardcoded a nenhum projeto específico. Sem essa flag, o Quorum roda
+  // exatamente como antes (nada muda). Ver openai-side/src/tools/index.js
+  // e claude-side/engine/tools.js para as ferramentas context_*.
+  const contextPath = args['context-path'] ? path.resolve(args['context-path']) : undefined;
   let tickTimer = null;
 
   try {
@@ -171,7 +176,7 @@ async function main() {
   const claudeClient = createClaudeClient();
   const claudeSidePromise = runClaudeSide({
     client: claudeClient, agentsConfig: { specialists: claudeSpecs, judge: claudeAgentsConfig.judge },
-    models, limits, scope, task: args.task, outDir: path.join(outDir, 'claude-side'),
+    models, limits, scope, task: args.task, outDir: path.join(outDir, 'claude-side'), contextPath,
     onAgentUpdate: (name, u) => {
       if (u.state) {
         updateAgent('claude', name, { state: u.state, findings: u.findings ?? undefined, usage: u.usage, elapsed: u.elapsedMs ? fmtElapsed(u.elapsedMs) : undefined });
@@ -194,7 +199,7 @@ async function main() {
   try { openaiClient = createOpenaiClient(); } catch (e) { /* ok — provedor padrão não usa a API */ }
   const openaiSidePromise = runOpenaiSide({
     client: openaiClient, agentsConfig: { specialists: openaiSpecs, judge: openaiAgentsConfig.judge },
-    models, limits, scope, task: args.task, outDir: path.join(outDir, 'openai-side'),
+    models, limits, scope, task: args.task, outDir: path.join(outDir, 'openai-side'), contextPath,
   }).then((r) => {
     // openai-side/src/orchestrator.js não expõe callback por agente (motor mais antigo,
     // sem live-update) — refletimos o resultado final de uma vez quando chega.
@@ -220,7 +225,7 @@ async function main() {
   const nvidiaSidePromise = nvidiaSpecs.length
     ? runNvidiaSide({
         agentsConfig: { specialists: nvidiaSpecs }, models, limits, scope, task: args.task,
-        outDir: path.join(outDir, 'nvidia-side'),
+        outDir: path.join(outDir, 'nvidia-side'), contextPath,
         onAgentUpdate: (name, u) => {
           if (u.state) {
             updateAgent('nvidia', name, { state: u.state, findings: u.findings ?? undefined, usage: u.usage, elapsed: u.elapsedMs ? fmtElapsed(u.elapsedMs) : undefined });
@@ -246,7 +251,7 @@ async function main() {
   const [claudeSide, openaiSide, nvidiaSide] = await Promise.all([claudeSidePromise, openaiSidePromise, nvidiaSidePromise]);
 
   const outputContract = fs.readFileSync(path.join(__dirname, 'contracts', 'output-contract.md'), 'utf8');
-  const { schemas: claudeSchemas, handlers: claudeHandlers } = buildClaudeToolset(scope, limits.run_command);
+  const { schemas: claudeSchemas, handlers: claudeHandlers } = buildClaudeToolset(scope, limits.run_command, contextPath);
 
   // --- Juiz NVIDIA (Sonnet 5, sobre o(s) relatório(s) bruto(s) do Hermes) —
   // agora simétrico com os outros dois: todo grupo tem juiz próprio. Sem
@@ -260,7 +265,7 @@ async function main() {
     : '(nenhum especialista do Grupo NVIDIA/Hermes concluiu com sucesso nesta rodada)';
   const judgeNvidiaResult = await runOneClaudeAgent({
     client: claudeClient, name: 'judge-nvidia', model: models.claude_verifier,
-    systemPrompt: buildSystemPrompt(loadPersona(claudeAgentsConfig.judgeNvidia), outputContract),
+    systemPrompt: buildSystemPrompt(loadPersona(claudeAgentsConfig.judgeNvidia), outputContract, !!contextPath),
     task: `Relatório(s) bruto(s) do especialista Hermes:\n\n${nvidiaDigest}`,
     schemas: claudeSchemas, handlers: claudeHandlers, limits: limits.claude_verifier,
     outDir: path.join(outDir, 'claude-side'),
@@ -290,7 +295,7 @@ async function main() {
 
   const leaderResult = await runOneClaudeAgent({
     client: claudeClient, name: 'leader-synthesizer', model: models.claude_leader,
-    systemPrompt: buildSystemPrompt(leaderPersona, outputContract),
+    systemPrompt: buildSystemPrompt(leaderPersona, outputContract, !!contextPath),
     task: leaderTask, schemas: claudeSchemas, handlers: claudeHandlers,
     limits: limits.claude_leader || limits.claude_judge, outDir,
   });

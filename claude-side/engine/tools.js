@@ -55,7 +55,49 @@ const TOOL_SCHEMAS = [
   },
 ];
 
-function buildToolset(scopeRoot, runCommandLimits) {
+// Ferramentas do contexto extra (--context-path) — mesma ideia do lado
+// OpenAI (openai-side/src/tools/index.js): read_file/grep/list_files de
+// novo, mas confinadas a uma SEGUNDA raiz separada do código, com nome
+// próprio pra deixar claro que não é o código do projeto (ex.: vault do
+// Obsidian com notas de PRs/bugs anteriores). Só existem quando uma
+// rodada passa --context-path.
+const CONTEXT_TOOL_SCHEMAS = [
+  {
+    name: 'context_read_file',
+    description: 'Lê um arquivo dentro do contexto extra (NÃO é o código do projeto — é material de referência, ex.: notas de PRs anteriores, bugs já corrigidos).',
+    input_schema: {
+      type: 'object',
+      properties: { file_path: { type: 'string', description: 'Caminho relativo à raiz do contexto extra, ou absoluto dentro dela.' } },
+      required: ['file_path'],
+    },
+  },
+  {
+    name: 'context_grep',
+    description: 'Busca um padrão de texto (regex) recursivamente nos arquivos do contexto extra (não é o código do projeto).',
+    input_schema: {
+      type: 'object',
+      properties: {
+        pattern: { type: 'string', description: 'Expressão regular a buscar (case-insensitive).' },
+        path: { type: 'string', description: 'Subpasta onde buscar. Omitir = raiz do contexto extra.' },
+        glob: { type: 'string', description: 'Filtro simples de nome de arquivo, ex: "*.md". Omitir = todos.' },
+      },
+      required: ['pattern'],
+    },
+  },
+  {
+    name: 'context_list_files',
+    description: 'Lista arquivos e pastas dentro do contexto extra, recursivamente até uma profundidade máxima (não é o código do projeto).',
+    input_schema: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'Subpasta a listar. Omitir = raiz do contexto extra.' },
+        max_depth: { type: 'integer', description: 'Profundidade máxima de recursão. Omitir = 3.' },
+      },
+    },
+  },
+];
+
+function buildToolset(scopeRoot, runCommandLimits, contextPath) {
   const guardPath = createPathGuard(scopeRoot);
   const handlers = {
     read_file: makeReadFile(guardPath),
@@ -63,7 +105,15 @@ function buildToolset(scopeRoot, runCommandLimits) {
     list_files: makeListFiles(guardPath, scopeRoot),
     run_command: makeRunCommand(scopeRoot, runCommandLimits),
   };
-  return { schemas: TOOL_SCHEMAS, handlers };
+  let schemas = TOOL_SCHEMAS;
+  if (contextPath) {
+    const guardContext = createPathGuard(contextPath);
+    handlers.context_read_file = makeReadFile(guardContext);
+    handlers.context_grep = makeGrep(guardContext, contextPath);
+    handlers.context_list_files = makeListFiles(guardContext, contextPath);
+    schemas = [...TOOL_SCHEMAS, ...CONTEXT_TOOL_SCHEMAS];
+  }
+  return { schemas, handlers };
 }
 
 module.exports = { buildToolset, TOOL_SCHEMAS };

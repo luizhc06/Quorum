@@ -81,10 +81,14 @@ const server = http.createServer(async (req, res) => {
 
     const task = typeof body.task === 'string' ? body.task.trim() : '';
     const scope = typeof body.scope === 'string' ? body.scope.trim() : '';
+    const contextPath = typeof body.contextPath === 'string' ? body.contextPath.trim() : '';
     if (!task) return sendJson(res, 400, { error: 'task é obrigatório' });
     if (!scope) return sendJson(res, 400, { error: 'scope (caminho do projeto) é obrigatório' });
     if (!fs.existsSync(scope) || !fs.statSync(scope).isDirectory()) {
       return sendJson(res, 400, { error: `scope não existe ou não é uma pasta: ${scope}` });
+    }
+    if (contextPath && (!fs.existsSync(contextPath) || !fs.statSync(contextPath).isDirectory())) {
+      return sendJson(res, 400, { error: `contextPath não existe ou não é uma pasta: ${contextPath}` });
     }
     let extraAgentsJson = '';
     if (body.extraAgents && (body.extraAgents.claude?.length || body.extraAgents.openai?.length)) {
@@ -98,6 +102,7 @@ const server = http.createServer(async (req, res) => {
     const logPath = path.join(outDir, 'orchestrate.log');
     const logFd = fs.openSync(logPath, 'a');
     const scriptArgs = ['orchestrate.js', '--scope', scope, '--task', task, '--run-id', runId, '--out', outDir];
+    if (contextPath) scriptArgs.push('--context-path', contextPath);
     if (extraAgentsJson) scriptArgs.push('--extra-agents', extraAgentsJson);
 
     const child = spawn(process.execPath, scriptArgs, {

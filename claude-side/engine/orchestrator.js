@@ -5,8 +5,11 @@ const { runAgentLoop, AgentAbortedError } = require('./agent-loop');
 const { buildToolset } = require('./tools');
 const { createTranscriptLogger } = require('./transcript');
 
-function buildSystemPrompt(persona, outputContract) {
-  return `${persona}\n\nExplore o código real dentro do escopo usando as ferramentas disponíveis antes de concluir qualquer coisa — nunca opine sem checar. Ao final, siga este contrato de saída:\n\n${outputContract}`;
+const CONTEXT_NOTE =
+  '\n\nVocê também tem acesso a um contexto extra (context_read_file/context_grep/context_list_files) — NÃO é o código do projeto, é material de referência (ex.: notas de PRs anteriores, bugs já corrigidos). Vale a pena checar antes de sugerir algo que talvez já tenha sido tentado ou decidido — mas não confunda com o escopo de código real.';
+
+function buildSystemPrompt(persona, outputContract, hasContext) {
+  return `${persona}\n\nExplore o código real dentro do escopo usando as ferramentas disponíveis antes de concluir qualquer coisa — nunca opine sem checar. Ao final, siga este contrato de saída:\n\n${outputContract}${hasContext ? CONTEXT_NOTE : ''}`;
 }
 
 // spec pode vir de config/agents.json (promptFile aponta pra claude-side/agents/*.md,
@@ -62,9 +65,9 @@ async function runOneAgent({ client, name, model, systemPrompt, task, schemas, h
  * forma de retorno, pra o script de nível superior (orchestrate.js) tratar
  * os dois lados de forma simétrica.
  */
-async function runClaudeSide({ client, agentsConfig, models, limits, scope, task, outDir, onAgentUpdate }) {
+async function runClaudeSide({ client, agentsConfig, models, limits, scope, task, outDir, onAgentUpdate, contextPath }) {
   const outputContract = fs.readFileSync(path.join(__dirname, '..', '..', 'contracts', 'output-contract.md'), 'utf8');
-  const { schemas, handlers } = buildToolset(scope, limits.run_command);
+  const { schemas, handlers } = buildToolset(scope, limits.run_command, contextPath);
 
   const specialistResults = await Promise.allSettled(
     agentsConfig.specialists.map((spec) =>
@@ -72,7 +75,7 @@ async function runClaudeSide({ client, agentsConfig, models, limits, scope, task
         client,
         name: spec.name,
         model: spec.model || models.claude_specialists,
-        systemPrompt: buildSystemPrompt(loadPersona(spec), outputContract),
+        systemPrompt: buildSystemPrompt(loadPersona(spec), outputContract, !!contextPath),
         task,
         schemas,
         handlers,
@@ -106,7 +109,7 @@ async function runClaudeSide({ client, agentsConfig, models, limits, scope, task
     client,
     name: agentsConfig.judge.name,
     model: agentsConfig.judge.model || models.claude_judge,
-    systemPrompt: buildSystemPrompt(loadPersona(agentsConfig.judge), outputContract),
+    systemPrompt: buildSystemPrompt(loadPersona(agentsConfig.judge), outputContract, !!contextPath),
     task: judgeTask,
     schemas,
     handlers,
