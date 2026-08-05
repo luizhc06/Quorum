@@ -11,6 +11,16 @@ const PRICE_PER_MTOK = {
   'claude-haiku-4-5-20251001': { input: 1, output: 5 },
 };
 
+// Preço de escrita/leitura de cache é um multiplicador sobre o preço de
+// input do próprio modelo (não um valor fixo) — confirmado no skill
+// claude-api: ~1.25x pra escrita (TTL de 5min, o único usado aqui) e ~0.1x
+// pra leitura. Antes desta correção, record() ignorava completamente
+// cache_creation_input_tokens/cache_read_input_tokens — subestimava o
+// custo real (escrita custa mais que input normal) e não mostrava a
+// economia real de ativar prompt caching no laço de ferramentas.
+const CACHE_WRITE_MULTIPLIER = 1.25;
+const CACHE_READ_MULTIPLIER = 0.1;
+
 class CostTracker {
   constructor(model, maxCostUsd) {
     this.model = model;
@@ -19,6 +29,8 @@ class CostTracker {
     this.turns = 0;
     this.inputTokens = 0;
     this.outputTokens = 0;
+    this.cacheWriteTokens = 0;
+    this.cacheReadTokens = 0;
   }
 
   record(usage) {
@@ -27,9 +39,17 @@ class CostTracker {
     const price = PRICE_PER_MTOK[this.model] || PRICE_PER_MTOK['claude-sonnet-5'];
     const inputTok = usage.input_tokens || 0;
     const outputTok = usage.output_tokens || 0;
+    const cacheWriteTok = usage.cache_creation_input_tokens || 0;
+    const cacheReadTok = usage.cache_read_input_tokens || 0;
     this.inputTokens += inputTok;
     this.outputTokens += outputTok;
-    this.totalUsd += (inputTok / 1_000_000) * price.input + (outputTok / 1_000_000) * price.output;
+    this.cacheWriteTokens += cacheWriteTok;
+    this.cacheReadTokens += cacheReadTok;
+    this.totalUsd +=
+      (inputTok / 1_000_000) * price.input +
+      (outputTok / 1_000_000) * price.output +
+      (cacheWriteTok / 1_000_000) * price.input * CACHE_WRITE_MULTIPLIER +
+      (cacheReadTok / 1_000_000) * price.input * CACHE_READ_MULTIPLIER;
   }
 
   exceeded() {
@@ -37,10 +57,17 @@ class CostTracker {
   }
 
   summary() {
+    const price = PRICE_PER_MTOK[this.model] || PRICE_PER_MTOK['claude-sonnet-5'];
+    // quanto os tokens lidos do cache teriam custado a preço cheio de
+    // input, menos o que realmente custaram (0.1x) — a economia real
+    const cacheSavedUsd = (this.cacheReadTokens / 1_000_000) * price.input * (1 - CACHE_READ_MULTIPLIER);
     return {
       turns: this.turns,
       inputTokens: this.inputTokens,
       outputTokens: this.outputTokens,
+      cacheWriteTokens: this.cacheWriteTokens,
+      cacheReadTokens: this.cacheReadTokens,
+      cacheSavedUsd: Number(cacheSavedUsd.toFixed(4)),
       estimatedUsd: Number(this.totalUsd.toFixed(4)),
     };
   }

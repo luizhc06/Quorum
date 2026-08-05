@@ -27,6 +27,17 @@ function extractText(content) {
  * stop_reason "refusal" chega como resposta HTTP 200 normal (não exceção) —
  * ver claude-side/agents/judge.md e leader-synthesizer.md sobre por que isso
  * importa pros papéis que fazem síntese de achado de segurança.
+ *
+ * Prompt caching (ver shared/prompt-caching.md do skill claude-api): o
+ * system prompt (persona+contrato) é idêntico em toda chamada deste laço —
+ * marcado com cache_control uma vez, fica "grátis" (~0.1x) do 2º turno em
+ * diante. Além disso, um marcador anda junto com o último bloco do
+ * histórico a cada turno — cacheia "tudo até aqui" (system+tools+turnos
+ * anteriores), a maior economia real do laço, já que sem
+ * previous_response_id cada turno reenviava o histórico inteiro descoberto
+ * (comentário original do arquivo, agora corrigido). O marcador antigo é
+ * removido antes de mover pro novo — nunca mais de 2 breakpoints por
+ * requisição (system + 1 no histórico), bem abaixo do limite de 4.
  */
 async function runAgentLoop({ client, model, systemPrompt, userPrompt, tools, toolHandlers, limits, onEvent, onTranscriptLine }) {
   let messages = [{ role: 'user', content: userPrompt }];
@@ -35,17 +46,30 @@ async function runAgentLoop({ client, model, systemPrompt, userPrompt, tools, to
   const transcript = [];
   onTranscriptLine?.({ role: 'user', content: userPrompt, at: Date.now() });
 
+  const system = [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }];
+  let lastCachedBlock = null;
+  function markCachePoint() {
+    if (lastCachedBlock) delete lastCachedBlock.cache_control;
+    const lastMsg = messages[messages.length - 1];
+    if (typeof lastMsg.content === 'string') lastMsg.content = [{ type: 'text', text: lastMsg.content }];
+    const lastBlock = lastMsg.content[lastMsg.content.length - 1];
+    lastBlock.cache_control = { type: 'ephemeral' };
+    lastCachedBlock = lastBlock;
+  }
+
   for (let iter = 0; iter < limits.maxIterations; iter++) {
     if (Date.now() - startedAt > limits.maxWallClockMs) {
       throw new AgentAbortedError('wall_clock_exceeded', { iter, elapsedMs: Date.now() - startedAt });
     }
+
+    markCachePoint();
 
     let resp;
     try {
       resp = await client.messages.create({
         model,
         max_tokens: limits.maxOutputTokensPerTurn,
-        system: systemPrompt,
+        system,
         messages,
         tools,
         tool_choice: { type: 'auto' },

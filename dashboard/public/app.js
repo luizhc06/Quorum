@@ -617,6 +617,7 @@ function renderSidebar() {
           <div class="sel-eyebrow" style="color:${a.side === 'claude' ? 'var(--accent-2)' : 'var(--blue)'}">${a.side === 'claude' ? 'GRUPO ANTHROPIC' : 'GRUPO OPENAI'}</div>
           <div class="sel-name">${escapeHtml(a.name)}</div>
           <div class="sel-meta">${escapeHtml(a.model || '')} · ${stateLabel(a.state)}</div>
+          ${a.usage?.cacheReadTokens ? `<div class="sel-meta" style="color:var(--green-3)">${fmtTokens(a.usage.cacheReadTokens)} tokens do cache (economizou ~US$ ${a.usage.cacheSavedUsd?.toFixed(3) ?? '0'})</div>` : ''}
         </div>
         <button class="btn-close" id="btnCloseSel">FECHAR</button>
       </div>
