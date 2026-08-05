@@ -385,12 +385,13 @@ aside{min-height:0;border-left:1px solid var(--border);background:#0a0908;displa
       <div class="modal-head">
         <div>
           <div class="modal-title">Nova rodada</div>
-          <div class="modal-sub">roda os dois lados (Anthropic + OpenAI) sozinho, sem precisar do Claude Code numa conversa</div>
+          <div class="modal-sub">roda os dois lados sozinho, sem precisar do Claude Code numa conversa</div>
         </div>
         <button class="btn-close" id="btnCloseNewRound">FECHAR</button>
       </div>
       <div class="modal-body">
         <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="form-hint" style="color:var(--amber);border:1px solid #4a3b22;border-radius:4px;padding:9px 11px;background:#1c150c">⚠ Isso usa a API paga da Anthropic <em>e</em> da OpenAI — não entra na sua assinatura Max. Custa dinheiro de verdade (tipicamente centavos por rodada). Pra uma revisão só do lado Claude sem custo extra, feche isto e peça direto aqui no chat em vez de usar este botão.</div>
           <div class="form-field">
             <label>PASTA DO PROJETO (caminho absoluto)</label>
             <input type="text" id="newRoundScope" placeholder="C:\Users\...\MeuProjeto">
