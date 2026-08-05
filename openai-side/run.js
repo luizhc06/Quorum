@@ -2,6 +2,9 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+
+require('../env').loadEnvFile(path.resolve(__dirname, '..'));
+
 const { createClient } = require('./src/client');
 const { runAgentLoop, AgentAbortedError } = require('./src/agent-loop');
 const { buildToolset } = require('./src/tools');

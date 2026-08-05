@@ -10,6 +10,8 @@
 const fs = require('fs');
 const path = require('path');
 
+require('./env').loadEnvFile(__dirname);
+
 const { createClient: createClaudeClient } = require('./claude-side/engine/client');
 const { runClaudeSide, runOneAgent: runOneClaudeAgent, buildSystemPrompt, loadPersona } = require('./claude-side/engine/orchestrator');
 const { buildToolset: buildClaudeToolset } = require('./claude-side/engine/tools');
