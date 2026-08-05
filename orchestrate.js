@@ -16,6 +16,7 @@ const { buildToolset: buildClaudeToolset } = require('./claude-side/engine/tools
 
 const { createClient: createOpenaiClient } = require('./openai-side/src/client');
 const { runOrchestration: runOpenaiSide } = require('./openai-side/src/orchestrator');
+const { runSolenneAgent } = require('./openai-side/src/providers/nvidia-solenne');
 
 function parseArgs(argv) {
   const out = {};
@@ -132,6 +133,7 @@ async function main() {
       { key: 'juiz-claude', name: 'Juiz Claude', model: 'Opus 5 · com leitura', state: 'queued', role: 'Aguardando os especialistas Claude.', chips: [] },
       { key: 'juiz-openai', name: 'Juiz OpenAI', model: 'GPT-5.6 Sol · com leitura', state: 'queued', role: 'Aguardando os especialistas OpenAI.', chips: [] },
       { key: 'verificador', name: 'Verificação adversarial', model: 'Sonnet 5', state: 'queued', role: 'Aguardando o Juiz OpenAI.', chips: [] },
+      { key: 'solenne', name: 'Solenne (NVIDIA)', model: 'Nemotron 3 Super · 3º parecer', state: 'queued', role: 'Aguardando os dois juízes.', chips: [] },
       { key: 'lider', name: 'Líder / Sintetizador', model: 'Opus 5', state: 'queued', role: 'Aguardando os dois lados.', chips: [] },
     ];
     state.claims = [];
@@ -222,6 +224,31 @@ async function main() {
 
   const [claudeSide, openaiSide] = await Promise.all([claudeSidePromise, openaiSidePromise]);
 
+  // --- Solenne (NVIDIA, 3º parecer independente) — dispara em paralelo com a
+  // verificação adversarial abaixo, já que as duas só dependem dos dois
+  // juízes e não uma da outra; o await fica lá embaixo, perto do líder.
+  updateArbiter('solenne', { state: 'running', role: 'Lendo os dois pareceres pra dar uma opinião independente.' });
+  pushActivity('Solenne (NVIDIA) começou seu parecer.');
+  const solennePromise = runSolenneAgent({
+    persona: openaiAgentsConfig.solenne.foco,
+    task:
+      `## Relatório do Juiz Claude\n\n${claudeSide.judge.status === 'ok' ? claudeSide.judge.finalText : `(status: ${claudeSide.judge.status})`}\n\n` +
+      `## Relatório do Juiz OpenAI\n\n${openaiSide.judge.status === 'ok' ? openaiSide.judge.finalText : `(status: ${openaiSide.judge.status})`}`,
+    model: models.solenne_model,
+  }).then((result) => {
+    if (result.status === 'ok') {
+      updateArbiter('solenne', { state: 'done', role: 'Deu seu parecer independente sobre os dois lados.' });
+      pushActivity('Solenne (NVIDIA) concluiu seu parecer.');
+    } else if (result.reason === 'nvidia_key_missing') {
+      updateArbiter('solenne', { state: 'skipped', role: 'NVIDIA_API_KEY não configurada — fora desta rodada.' });
+      pushActivity('Solenne (NVIDIA) pulada — chave não configurada.');
+    } else {
+      updateArbiter('solenne', { state: 'failed', role: `Falhou: ${result.error || result.reason}` });
+      pushActivity(`Solenne (NVIDIA) falhou: ${result.error || result.reason}.`);
+    }
+    return result;
+  });
+
   // --- verificação adversarial (Claude, sobre o relatório do Juiz OpenAI) ---
   updateArbiter('verificador', { state: 'running', role: 'Lendo o código pra confirmar ou refutar os achados do Juiz OpenAI.' });
   pushActivity('Verificação adversarial começou.');
@@ -254,6 +281,8 @@ async function main() {
     pushActivity(`Verificação adversarial concluída — ${claims.length} afirmações checadas.`);
   }
 
+  const solenneResult = await solennePromise;
+
   // --- líder / sintetizador ---
   updateArbiter('lider', { state: 'running', role: 'Cruzando os dois lados pra decidir o que vai para a síntese final.' });
   pushActivity('Líder/Sintetizador começou.');
@@ -262,7 +291,8 @@ async function main() {
     `## Relatório do Juiz Claude\n\n${claudeSide.judge.status === 'ok' ? claudeSide.judge.finalText : `(status: ${claudeSide.judge.status})`}\n\n` +
     `## Relatório do Juiz OpenAI (com veredictos da verificação adversarial anexados)\n\n${openaiSide.judge.status === 'ok' ? openaiSide.judge.finalText : `(status: ${openaiSide.judge.status})`}\n\n` +
     (claims.length ? `## Veredictos da verificação adversarial\n\n${claims.map((c) => `- [${c.verdict}] ${c.text} — ${c.check}`).join('\n')}\n\n` : '') +
-    `Produza o relatório final seguindo exatamente o formato pedido no seu prompt de sistema (headline, lede, blocos P0/P1/DESCARTADO, e uma seção de divergência não resolvida se houver).`;
+    (solenneResult.status === 'ok' ? `## Parecer da Solenne (3º voto, fornecedor independente — NVIDIA)\n\n${solenneResult.finalText}\n\n` : '') +
+    `Produza o relatório final seguindo exatamente o formato pedido no seu prompt de sistema (headline, lede, blocos P0/P1/DESCARTADO, e uma seção de divergência não resolvida se houver). Se a Solenne discordou de algo que os outros dois juízes concordaram, trate isso como candidato a divergência não resolvida.`;
 
   const { schemas: leaderSchemas, handlers: leaderHandlers } = buildClaudeToolset(scope, limits.run_command);
   const leaderResult = await runOneClaudeAgent({

@@ -146,6 +146,7 @@ function stateColor(state) {
   if (state === 'done') return 'var(--green-3)';
   if (state === 'running') return 'var(--amber)';
   if (state === 'failed' || state === 'refused') return 'var(--red-2)';
+  if (state === 'skipped') return 'var(--text-5)';
   return 'var(--text-9)';
 }
 function stateLabel(state) {
@@ -153,6 +154,7 @@ function stateLabel(state) {
   if (state === 'running') return 'EM ANDAMENTO';
   if (state === 'failed') return 'FALHOU';
   if (state === 'refused') return 'RECUSOU';
+  if (state === 'skipped') return 'PULADA';
   return 'NA FILA';
 }
 function verdictColor(verdict) {

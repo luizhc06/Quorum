@@ -18,5 +18,8 @@
 
   "openai_provider": "codex-local",
   "openai_specialists": "gpt-5.6-terra",
-  "openai_judge": "gpt-5.6-sol"
+  "openai_judge": "gpt-5.6-sol",
+
+  "_aviso_solenne": "Terceira voz do conselho, fornecedor independente (NVIDIA, não Anthropic nem OpenAI) — plano free, sem custo por token, só limite de 40 requisições/min. Precisa de NVIDIA_API_KEY no .env; se ausente, a rodada segue sem ela (arbiter 'solenne' marca failed/nvidia_key_missing, não derruba o resto). Ver openai-side/src/providers/nvidia-solenne.js.",
+  "solenne_model": "nvidia/nemotron-3-super-120b-a12b"
 }
