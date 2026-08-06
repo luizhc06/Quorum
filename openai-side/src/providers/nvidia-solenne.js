@@ -29,7 +29,17 @@ const BASE_URL = 'https://integrate.api.nvidia.com/v1';
 function createSolenneClient() {
   const apiKey = process.env.NVIDIA_API_KEY;
   if (!apiKey) return null;
-  return new OpenAI({ apiKey, baseURL: BASE_URL, maxRetries: 3 });
+  // timeout adicionado em 06/08/2026: sem isso, o SDK usa o padrão de 10min
+  // por requisição — combinado com maxRetries:3, uma única chamada lenta
+  // (fila do plano free, 40 RPM) podia sozinha estourar todo o
+  // maxWallClockMs do agente sem chance de abortar no meio (o laço só
+  // confere o tempo total no TOPO de cada iteração, não durante uma
+  // chamada em andamento). Achado ao vivo: run de 06/08 estourou em
+  // 260793ms contra um teto de 180000ms configurado na época — a diferença
+  // é exatamente uma chamada lenta que não tinha como ser cortada.
+  // 45s por tentativa deixa até ~3min em retries no pior caso (3 tentativas
+  // do maxRetries), ainda dentro de uma folga razoável do teto do agente.
+  return new OpenAI({ apiKey, baseURL: BASE_URL, maxRetries: 3, timeout: 45_000 });
 }
 
 const CONTEXT_NOTE =

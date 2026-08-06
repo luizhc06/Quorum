@@ -55,9 +55,9 @@
     "maxCostUsd": 1.0
   },
   "nvidia_specialist": {
-    "_comment": "Sem maxCostUsd — plano free da NVIDIA não cobra por token, só limita taxa (40 req/min). maxIterations/maxWallClockMs aumentados em 05/08/2026: Hermes bateu max_iterations_exceeded em 27s sem produzir texto final nem registrar chamada de ferramenta no transcript (run 20260805-a547b0) — sintoma ainda não investigado a fundo, este aumento é paliativo, não correção da causa raiz.",
+    "_comment": "Sem maxCostUsd — plano free da NVIDIA não cobra por token, só limita taxa (40 req/min). maxIterations/maxWallClockMs aumentados em 05/08/2026: Hermes bateu max_iterations_exceeded em 27s sem produzir texto final nem registrar chamada de ferramenta no transcript (run 20260805-a547b0) — sintoma ainda não investigado a fundo, aquele aumento foi paliativo, não correção da causa raiz. maxWallClockMs aumentado de novo em 06/08/2026, desta vez com causa raiz corrigida: run real estourou em 260793ms contra o teto de 180000ms daquela época porque uma ÚNICA chamada lenta não tinha como ser abortada no meio (o laço só confere o tempo total no topo de cada iteração) — nvidia-solenne.js::createSolenneClient() ganhou timeout de 45s por chamada no mesmo commit, então agora o teto abaixo tem folga real, não é só \"aumentar até parar de estourar\".",
     "maxIterations": 16,
-    "maxWallClockMs": 180000,
+    "maxWallClockMs": 300000,
     "maxOutputTokensPerTurn": 2500,
     "maxToolOutputChars": 15000
   },
