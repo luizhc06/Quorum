@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Conselho</title>
+<title>Quorum</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -20,6 +20,7 @@
   --blue:#7fa9c9; --blue-2:#4f8fa8;
   --purple:#8a7fc9; --pink:#a86f9c;
   --nvidia:#9dbb4f; --nvidia-2:#7fa03e;
+  --community:#a78bfa; --community-2:#67e8f9;
   --serif:'Spectral',Georgia,serif; --sans:'IBM Plex Sans',system-ui,sans-serif; --mono:'IBM Plex Mono',monospace;
 }
 *{box-sizing:border-box}
@@ -228,9 +229,74 @@ aside{min-height:0;border-left:1px solid var(--border);background:#0a0908;displa
 .btn-download{appearance:none;background:var(--accent);border:0;color:#17130d;border-radius:4px;padding:9px 16px;cursor:pointer;font-family:var(--sans);font-size:13px;font-weight:600}
 .btn-download:hover{background:var(--accent-2)}
 
+/* Quorum premium shell */
+body{background:
+  radial-gradient(circle at 10% -10%,rgba(103,232,249,.08),transparent 30%),
+  radial-gradient(circle at 90% 0%,rgba(167,139,250,.09),transparent 34%),#07080b}
+.app{background:linear-gradient(180deg,rgba(12,14,20,.94),rgba(7,8,11,.98))}
+header{align-items:center;padding:16px 24px;background:rgba(9,10,14,.78);backdrop-filter:blur(20px);border-color:rgba(255,255,255,.07)}
+.brand{align-items:center;gap:12px}
+.brand-lockup{display:flex;align-items:center;gap:12px;margin-right:5px}
+.brand-mark{width:42px;height:42px;border-radius:13px;object-fit:cover;border:1px solid rgba(255,255,255,.12);box-shadow:0 0 0 1px rgba(255,255,255,.03),0 12px 30px rgba(0,0,0,.38)}
+.brand-copy{display:flex;flex-direction:column;gap:1px}
+.brand h1{font-family:var(--sans);font-size:20px;font-weight:600;letter-spacing:-.35px;color:#f8fafc}
+.brand-kicker{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:#7f8797;text-transform:uppercase}
+.brand .meta{padding:6px 9px;border:1px solid rgba(255,255,255,.07);border-radius:8px;background:rgba(255,255,255,.025)}
+.run-selector,.btn-new-round,.btn-providers{height:34px;border-radius:9px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);transition:.18s ease}
+.btn-new-round{padding:0 13px;color:#ecfeff;border-color:rgba(103,232,249,.28);background:linear-gradient(180deg,rgba(103,232,249,.12),rgba(103,232,249,.045))}
+.btn-providers{appearance:none;padding:0 11px;color:#cbd5e1;cursor:pointer;font-family:var(--mono);font-size:10px;letter-spacing:.4px}
+.btn-new-round:hover,.btn-providers:hover,.run-selector:hover{transform:translateY(-1px);border-color:rgba(167,139,250,.4);background:rgba(167,139,250,.09)}
+.provider-count{color:#a78bfa;margin-left:4px}
+.stats{padding:8px 10px 8px 14px;border:1px solid rgba(255,255,255,.07);border-radius:12px;background:rgba(255,255,255,.025)}
+.stats-row{gap:18px}.stat .label{font-size:9px;color:#667085}.stat .value{color:#e5e7eb}
+nav{padding:0 24px;background:rgba(9,10,14,.72);border-color:rgba(255,255,255,.065)}
+.stage-btn{padding:13px 15px 11px;border-radius:8px 8px 0 0}.stage-btn:hover{background:rgba(255,255,255,.035)}
+.stage-num{border-radius:6px;border-color:rgba(255,255,255,.09);background:rgba(255,255,255,.03)}
+.stage-active-bar{background:linear-gradient(90deg,#67e8f9,#a78bfa);box-shadow:0 -2px 14px rgba(103,232,249,.28)}
+.layout{grid-template-columns:minmax(0,1fr) minmax(300px,350px)}
+main{padding:28px 30px 100px}.view.active{gap:38px}
+.group-head{padding-bottom:11px;border-color:rgba(255,255,255,.07)}
+.group-head h2{font-family:var(--sans);font-size:16px;font-weight:600;letter-spacing:-.15px;color:#f1f5f9}
+.group-head .sub{color:#6f7787}.group-done{padding:4px 7px;border:1px solid rgba(255,255,255,.07);border-radius:6px;background:rgba(255,255,255,.025)}
+.agent-grid{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:11px}
+.agent-card,.arbiter-card{border-radius:12px;border-color:rgba(255,255,255,.07);background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.018));box-shadow:0 12px 32px rgba(0,0,0,.12);transition:transform .18s ease,border-color .18s ease,background .18s ease}
+.agent-card.openai,.agent-card.nvidia,.agent-card.community{background:linear-gradient(145deg,rgba(255,255,255,.042),rgba(255,255,255,.016))}
+.agent-card:hover{transform:translateY(-2px);border-color:rgba(103,232,249,.26);background:linear-gradient(145deg,rgba(103,232,249,.07),rgba(167,139,250,.035))}
+.agent-card.community:hover{border-color:rgba(167,139,250,.38)}
+.agent-dot{width:9px;height:9px;margin:6px 4px 0 1px;box-shadow:0 0 12px currentColor}
+.agent-name{color:#f1f5f9}.agent-lens{color:#8d96a6}.agent-foot{color:#5f6878}
+.arbiter-card{padding:17px}.arbiter-name{font-family:var(--sans);font-size:15px;font-weight:600}.chip{border-radius:6px;background:rgba(255,255,255,.025)}
+aside{background:rgba(5,6,9,.7);border-color:rgba(255,255,255,.065)}
+.aside-input{background:rgba(8,9,13,.9);border-color:rgba(255,255,255,.07)}
+.input-row input,.form-field input,.form-field textarea{border-radius:9px;border-color:rgba(255,255,255,.09);background:rgba(255,255,255,.035)}
+.btn-send,.btn-primary,.btn-download{border-radius:9px;background:linear-gradient(135deg,#67e8f9,#a78bfa);color:#090a0e;box-shadow:0 8px 22px rgba(103,232,249,.12)}
+.modal-backdrop{background:rgba(2,3,6,.78);backdrop-filter:blur(10px)}
+.modal{max-width:860px;border-radius:16px;border-color:rgba(255,255,255,.1);background:linear-gradient(160deg,#101219,#090a0f);box-shadow:0 30px 90px rgba(0,0,0,.55)}
+.modal-head,.modal-foot{border-color:rgba(255,255,255,.07);background:rgba(255,255,255,.015)}
+.modal-title{font-family:var(--sans);font-weight:600;color:#f8fafc}
+.provider-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.provider-card{padding:16px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.025)}
+.provider-card-top{display:flex;align-items:center;justify-content:space-between}.provider-card h3{margin:13px 0 4px;font-size:14px;color:#f1f5f9}.provider-card p{min-height:38px;margin:10px 0;color:#8791a2;font-size:11.5px;line-height:1.5}.provider-model,.provider-detail{font-family:var(--mono);font-size:10px;color:#687184}.provider-detail{margin-top:10px;color:#a1a9b8}
+.provider-orb{width:9px;height:9px;border-radius:50%;background:#4b5563}.provider-orb.ready{background:#6ee7b7;box-shadow:0 0 16px rgba(110,231,183,.55)}
+.provider-state{font-family:var(--mono);font-size:9px;letter-spacing:.65px;padding:4px 6px;border-radius:6px;border:1px solid rgba(255,255,255,.08);color:#7f8797}.provider-state.ready{color:#6ee7b7;border-color:rgba(110,231,183,.2);background:rgba(110,231,183,.06)}
+.provider-picker{display:grid;gap:8px}.provider-choice{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.022);cursor:pointer}.provider-choice:hover{border-color:rgba(167,139,250,.3)}.provider-choice input{accent-color:#a78bfa}.provider-choice-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}.provider-choice-title{font-size:12.5px;color:#e5e7eb}.provider-choice-meta{font-family:var(--mono);font-size:9.5px;color:#687184}
+.free-note{color:#a8b1c1;border:1px solid rgba(103,232,249,.16);border-radius:10px;padding:11px 12px;background:linear-gradient(135deg,rgba(103,232,249,.05),rgba(167,139,250,.04));font-size:11.5px;line-height:1.55}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
 @media (max-width:860px){
-  .layout{grid-template-columns:1fr}
+  html,body{max-width:100%;overflow-x:hidden}
+  .app,.layout,main,.view,.view>section{width:100%;min-width:0}
+  .layout{grid-template-columns:minmax(0,1fr)}
   aside{display:none}
+  header{align-items:flex-start;padding:14px 16px;gap:14px}
+  .brand{width:100%;gap:10px}.brand-lockup{width:100%}.brand .meta{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .run-selector{max-width:210px}
+  .stats{width:100%;overflow-x:auto}.stats-row{flex-wrap:nowrap}
+  nav{padding:0 12px;overflow:hidden}.btn-interrupt{display:none}
+  main{padding:24px 16px 80px}
+  .agent-grid,.arbiter-grid{grid-template-columns:minmax(0,1fr)}
+  .group-head{align-items:flex-start}.group-head-left{min-width:0;flex-direction:column;gap:5px}.group-head .sub{white-space:normal;line-height:1.45}
+  .provider-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -239,10 +305,14 @@ aside{min-height:0;border-left:1px solid var(--border);background:#0a0908;displa
 
   <header>
     <div class="brand">
-      <h1>Conselho</h1>
+      <div class="brand-lockup">
+        <img class="brand-mark" src="/assets/quorum-minimal.png" alt="">
+        <div class="brand-copy"><h1>Quorum</h1><span class="brand-kicker">Local intelligence council</span></div>
+      </div>
       <div class="meta">localhost:7331 · run <span id="runId"></span> · rodada <span id="round"></span></div>
       <select id="runSelector" class="run-selector"></select>
       <button class="btn-new-round" id="btnNewRound">+ NOVA RODADA</button>
+      <button class="btn-providers" id="btnProviders">MODELOS <span class="provider-count" id="providerCount">verificando</span></button>
     </div>
     <div class="stats">
       <div class="stats-col">
@@ -273,7 +343,7 @@ aside{min-height:0;border-left:1px solid var(--border);background:#0a0908;displa
           <div class="group-head">
             <div class="group-head-left">
               <h2>Grupo Anthropic</h2>
-              <span class="sub">10 especialistas · Sonnet 5/Haiku · todos com leitura de arquivos</span>
+              <span class="sub">especialistas em paralelo · Sonnet/Haiku · todos com leitura de arquivos</span>
             </div>
             <span class="group-done" id="claudeDone" style="color:var(--green-3)"></span>
           </div>
@@ -284,7 +354,7 @@ aside{min-height:0;border-left:1px solid var(--border);background:#0a0908;displa
           <div class="group-head">
             <div class="group-head-left">
               <h2>Grupo OpenAI</h2>
-              <span class="sub">10 especialistas · GPT-5.6 Terra/Luna · mesmas lentes do Grupo Claude, sandbox só-leitura</span>
+              <span class="sub">especialistas em paralelo · GPT-5.6 Terra/Luna · sandbox só-leitura</span>
             </div>
             <span class="group-done" id="openaiDone" style="color:var(--accent-5)"></span>
           </div>
@@ -295,11 +365,22 @@ aside{min-height:0;border-left:1px solid var(--border);background:#0a0908;displa
           <div class="group-head">
             <div class="group-head-left">
               <h2>Grupo NVIDIA / Hermes</h2>
-              <span class="sub">fornecedor independente · Nemotron 3 Super 120B · escopo básico, sem juiz próprio</span>
+              <span class="sub">fornecedor independente · Nemotron 3 Super 120B · validação consolidada por juiz próprio</span>
             </div>
             <span class="group-done" id="nvidiaDone" style="color:var(--nvidia)"></span>
           </div>
           <div class="agent-grid" id="nvidiaGrid"></div>
+        </section>
+
+        <section>
+          <div class="group-head">
+            <div class="group-head-left">
+              <h2>Conselheiros independentes</h2>
+              <span class="sub">DeepSeek local · Kimi free · Antigravity/Gemini · skills especializadas</span>
+            </div>
+            <span class="group-done" id="communityDone" style="color:var(--community)"></span>
+          </div>
+          <div class="agent-grid" id="communityGrid"></div>
         </section>
 
         <section>
@@ -366,7 +447,7 @@ aside{min-height:0;border-left:1px solid var(--border);background:#0a0908;displa
           <input type="text" id="draftInput" placeholder="Instrução para o conselho…">
           <button class="btn-send" id="btnSend">Enviar</button>
         </div>
-        <div class="input-hint">Entra na fila do orquestrador. Interromper uma rodada preserva os achados já gravados em .conselho/runs/<span id="runIdHint"></span>/.</div>
+        <div class="input-hint">Entra na fila do orquestrador. Interromper uma rodada preserva os achados já gravados em runs/<span id="runIdHint"></span>/.</div>
       </div>
     </aside>
   </div>
@@ -399,13 +480,13 @@ aside{min-height:0;border-left:1px solid var(--border);background:#0a0908;displa
       <div class="modal-head">
         <div>
           <div class="modal-title">Nova rodada</div>
-          <div class="modal-sub">roda os dois lados sozinho, sem precisar do Claude Code numa conversa</div>
+          <div class="modal-sub">orquestra os modelos disponíveis e preserva a rodada quando um provedor está sem quota</div>
         </div>
         <button class="btn-close" id="btnCloseNewRound">FECHAR</button>
       </div>
       <div class="modal-body">
         <div style="display:flex;flex-direction:column;gap:14px">
-          <div class="form-hint" style="color:var(--amber);border:1px solid #4a3b22;border-radius:4px;padding:9px 11px;background:#1c150c">⚠ Isso usa a API paga da Anthropic <em>e</em> da OpenAI — não entra na sua assinatura Max. Custa dinheiro de verdade (tipicamente centavos por rodada). Pra uma revisão só do lado Claude sem custo extra, feche isto e peça direto aqui no chat em vez de usar este botão.</div>
+          <div class="free-note">O perfil padrão prioriza sessões locais, Ollama e quotas gratuitas. Nenhum fallback pago é ativado automaticamente. Provedores indisponíveis são pulados sem derrubar a rodada.</div>
           <div class="form-field">
             <label>PASTA DO PROJETO (caminho absoluto)</label>
             <input type="text" id="newRoundScope" placeholder="C:\Users\...\MeuProjeto">
@@ -418,13 +499,35 @@ aside{min-height:0;border-left:1px solid var(--border);background:#0a0908;displa
             <label>CONTEXTO EXTRA (opcional — ex. vault do Obsidian)</label>
             <input type="text" id="newRoundContextPath" placeholder="C:\Users\...\Vault (deixe vazio se não tiver)">
           </div>
-          <div class="form-hint">Usa os 21 agentes padrão (10 Anthropic + 10 OpenAI + 1 NVIDIA/Hermes). Pedir agentes extras avulsos ainda não tem UI aqui — dá pra pedir direto pro Claude Code numa conversa por enquanto. Contexto extra: só funciona pros grupos Claude e NVIDIA/Hermes hoje — o grupo OpenAI usa o Codex CLI por padrão, que ainda não suporta uma segunda pasta de contexto.</div>
+          <div class="form-field">
+            <label>CONSELHEIROS GRATUITOS OPCIONAIS</label>
+            <div class="provider-picker" id="newRoundProviders"></div>
+          </div>
+          <div class="form-hint">DeepSeek e Kimi usam as ferramentas confinadas do Quorum. O Antigravity recebe somente os relatórios consolidados em um diretório isolado, reduzindo risco de escrita acidental no projeto.</div>
           <div class="form-error" id="newRoundError" style="display:none"></div>
         </div>
       </div>
       <div class="modal-foot">
         <span class="modal-path" id="newRoundStatus"></span>
         <button class="btn-primary" id="btnStartRound">Iniciar rodada</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="providersModal">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">Rede de modelos</div>
+          <div class="modal-sub">diagnóstico local sem exibir chaves ou credenciais</div>
+        </div>
+        <button class="btn-close" id="btnCloseProviders">FECHAR</button>
+      </div>
+      <div class="modal-body">
+        <div class="provider-grid" id="providersGrid"></div>
+      </div>
+      <div class="modal-foot">
+        <span class="modal-path">Execute <strong>npm run doctor</strong> para ver instruções no terminal.</span>
       </div>
     </div>
   </div>

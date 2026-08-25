@@ -37,6 +37,11 @@ const DEMO = {
   nvidiaAgents: [
     { key: 'hermes-docs', name: 'Documentação & Legibilidade (Hermes)', model: 'Nemotron 3 Super', state: 'done', findings: 1, lens: 'README/comentários batendo com o código real, nomes que escondem o que fazem.', elapsed: '31s', usage: { source: 'plano free NVIDIA (sem custo)' } },
   ],
+  communityAgents: [
+    { key: 'deepseek-local', name: 'DeepSeek · Segurança & Performance', model: 'deepseek-r1:8b', state: 'done', findings: 2, lens: 'Vulnerabilidades verificáveis, gargalos e economia de tokens.', elapsed: '44s', free: 'Ollama local' },
+    { key: 'kimi-free', name: 'Kimi · Qualidade & Design', model: 'kimi-k2.6:cloud', state: 'done', findings: 2, lens: 'Qualidade de produto, interface e refinamento visual.', elapsed: '39s', free: 'Ollama Cloud Free' },
+    { key: 'antigravity-free', name: 'Antigravity · Revisão Gemini', model: 'gemini-3.7-flash-high', state: 'done', findings: 1, lens: 'Revisão independente dos relatórios consolidados.', elapsed: '36s', free: 'Quota Antigravity' },
+  ],
   arbiters: [
     { key: 'juiz-claude', name: 'Juiz Claude', model: 'Opus 5 · com leitura', state: 'done', role: 'Consolidou os 10 relatórios, descartou 3 achados de baixa confiança, checou pessoalmente os de severidade alta antes de aceitar.', chips: ['10 relatórios lidos', '3 descartados', '15 confirmados'], usage: { inputTokens: 48200, outputTokens: 5100, estimatedUsd: 0.369 } },
     { key: 'juiz-openai', name: 'Juiz OpenAI', model: 'GPT-5.6 Sol · com leitura', state: 'done', role: 'Consolidou os 10 relatórios, checou o achado de dependência travada contra o lockfile antes de aceitar.', chips: ['10 relatórios lidos', '1 rebaixado'], usage: { inputTokens: 31500, outputTokens: 3400, estimatedUsd: 0.26 } },
@@ -72,6 +77,7 @@ const DEMO = {
     claude: '## Resumo\nConsolidação dos 10 especialistas Claude. 2 achados de severidade alta checados pessoalmente antes de aceitar.\n\n## Achados\n\n### SQL injection em /api/pedidos/buscar\n- Severidade: alto\n- Evidência: app/Controllers/PedidoController.php:212\n- Confiança: alta (reli o arquivo pessoalmente)\n\n(relatório completo omitido no exemplo demo)',
     openai: '## Resumo\nConsolidação dos 10 especialistas GPT/Codex. Confirmo o achado de SQL injection do lado Claude a partir de ângulo diferente.\n\n## Achados\n\n### .env.production copiado no build\n- Severidade: alto\n- Evidência: ci/build.yml:34\n- Confiança: alta\n\n(relatório completo omitido no exemplo demo)',
     nvidia: '## Resumo\nO Hermes revisou documentação/legibilidade. 1 achado confirmado.\n\n## Achados\n\n### README desatualizado sobre o fluxo de reenvio\n- Severidade: baixo\n- Evidência: README.md:88\n- Confiança: média',
+    community: '## Resumo\nDeepSeek, Kimi e Antigravity acrescentaram uma leitura independente, com foco em segurança, desempenho, qualidade e experiência visual.\n\n## Achados\n\n### Redução de contexto repetido\n- Impacto: médio\n- Evidência: prompts compartilhados entre especialistas\n- Confiança: alta',
   },
   headline: 'Deploy pode seguir, com um bloqueio: segredos ainda saem no build.',
   lede: 'Os dois grupos convergiram em 9 dos 12 pontos materiais. A divergência que importa é sobre o custo de migrar o schema agora — e ela não é resolvível com leitura de código, precisa de um número seu.',
@@ -127,19 +133,23 @@ const STATE = {
   data: DEMO,
   pollTimer: null,
   editingNoteKey: null,
+  providers: [],
+  providersOpen: false,
+  selectedProviders: new Set(['deepseek-local', 'kimi-free', 'antigravity-free']),
 };
 
 const STAGES = [
   { key: 'conselho', num: '01', title: 'Rodada paralela', state: () => {
-    const total = STATE.data.claudeAgents.length + STATE.data.openaiAgents.length;
-    const done = [...STATE.data.claudeAgents, ...STATE.data.openaiAgents].filter(a => a.state === 'done').length;
+    const all = [...STATE.data.claudeAgents, ...STATE.data.openaiAgents, ...STATE.data.nvidiaAgents, ...(STATE.data.communityAgents || [])];
+    const total = all.length;
+    const done = all.filter(a => a.state === 'done').length;
     return `${total} agentes · ${done} concluídos`;
   } },
   { key: 'debate', num: '02', title: 'Debate cruzado', state: () => `${(STATE.data.debate || []).length} mensagens` },
   { key: 'verify', num: '04', title: 'Juízes', state: () => {
     const jr = STATE.data.judgeReports || {};
-    const n = ['claude', 'openai', 'nvidia'].filter((k) => jr[k]).length;
-    return n ? `${n}/3 relatórios` : 'aguardando';
+    const n = ['claude', 'openai', 'nvidia', 'community'].filter((k) => jr[k]).length;
+    return n ? `${n}/4 relatórios` : 'aguardando';
   } },
   { key: 'synth', num: '05', title: 'Síntese Opus', state: () => STATE.data.headline ? (STATE.data.dissent ? '1 divergência aberta' : 'sem divergência') : 'aguardando' },
 ];
@@ -177,6 +187,7 @@ function findingsFor(key) {
   const all = [
     ...STATE.data.claudeAgents.map(a => ({ ...a, side: 'claude' })),
     ...STATE.data.openaiAgents.map(a => ({ ...a, side: 'openai' })),
+    ...(STATE.data.communityAgents || []).map(a => ({ ...a, side: 'community' })),
   ];
   const agent = all.find(a => a.key === key);
   if (!agent || !agent.findings) return [];
@@ -254,8 +265,9 @@ function normalizeRunData(raw) {
     claudeAgents: raw.claudeAgents || [],
     openaiAgents: raw.openaiAgents || [],
     nvidiaAgents: raw.nvidiaAgents || [],
+    communityAgents: raw.communityAgents || [],
     arbiters: raw.arbiters || [],
-    judgeReports: raw.judgeReports || { claude: '', openai: '', nvidia: '' },
+    judgeReports: raw.judgeReports || { claude: '', openai: '', nvidia: '', community: '' },
     debate: raw.debate || [],
     claims: raw.claims || [],
     headline: raw.headline || '',
@@ -334,6 +346,9 @@ function renderHeader() {
   dot.classList.toggle('demo', isDemo);
   dot.classList.toggle('failed', !isDemo && r.status === 'failed');
   label.textContent = isDemo ? 'demo' : r.status === 'done' ? 'concluída' : r.status === 'failed' ? 'falhou' : 'ao vivo';
+  const ready = STATE.providers.filter((provider) => provider.available).length;
+  const providerCount = document.getElementById('providerCount');
+  if (providerCount) providerCount.textContent = STATE.providers.length ? `${ready}/${STATE.providers.length} prontos` : 'verificando';
 }
 
 function renderTabs() {
@@ -357,7 +372,7 @@ function renderTabs() {
 /* ---------- render: view 01 conselho ---------- */
 
 function agentCard(agent, side) {
-  const card = el('button', `agent-card${side === 'openai' ? ' openai' : side === 'nvidia' ? ' nvidia' : ''}`);
+  const card = el('button', `agent-card${side === 'openai' ? ' openai' : side === 'nvidia' ? ' nvidia' : side === 'community' ? ' community' : ''}`);
   card.innerHTML = `
     <div class="agent-top">
       <span class="agent-dot" style="background:${stateColor(agent.state)}"></span>
@@ -375,7 +390,7 @@ function agentCard(agent, side) {
 
 function renderConselho() {
   const container = document.getElementById('view-conselho');
-  const hasAny = STATE.data.claudeAgents.length || STATE.data.openaiAgents.length || STATE.data.nvidiaAgents.length;
+  const hasAny = STATE.data.claudeAgents.length || STATE.data.openaiAgents.length || STATE.data.nvidiaAgents.length || (STATE.data.communityAgents || []).length;
   if (!hasAny) {
     container.innerHTML = '';
     container.appendChild(emptyState('Nenhuma rodada iniciada ainda para este run. O painel atualiza sozinho assim que os agentes começarem.'));
@@ -388,10 +403,13 @@ function renderConselho() {
   STATE.data.openaiAgents.forEach(a => oGrid.appendChild(agentCard(a, 'openai')));
   const nGrid = document.getElementById('nvidiaGrid'); nGrid.innerHTML = '';
   STATE.data.nvidiaAgents.forEach(a => nGrid.appendChild(agentCard(a, 'nvidia')));
+  const communityGrid = document.getElementById('communityGrid'); communityGrid.innerHTML = '';
+  (STATE.data.communityAgents || []).forEach(a => communityGrid.appendChild(agentCard(a, 'community')));
 
   document.getElementById('claudeDone').textContent = `${STATE.data.claudeAgents.filter(a => a.state === 'done').length}/${STATE.data.claudeAgents.length} concluídos`;
   document.getElementById('openaiDone').textContent = `${STATE.data.openaiAgents.filter(a => a.state === 'done').length}/${STATE.data.openaiAgents.length} concluídos`;
   document.getElementById('nvidiaDone').textContent = `${STATE.data.nvidiaAgents.filter(a => a.state === 'done').length}/${STATE.data.nvidiaAgents.length} concluídos`;
+  document.getElementById('communityDone').textContent = `${(STATE.data.communityAgents || []).filter(a => a.state === 'done').length}/${(STATE.data.communityAgents || []).length} concluídos`;
 
   const aGrid = document.getElementById('arbiterGrid'); aGrid.innerHTML = '';
   STATE.data.arbiters.forEach(a => {
@@ -447,7 +465,7 @@ function renderDebate() {
 function renderVerify() {
   const view = document.getElementById('view-verify');
   const jr = STATE.data.judgeReports || {};
-  if (!jr.claude && !jr.openai && !jr.nvidia) {
+  if (!jr.claude && !jr.openai && !jr.nvidia && !jr.community) {
     view.innerHTML = '';
     view.appendChild(emptyState('Nenhum juiz concluiu ainda nesta rodada. Esta tela popula conforme cada grupo termina.'));
     return;
@@ -456,6 +474,7 @@ function renderVerify() {
     { key: 'claude', label: 'Juiz Claude', color: 'var(--accent-2)' },
     { key: 'openai', label: 'Juiz OpenAI', color: 'var(--blue)' },
     { key: 'nvidia', label: 'Juiz NVIDIA', color: 'var(--nvidia)' },
+    { key: 'community', label: 'Conselheiros independentes', color: 'var(--community)' },
   ];
   view.innerHTML = `
     <div style="display:flex;flex-direction:column;gap:16px">
@@ -722,9 +741,9 @@ function buildExportFormats(data) {
   };
 
   return {
-    opus: { label: 'TASK · OPUS FINAL', color: 'var(--accent-2)', border: '#6b4f33', path: `.conselho/runs/${data.run.runId}/export-task-opus.md`, text: opusLines.join('\n') },
-    resumo: { label: 'RESUMO EXECUTIVO', color: 'var(--text-2)', border: 'var(--border-6)', path: `.conselho/runs/${data.run.runId}/export-resumo.md`, text: resumoLines.join('\n') },
-    json: { label: 'JSON · MÁQUINA', color: 'var(--blue)', border: '#2c3d47', path: `.conselho/runs/${data.run.runId}/export.json`, text: JSON.stringify(jsonObj, null, 2) },
+    opus: { label: 'TASK · OPUS FINAL', color: 'var(--accent-2)', border: '#6b4f33', path: `runs/${data.run.runId}/export-task-opus.md`, text: opusLines.join('\n') },
+    resumo: { label: 'RESUMO EXECUTIVO', color: 'var(--text-2)', border: 'var(--border-6)', path: `runs/${data.run.runId}/export-resumo.md`, text: resumoLines.join('\n') },
+    json: { label: 'JSON · MÁQUINA', color: 'var(--blue)', border: '#2c3d47', path: `runs/${data.run.runId}/export.json`, text: JSON.stringify(jsonObj, null, 2) },
   };
 }
 
@@ -754,6 +773,56 @@ function renderModal() {
   document.getElementById('btnCopy').textContent = STATE.copied ? 'Copiado' : 'Copiar';
 }
 
+async function loadProviderHealth() {
+  try {
+    const response = await fetch('/api/providers');
+    const data = response.ok ? await response.json() : { providers: [] };
+    STATE.providers = data.providers || [];
+  } catch (error) {
+    STATE.providers = [];
+  }
+}
+
+function renderProviderChoices() {
+  const target = document.getElementById('newRoundProviders');
+  if (!target) return;
+  const optional = STATE.providers.filter((provider) => ['deepseek-local', 'kimi-free', 'antigravity-free'].includes(provider.key));
+  target.innerHTML = optional.map((provider) => `
+    <label class="provider-choice">
+      <input type="checkbox" value="${escapeHtml(provider.key)}" ${STATE.selectedProviders.has(provider.key) ? 'checked' : ''}>
+      <span class="provider-choice-copy">
+        <span class="provider-choice-title">${escapeHtml(provider.name)}</span>
+        <span class="provider-choice-meta">${escapeHtml(provider.model)} · ${escapeHtml(provider.detail || '')}</span>
+      </span>
+      <span class="provider-state ${provider.available ? 'ready' : 'optional'}">${provider.available ? 'PRONTO' : 'OPCIONAL'}</span>
+    </label>`).join('') || '<div class="form-hint">Diagnóstico de provedores indisponível.</div>';
+  target.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+    input.addEventListener('change', () => {
+      if (input.checked) STATE.selectedProviders.add(input.value);
+      else STATE.selectedProviders.delete(input.value);
+    });
+  });
+}
+
+function renderProvidersModal() {
+  const backdrop = document.getElementById('providersModal');
+  if (!backdrop) return;
+  backdrop.classList.toggle('show', STATE.providersOpen);
+  if (!STATE.providersOpen) return;
+  const grid = document.getElementById('providersGrid');
+  grid.innerHTML = STATE.providers.map((provider) => `
+    <article class="provider-card">
+      <div class="provider-card-top">
+        <span class="provider-orb ${provider.available ? 'ready' : ''}"></span>
+        <span class="provider-state ${provider.available ? 'ready' : 'optional'}">${provider.available ? 'PRONTO' : 'CONFIGURAR'}</span>
+      </div>
+      <h3>${escapeHtml(provider.name)}</h3>
+      <div class="provider-model">${escapeHtml(provider.model || '')}</div>
+      <p>${escapeHtml(provider.free || '')}</p>
+      <div class="provider-detail">${escapeHtml(provider.detail || '')}</div>
+    </article>`).join('');
+}
+
 /* ---------- render principal ---------- */
 
 function render() {
@@ -771,6 +840,7 @@ function render() {
 
   renderSidebar();
   renderModal();
+  renderProvidersModal();
 }
 
 /* ---------- eventos fixos (fora das views que são reconstruídas) ---------- */
@@ -797,12 +867,21 @@ document.getElementById('btnDownload').addEventListener('click', () => {
 });
 document.getElementById('btnInterrupt').addEventListener('click', () => {
   STATE.data.activity = STATE.data.activity || [];
-  STATE.data.activity.unshift({ time: 'agora', text: 'Rodada interrompida pelo usuário — achados já gravados preservados em .conselho/runs/' + (STATE.data.run.runId || '') + '/.' });
+  STATE.data.activity.unshift({ time: 'agora', text: 'Rodada interrompida pelo usuário — achados já gravados preservados em runs/' + (STATE.data.run.runId || '') + '/.' });
   render();
 });
 document.getElementById('draftInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendDraft(); });
 document.getElementById('btnSend').addEventListener('click', sendDraft);
 document.getElementById('runSelector').addEventListener('change', (e) => loadRun(e.target.value));
+document.getElementById('btnProviders').addEventListener('click', async () => {
+  await loadProviderHealth();
+  STATE.providersOpen = true;
+  render();
+});
+document.getElementById('btnCloseProviders').addEventListener('click', () => { STATE.providersOpen = false; render(); });
+document.getElementById('providersModal').addEventListener('click', (event) => {
+  if (event.target.id === 'providersModal') { STATE.providersOpen = false; render(); }
+});
 
 async function sendDraft() {
   const input = document.getElementById('draftInput');
@@ -830,6 +909,7 @@ document.getElementById('btnNewRound').addEventListener('click', () => {
   document.getElementById('newRoundModal').classList.add('show');
   document.getElementById('newRoundError').style.display = 'none';
   document.getElementById('newRoundStatus').textContent = '';
+  renderProviderChoices();
 });
 document.getElementById('btnCloseNewRound').addEventListener('click', () => {
   document.getElementById('newRoundModal').classList.remove('show');
@@ -855,7 +935,9 @@ document.getElementById('btnStartRound').addEventListener('click', async () => {
   statusBox.textContent = 'iniciando…';
   try {
     const res = await fetch('/api/rounds', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scope, task, contextPath: contextPath || undefined }),
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+        scope, task, contextPath: contextPath || undefined, providers: [...STATE.selectedProviders],
+      }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'falha ao iniciar rodada');
@@ -877,6 +959,12 @@ document.getElementById('btnStartRound').addEventListener('click', async () => {
 /* ---------- boot ---------- */
 
 async function boot() {
+  // O diagnóstico de CLIs pode levar alguns segundos. O conteúdo principal
+  // deve aparecer imediatamente; a rede de modelos se atualiza em paralelo.
+  loadProviderHealth().then(() => {
+    render();
+    if (document.getElementById('newRoundModal').classList.contains('show')) renderProviderChoices();
+  });
   await loadRunsList();
   const latestReal = STATE.runsList[0];
   await loadRun(latestReal ? latestReal.runId : DEMO_RUN_ID);

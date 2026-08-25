@@ -62,6 +62,14 @@
     "maxToolOutputChars": 15000
   },
 
+  "community_specialist": {
+    "_comment": "DeepSeek/Kimi via Ollama e revisor Antigravity. Contexto e saída menores para respeitar hardware local e quotas gratuitas.",
+    "maxIterations": 10,
+    "maxWallClockMs": 300000,
+    "maxOutputTokensPerTurn": 2200,
+    "maxToolOutputChars": 12000
+  },
+
   "run_command": {
     "timeoutMs": 30000,
     "maxOutputChars": 8000
