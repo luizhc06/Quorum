@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
+const { getProviderHealth } = require('../provider-health');
 
 const PORT = 7331;
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -15,11 +16,22 @@ const MIME = {
   '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
+  '.png': 'image/png',
+};
+const SECURITY_HEADERS = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'no-referrer',
+  'Cross-Origin-Resource-Policy': 'same-origin',
+  'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
 };
 
 function sendJson(res, status, obj) {
   const body = JSON.stringify(obj);
-  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+  res.writeHead(status, {
+    'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store',
+    ...SECURITY_HEADERS,
+  });
   res.end(body);
 }
 
@@ -74,6 +86,10 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, 200, listRuns());
   }
 
+  if (reqPath === '/api/providers' && req.method === 'GET') {
+    return sendJson(res, 200, { providers: getProviderHealth() });
+  }
+
   if (reqPath === '/api/rounds' && req.method === 'POST') {
     let body;
     try { body = await readJsonBody(req); }
@@ -94,6 +110,12 @@ const server = http.createServer(async (req, res) => {
     if (body.extraAgents && (body.extraAgents.claude?.length || body.extraAgents.openai?.length)) {
       extraAgentsJson = JSON.stringify(body.extraAgents);
     }
+    const allowedProviders = new Set(
+      JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'config', 'community-agents.json'), 'utf8')).agents.map((agent) => agent.key)
+    );
+    const selectedProviders = Array.isArray(body.providers)
+      ? body.providers.filter((provider) => typeof provider === 'string' && allowedProviders.has(provider))
+      : null;
 
     const runId = `${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${crypto.randomBytes(3).toString('hex')}`;
     const outDir = path.join(RUNS_DIR, runId);
@@ -104,6 +126,7 @@ const server = http.createServer(async (req, res) => {
     const scriptArgs = ['orchestrate.js', '--scope', scope, '--task', task, '--run-id', runId, '--out', outDir];
     if (contextPath) scriptArgs.push('--context-path', contextPath);
     if (extraAgentsJson) scriptArgs.push('--extra-agents', extraAgentsJson);
+    if (selectedProviders) scriptArgs.push('--providers', JSON.stringify(selectedProviders));
 
     const child = spawn(process.execPath, scriptArgs, {
       cwd: REPO_ROOT,
@@ -188,8 +211,9 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  let filePath = path.join(PUBLIC_DIR, reqPath === '/' ? '/index.html' : reqPath);
-  if (!filePath.startsWith(PUBLIC_DIR)) {
+  const relativePath = reqPath === '/' ? 'index.html' : reqPath.replace(/^\/+/, '');
+  const filePath = path.resolve(PUBLIC_DIR, relativePath);
+  if (!filePath.startsWith(PUBLIC_DIR + path.sep)) {
     res.writeHead(403);
     res.end('forbidden');
     return;
@@ -202,12 +226,15 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     const ext = path.extname(filePath);
-    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
+    res.writeHead(200, {
+      'Content-Type': MIME[ext] || 'application/octet-stream',
+      ...SECURITY_HEADERS,
+    });
     res.end(data);
   });
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, '127.0.0.1', () => {
   console.log(`[dashboard] Conselho rodando em http://localhost:${PORT}`);
   console.log(`[dashboard] lendo rodadas reais de ${RUNS_DIR}`);
 });

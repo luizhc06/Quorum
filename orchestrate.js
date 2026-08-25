@@ -21,6 +21,7 @@ const { buildToolset: buildClaudeToolset } = require('./claude-side/engine/tools
 const { createClient: createOpenaiClient } = require('./openai-side/src/client');
 const { runOrchestration: runOpenaiSide } = require('./openai-side/src/orchestrator');
 const { runNvidiaSide } = require('./openai-side/src/providers/nvidia-solenne');
+const { runCommunityStage } = require('./openai-side/src/providers/community');
 
 function parseArgs(argv) {
   const out = {};
@@ -72,7 +73,7 @@ function extractFindingBlocks(markdown) {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (!args.scope || !args.task || !args['run-id'] || !args.out) {
-    console.error('Uso: node orchestrate.js --scope <dir> --task "<descrição>" --run-id <id> --out runs/<id> [--context-path <dir>] [--extra-agents \'{"claude":[...],"openai":[...]}\']');
+    console.error('Uso: node orchestrate.js --scope <dir> --task "<descrição>" --run-id <id> --out runs/<id> [--context-path <dir>] [--providers \'["deepseek-local","kimi-free","antigravity-free"]\'] [--extra-agents \'{"claude":[...],"openai":[...]}\']');
     process.exit(1);
   }
 
@@ -106,6 +107,7 @@ async function main() {
   const limits = loadJson(path.join(__dirname, 'config', 'limits.json'));
   const claudeAgentsConfig = loadJson(path.join(__dirname, 'claude-side', 'config', 'agents.json'));
   const openaiAgentsConfig = loadJson(path.join(__dirname, 'openai-side', 'config', 'agents.json'));
+  const communityAgentsConfig = loadJson(path.join(__dirname, 'config', 'community-agents.json'));
 
   let extra = { claude: [], openai: [] };
   if (args['extra-agents']) {
@@ -115,6 +117,20 @@ async function main() {
   const claudeSpecs = [...claudeAgentsConfig.specialists, ...extra.claude];
   const openaiSpecs = [...openaiAgentsConfig.specialists, ...extra.openai];
   const nvidiaSpecs = openaiAgentsConfig.nvidia?.specialists || [];
+  let requestedProviders = null;
+  if (args.providers) {
+    try {
+      const parsed = JSON.parse(args.providers);
+      if (Array.isArray(parsed)) requestedProviders = new Set(parsed.filter((value) => typeof value === 'string'));
+    } catch (error) {
+      console.error('--providers inválido (precisa ser um array JSON), usando os padrões:', error.message);
+    }
+  }
+  const communitySpecs = (communityAgentsConfig.agents || []).filter((spec) =>
+    requestedProviders ? requestedProviders.has(spec.key) : spec.defaultEnabled !== false
+  );
+  const explorationCommunitySpecs = communitySpecs.filter((spec) => spec.stage === 'exploration');
+  const postJudgeCommunitySpecs = communitySpecs.filter((spec) => spec.stage === 'post-judge');
 
   const startedAt = Date.now();
 
@@ -122,7 +138,7 @@ async function main() {
     state.run = {
       runId, round: 1, task: args.task, status: 'running',
       startedAt: new Date(startedAt).toISOString(),
-      parallelism: `${claudeSpecs.length + openaiSpecs.length + nvidiaSpecs.length} agentes`,
+      parallelism: `${claudeSpecs.length + openaiSpecs.length + nvidiaSpecs.length + communitySpecs.length} agentes`,
       elapsed: '00:00', cost: 'US$ 0,00',
     };
     state.claudeAgents = claudeSpecs.map((s) => ({
@@ -144,13 +160,18 @@ async function main() {
       key: s.name, name: s.titulo || s.name, model: s.model ? s.model : 'Nemotron 3 Super',
       state: 'queued', findings: 0, lens: s.foco ? s.foco.slice(0, 140) : '', elapsed: '—',
     }));
+    state.communityAgents = communitySpecs.map((s) => ({
+      key: s.key, name: s.name, model: s.model, provider: s.provider,
+      state: 'queued', findings: 0, lens: s.focus ? s.focus.slice(0, 140) : '', elapsed: '—',
+      free: s.free, skills: s.skills || [],
+    }));
     state.arbiters = [
       { key: 'juiz-claude', name: 'Juiz Claude', model: 'Opus 5 · com leitura', state: 'queued', role: 'Aguardando os especialistas Claude.', chips: [] },
       { key: 'juiz-openai', name: 'Juiz OpenAI', model: 'GPT-5.6 Sol · com leitura', state: 'queued', role: 'Aguardando os especialistas OpenAI.', chips: [] },
       { key: 'juiz-nvidia', name: 'Juiz NVIDIA', model: 'Sonnet 5 · com leitura', state: 'queued', role: 'Aguardando o Hermes.', chips: [] },
       { key: 'lider', name: 'Líder / Sintetizador', model: 'Opus 5', state: 'queued', role: 'Vai pesquisar e montar o brief da rodada antes de liberar os grupos.', chips: [] },
     ];
-    state.judgeReports = { claude: '', openai: '', nvidia: '' };
+    state.judgeReports = { claude: '', openai: '', nvidia: '', community: '' };
     state.headline = ''; state.lede = ''; state.synthBlocks = []; state.dissent = null;
     state.activity = [{ time: nowLabel(), text: `Rodada iniciada: "${args.task}"` }];
     state.decisions = state.decisions || {};
@@ -169,7 +190,9 @@ async function main() {
   }
   function updateAgent(side, key, patch) {
     patchState(statePath, (state) => {
-      const list = side === 'claude' ? state.claudeAgents : side === 'openai' ? state.openaiAgents : state.nvidiaAgents;
+      const list = side === 'claude' ? state.claudeAgents
+        : side === 'openai' ? state.openaiAgents
+          : side === 'nvidia' ? state.nvidiaAgents : state.communityAgents;
       const agent = (list || []).find((a) => a.key === key);
       if (agent) Object.assign(agent, patch);
     });
@@ -203,10 +226,10 @@ async function main() {
   pushActivity('Líder começou o kickoff — vai definir o brief antes de liberar os grupos.');
   const kickoffTask =
     `Tarefa pedida pelo usuário para esta rodada do conselho:\n\n"${args.task}"\n\n` +
-    `Antes de liberar os 3 grupos de especialistas (${claudeSpecs.length} Claude, ${openaiSpecs.length} OpenAI, ${nvidiaSpecs.length} NVIDIA/Hermes — todos recebem o MESMO brief que você produzir, já que as lentes Claude/OpenAI são espelhadas), faça uma pesquisa rápida: explore a estrutura geral do código no escopo (list_files, alguns read_file/grep pontuais)` +
+    `Antes de liberar os grupos de especialistas (${claudeSpecs.length} Claude, ${openaiSpecs.length} OpenAI, ${nvidiaSpecs.length} NVIDIA/Hermes e ${explorationCommunitySpecs.length} conselheiros comunitários), faça uma pesquisa rápida: explore a estrutura geral do código no escopo (list_files, alguns read_file/grep pontuais)` +
     (contextPath ? ' e do contexto extra disponível (context_list_files/context_read_file/context_grep)' : '') +
     ` o suficiente pra entender o projeto e calibrar o brief — não precisa ser exaustivo, isso é trabalho dos especialistas depois.\n\n` +
-    `Produza um BRIEF final (ainda não é o relatório, não há achados nesta etapa) que os 3 grupos vão receber como a tarefa deles. O brief deve: (1) esclarecer/expandir a tarefa original se ela for vaga, mantendo a intenção do usuário; (2) apontar, se você notou algo relevante na pesquisa rápida, onde os especialistas devem focar; (3) mencionar explicitamente se algo no contexto extra parece relevante (ex. uma decisão ou correção anterior relacionada), se houver contexto extra disponível. Responda SÓ com o texto do brief final, pronto pra ser repassado — sem preâmbulo, sem comentário sobre o processo.`;
+    `Produza um BRIEF final (ainda não é o relatório, não há achados nesta etapa) que todos os grupos vão receber como a tarefa deles. O brief deve: (1) esclarecer/expandir a tarefa original se ela for vaga, mantendo a intenção do usuário; (2) apontar, se você notou algo relevante na pesquisa rápida, onde os especialistas devem focar; (3) mencionar explicitamente se algo no contexto extra parece relevante (ex. uma decisão ou correção anterior relacionada), se houver contexto extra disponível. Responda SÓ com o texto do brief final, pronto pra ser repassado — sem preâmbulo, sem comentário sobre o processo.`;
   const kickoffResult = await runOneClaudeAgent({
     client: claudeClient, name: 'leader-kickoff', model: models.claude_leader,
     systemPrompt: buildSystemPrompt(loadPersona(claudeAgentsConfig.leader), outputContract, !!contextPath),
@@ -287,6 +310,26 @@ async function main() {
       })
     : Promise.resolve({ specialists: [] });
 
+  // --- DeepSeek e Kimi — provedores gratuitos opcionais, com as mesmas
+  // ferramentas confinadas por path-guard/secret-denylist do grupo NVIDIA.
+  // Ausência do Ollama, login ou modelo gera "skipped", nunca derruba a rodada.
+  const communityExplorationPromise = explorationCommunitySpecs.length
+    ? runCommunityStage({
+        specs: explorationCommunitySpecs, scope, task: roundTask, limits,
+        outDir: path.join(outDir, 'community-side'), contextPath,
+        onAgentUpdate: (name, update) => {
+          updateAgent('community', name, {
+            state: update.state, findings: update.findings ?? undefined,
+            usage: update.usage, elapsed: update.elapsedMs ? fmtElapsed(update.elapsedMs) : undefined,
+          });
+          if (update.state === 'running') pushActivity(`Comunidade · ${name} começou.`);
+          if (update.state === 'done') pushActivity(`Comunidade · ${name} concluiu — ${update.findings ?? 0} achado(s).`);
+          if (update.state === 'skipped') pushActivity(`Comunidade · ${name} indisponível; rodada segue sem ele.`);
+          if (update.state === 'failed') pushActivity(`Comunidade · ${name} falhou; rodada segue sem ele.`);
+        },
+      })
+    : Promise.resolve({ specialists: [] });
+
   // marca todos como "running" já de cara — os três grupos rodam os especialistas
   // em paralelo internamente (Promise.allSettled), não dá pra saber o instante exato
   // que cada um começa sem instrumentar mais fundo; "running" desde o início é uma
@@ -295,9 +338,12 @@ async function main() {
     (state.claudeAgents || []).forEach((a) => { a.state = 'running'; });
     (state.openaiAgents || []).forEach((a) => { a.state = 'running'; });
     (state.nvidiaAgents || []).forEach((a) => { a.state = 'running'; });
+    (state.communityAgents || []).filter((a) => explorationCommunitySpecs.some((spec) => spec.key === a.key)).forEach((a) => { a.state = 'running'; });
   });
 
-  const [claudeSide, openaiSide, nvidiaSide] = await Promise.all([claudeSidePromise, openaiSidePromise, nvidiaSidePromise]);
+  const [claudeSide, openaiSide, nvidiaSide, communityExploration] = await Promise.all([
+    claudeSidePromise, openaiSidePromise, nvidiaSidePromise, communityExplorationPromise,
+  ]);
 
   // --- Juiz NVIDIA (Sonnet 5, sobre o(s) relatório(s) bruto(s) do Hermes) —
   // agora simétrico com os outros dois: todo grupo tem juiz próprio. Sem
@@ -319,11 +365,46 @@ async function main() {
   updateArbiter('juiz-nvidia', { state: judgeNvidiaResult.status === 'ok' ? 'done' : judgeNvidiaResult.status, role: 'Consolidou o relatório do Grupo NVIDIA/Hermes.' });
   pushActivity(`Juiz NVIDIA concluiu (status: ${judgeNvidiaResult.status}).`);
 
+  // Antigravity entra após os juízes. Ele trabalha em um diretório isolado e
+  // recebe os relatórios no prompt; não ganha acesso de escrita ao projeto.
+  const communityEvidence = communityExploration.specialists
+    .filter((result) => result.status === 'ok')
+    .map((result) => `## ${result.name || result.agent}\n\n${result.finalText}`)
+    .join('\n\n---\n\n');
+  const postJudgeTask =
+    `Revise criticamente os relatórios consolidados abaixo e produza uma contribuição independente para a síntese final. Não crie achados que dependam de arquivos que você não recebeu.\n\n` +
+    `## Juiz Claude\n\n${claudeSide.judge.finalText || `(status: ${claudeSide.judge.status})`}\n\n` +
+    `## Juiz OpenAI\n\n${openaiSide.judge.finalText || `(status: ${openaiSide.judge.status})`}\n\n` +
+    `## Juiz NVIDIA\n\n${judgeNvidiaResult.finalText || `(status: ${judgeNvidiaResult.status})`}\n\n` +
+    (communityEvidence ? `## Conselheiros DeepSeek/Kimi\n\n${communityEvidence}` : '');
+  const communityPostJudge = postJudgeCommunitySpecs.length
+    ? await runCommunityStage({
+        specs: postJudgeCommunitySpecs, scope, task: postJudgeTask, limits,
+        outDir: path.join(outDir, 'community-side'), contextPath,
+        onAgentUpdate: (name, update) => {
+          updateAgent('community', name, {
+            state: update.state, findings: update.findings ?? undefined,
+            usage: update.usage, elapsed: update.elapsedMs ? fmtElapsed(update.elapsedMs) : undefined,
+          });
+          if (update.state === 'running') pushActivity(`Comunidade · ${name} começou a revisão cruzada.`);
+          if (update.state === 'done') pushActivity(`Comunidade · ${name} concluiu a revisão cruzada.`);
+          if (update.state === 'skipped') pushActivity(`Comunidade · ${name} indisponível; síntese segue sem ele.`);
+          if (update.state === 'failed') pushActivity(`Comunidade · ${name} falhou; síntese segue sem ele.`);
+        },
+      })
+    : { specialists: [] };
+  const communityResults = [...communityExploration.specialists, ...communityPostJudge.specialists];
+  const communityDigest = communityResults
+    .filter((result) => result.status === 'ok')
+    .map((result) => `## ${result.name || result.agent}\n\n${result.finalText}`)
+    .join('\n\n---\n\n');
+
   patchState(statePath, (state) => {
     state.judgeReports = {
       claude: claudeSide.judge.status === 'ok' ? claudeSide.judge.finalText : `(status: ${claudeSide.judge.status})`,
       openai: openaiSide.judge.status === 'ok' ? openaiSide.judge.finalText : `(status: ${openaiSide.judge.status})`,
       nvidia: judgeNvidiaResult.status === 'ok' ? judgeNvidiaResult.finalText : `(status: ${judgeNvidiaResult.status})`,
+      community: communityDigest || '(nenhum conselheiro comunitário disponível nesta rodada)',
     };
   });
 
@@ -337,6 +418,7 @@ async function main() {
     `## Relatório do Juiz Claude\n\n${claudeSide.judge.status === 'ok' ? claudeSide.judge.finalText : `(status: ${claudeSide.judge.status})`}\n\n` +
     `## Relatório do Juiz OpenAI\n\n${openaiSide.judge.status === 'ok' ? openaiSide.judge.finalText : `(status: ${openaiSide.judge.status})`}\n\n` +
     `## Relatório do Juiz NVIDIA\n\n${judgeNvidiaResult.status === 'ok' ? judgeNvidiaResult.finalText : `(status: ${judgeNvidiaResult.status})`}\n\n` +
+    `## Contribuições independentes (DeepSeek, Kimi e Antigravity)\n\n${communityDigest || '(indisponíveis nesta rodada — não reduza a confiança dos grupos que concluíram por causa disso)'}\n\n` +
     `Produza o relatório final seguindo exatamente o formato pedido no seu prompt de sistema (headline, lede, blocos P0/P1/DESCARTADO, e uma seção de divergência não resolvida se houver).`;
 
   const leaderResult = await runOneClaudeAgent({
