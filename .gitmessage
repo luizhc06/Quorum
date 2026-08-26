@@ -1,0 +1,22 @@
+
+# ─────────────────────────────────────────────────────────────────────
+# Assunto acima (imperativo, ~50 col). Linha em branco, depois o corpo.
+#
+# Co-autoria: descomente SÓ os modelos que trabalharam NESTE commit.
+# Creditar quem não participou é crédito falso e suja o histórico.
+#
+# Co-Authored-By: Claude <noreply@anthropic.com>
+# Co-Authored-By: Codex <267193182+codex@users.noreply.github.com>
+# Co-Authored-By: Gemini <200291788+gemini-code-assist@users.noreply.github.com>
+#
+# Estes três têm conta de USUÁRIO no GitHub, então somam em Contributors.
+# Kimi, DeepSeek e Nemotron não entram aqui: seus fornecedores só têm
+# ORGANIZAÇÃO no GitHub, e organização não conta como co-autora. Eles
+# são creditados na tabela de conselheiros do README.
+#
+# NUNCA invente e-mail: a conta `kimi` é de uma pessoa física e `gemini`
+# é a corretora de cripto. E-mail errado credita um estranho.
+#
+# Os trailers ficam no FIM da mensagem, um por linha, sem linha em
+# branco entre eles. Ver a seção "Créditos" do README.
+# ─────────────────────────────────────────────────────────────────────

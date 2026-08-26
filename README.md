@@ -139,3 +139,48 @@ node --check orchestrate.js
 ```
 
 Os testes cobrem registro de skills, traversal, deduplicação, integridade de configuração e isolamento de falhas entre provedores opcionais.
+
+## Créditos
+
+O Quorum é mantido por [@luizhc06](https://github.com/luizhc06). Os modelos abaixo aparecem no projeto em dois papéis diferentes — vale distinguir, porque não é a mesma coisa:
+
+**Conselheiros** — participam das revisões que o Quorum orquestra. É o produto funcionando, não autoria do repositório:
+
+| Modelo | Fornecedor | Papel no conselho |
+|---|---|---|
+| Claude (Sonnet 5 / Opus 5) | Anthropic | especialistas, juiz e líder/sintetizador |
+| Codex (GPT-5.6) | OpenAI | especialistas espelhados e juiz próprio |
+| Nemotron 3 Super 120B | NVIDIA | documentação e legibilidade, fornecedor independente |
+| DeepSeek R1 | DeepSeek, via Ollama local | segurança, performance e economia de tokens |
+| Kimi K2.6 | Moonshot AI, via Ollama Cloud | qualidade e design |
+| Gemini | Google, via Antigravity | revisão cruzada pós-juízes |
+
+**Co-autoria de código** — modelos que ajudaram a escrever o próprio Quorum aparecem como `Co-Authored-By` nos commits em que trabalharam, e por isso somam no painel *Contributors* do GitHub.
+
+A escolha de fornecedores diferentes é deliberada: dois modelos do mesmo fornecedor tendem a errar junto, e o valor do conselho está justamente na discordância.
+
+### Convenção de co-autoria
+
+Um modelo só aparece em *Contributors* se o e-mail do trailer estiver ligado a uma **conta de usuário** do GitHub. Três dos seis têm identidade oficial:
+
+```
+Co-Authored-By: Claude <noreply@anthropic.com>
+Co-Authored-By: Codex <267193182+codex@users.noreply.github.com>
+Co-Authored-By: Gemini <200291788+gemini-code-assist@users.noreply.github.com>
+```
+
+Credite **só quem realmente trabalhou naquele commit** — trailer de quem não participou é crédito falso.
+
+**Kimi, DeepSeek e Nemotron ficam de fora dos trailers de propósito.** Seus fornecedores só mantêm *organizações* no GitHub (`moonshotai`, `deepseek-ai`, `nvidia`), e organização não é creditada como co-autora — só conta de usuário é. Eles seguem creditados na tabela de conselheiros acima, que é onde o papel deles realmente está.
+
+> **Não invente e-mail de co-autor.** Vários nomes óbvios pertencem a terceiros sem relação com estas IAs: a conta `kimi` é de uma pessoa física, e `gemini` é a corretora de criptoativos, não o modelo do Google. Um endereço errado credita silenciosamente o commit a um estranho. Na dúvida, resolva o ID real da conta antes:
+>
+> ```bash
+> gh api users/<conta> --jq '"\(.id)+\(.login)@users.noreply.github.com"'
+> ```
+
+O repositório traz um template com essas linhas prontas, comentadas. Para ativá-lo:
+
+```bash
+git config commit.template .gitmessage
+```
