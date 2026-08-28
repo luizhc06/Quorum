@@ -37,17 +37,18 @@ function ollamaProbe(model) {
 function getProviderHealth() {
   const community = JSON.parse(fs.readFileSync(path.join(ROOT, 'config', 'community-agents.json'), 'utf8')).agents;
   const fixed = [
-    { key: 'claude-local', name: 'Claude Code', model: 'configuração local', free: 'Usa a sessão local autenticada.', ...commandProbe('claude') },
-    { key: 'codex-local', name: 'Codex', model: 'configuração local', free: 'Usa a sessão local autenticada.', ...commandProbe('codex') },
+    { key: 'claude-local', name: 'Claude Code', model: 'configuração local', free: 'Usa a sessão local autenticada.', howTo: 'Rode: claude login', ...commandProbe('claude') },
+    { key: 'codex-local', name: 'Codex', model: 'configuração local', free: 'Usa a sessão local autenticada.', howTo: 'Rode: codex login', ...commandProbe('codex') },
     {
       key: 'nvidia-nim', name: 'NVIDIA / Nemotron', model: 'Nemotron 3 Super',
       free: 'NVIDIA NIM free tier; sujeito à quota.',
+      howTo: 'Gere uma chave grátis em build.nvidia.com e adicione NVIDIA_API_KEY=... no .env do Quorum.',
       available: Boolean(process.env.NVIDIA_API_KEY), detail: process.env.NVIDIA_API_KEY ? 'chave configurada' : 'NVIDIA_API_KEY ausente',
     },
   ];
   const optional = community.map((spec) => {
     const probe = spec.provider === 'ollama' ? ollamaProbe(spec.model) : commandProbe('agy');
-    return { key: spec.key, name: spec.name, model: spec.model, provider: spec.provider, free: spec.free, ...probe };
+    return { key: spec.key, name: spec.name, model: spec.model, provider: spec.provider, free: spec.free, howTo: spec.setup || '', ...probe };
   });
   return [...fixed, ...optional];
 }

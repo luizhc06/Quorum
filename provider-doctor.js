@@ -8,5 +8,6 @@ const providers = getProviderHealth();
 console.log('\nQuorum · diagnóstico de provedores\n');
 for (const provider of providers) {
   console.log(`${provider.available ? '✓' : '○'} ${provider.name.padEnd(34)} ${provider.detail}`);
+  if (!provider.available && provider.howTo) console.log(`    → ${provider.howTo}`);
 }
 console.log('\n○ significa opcional/indisponível; a rodada continua com os demais provedores.\n');

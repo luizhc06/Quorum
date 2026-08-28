@@ -9,6 +9,7 @@
       "stage": "exploration",
       "defaultEnabled": true,
       "free": "Execução local pelo Ollama; sem custo por token.",
+      "setup": "Instale o Ollama (ollama.com) e rode: ollama pull deepseek-r1:8b",
       "skills": ["security-audit", "performance", "token-economy"],
       "focus": "Revise o código com foco em vulnerabilidades verificáveis, gargalos estruturais e oportunidades concretas de reduzir trabalho e tokens. Prefira poucos achados com evidência precisa."
     },
@@ -20,6 +21,7 @@
       "stage": "exploration",
       "defaultEnabled": true,
       "free": "Ollama Cloud Free; exige `ollama signin` e está sujeito à quota do plano.",
+      "setup": "Rode: ollama signin — depois: ollama pull kimi-k2.6:cloud",
       "skills": ["quality-engineering", "product-design", "visual-polish"],
       "focus": "Avalie robustez, experiência do desenvolvedor, coerência visual e qualidade de interface. Sempre conecte sugestões de design a uma fricção observável no produto."
     },
@@ -31,6 +33,7 @@
       "stage": "post-judge",
       "defaultEnabled": true,
       "free": "Quota da conta no Antigravity; não habilita fallback pago automaticamente.",
+      "setup": "Instale o Antigravity CLI (agy) e faça login pelo app.",
       "skills": ["quality-engineering", "product-design", "visual-polish", "token-economy"],
       "focus": "Atue como revisor independente dos relatórios já consolidados. Identifique lacunas, contradições e melhorias de produto de alto retorno sem inventar evidência nova."
     }

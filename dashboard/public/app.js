@@ -820,6 +820,7 @@ function renderProvidersModal() {
       <div class="provider-model">${escapeHtml(provider.model || '')}</div>
       <p>${escapeHtml(provider.free || '')}</p>
       <div class="provider-detail">${escapeHtml(provider.detail || '')}</div>
+      ${!provider.available && provider.howTo ? `<div class="provider-howto">→ ${escapeHtml(provider.howTo)}</div>` : ''}
     </article>`).join('');
 }
 
@@ -962,6 +963,12 @@ async function boot() {
   // O diagnóstico de CLIs pode levar alguns segundos. O conteúdo principal
   // deve aparecer imediatamente; a rede de modelos se atualiza em paralelo.
   loadProviderHealth().then(() => {
+    // Primeira vez que o painel abre nesta máquina: mostra o diagnóstico de
+    // provedores sozinho, sem precisar clicar em nada — depois disso, só sob pedido.
+    if (!localStorage.getItem('quorum_setup_visto')) {
+      localStorage.setItem('quorum_setup_visto', '1');
+      STATE.providersOpen = true;
+    }
     render();
     if (document.getElementById('newRoundModal').classList.contains('show')) renderProviderChoices();
   });
