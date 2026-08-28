@@ -97,7 +97,7 @@ O painel mostra quais integrações estão prontas. Não armazene chaves no repo
 4. O Líder cruza o relatório do Juiz, verifica achados de alta severidade, mantém divergências decisórias abertas e grava `runs/<run-id>/FINAL_REPORT.md`.
 
 <p align="center">
-  <img src="docs/fluxo-conselho.svg" alt="Fluxo do Conselho">
+  <img src="docs/fluxo-conselho.svg?v=2" alt="Fluxo do Conselho">
 </p>
 
 Também é possível rodar sem o painel:
@@ -162,16 +162,18 @@ Os testes cobrem registro de skills, traversal, deduplicação, integridade de c
 
 O Quorum é mantido por [@luizhc06](https://github.com/luizhc06). Os modelos abaixo aparecem no projeto em dois papéis diferentes — vale distinguir, porque não é a mesma coisa:
 
-**Conselheiros** — participam das revisões que o Quorum orquestra. É o produto funcionando, não autoria do repositório:
+**Conselheiros** — participam das revisões que o Quorum orquestra. É o produto funcionando, não autoria do repositório. Desde a alocação dinâmica, nenhum papel é fixo por modelo: o Líder decide a cada rodada quem roda qual especialidade, e Juiz/Líder são configuráveis independente disso (`config/routing.json`, painel "Configurar Conselho") — a tabela abaixo mostra o *perfil típico*, não uma trava:
 
-| Modelo | Fornecedor | Papel no conselho |
+| Modelo | Fornecedor | Perfil típico no conselho |
 |---|---|---|
-| Claude (Sonnet 5 / Opus 5) | Anthropic | especialistas, juiz e líder/sintetizador |
-| Codex (GPT-5.6) | OpenAI | especialistas espelhados e juiz próprio |
-| Nemotron 3 Super 120B | NVIDIA | documentação e legibilidade, fornecedor independente |
-| DeepSeek R1 | DeepSeek, via Ollama local | segurança, performance e economia de tokens |
-| Kimi K2.6 | Moonshot AI, via Ollama Cloud | qualidade e design |
-| Gemini | Google, via Antigravity | revisão cruzada pós-juízes |
+| Claude (Sonnet 5 / Opus 5) | Anthropic | especialista em qualquer especialidade; Juiz e Líder por padrão |
+| Codex (GPT-5.6) | OpenAI | especialista em qualquer especialidade; segundo parecer independente |
+| Nemotron 3 Super 120B | NVIDIA | especialista, força em documentação e legibilidade |
+| DeepSeek R1 | DeepSeek, via Ollama local | especialista, força em segurança e performance |
+| Kimi K2.6 | Moonshot AI, via Ollama Cloud | especialista, força em qualidade e design |
+| Gemini | Google, via Antigravity | especialista, força em qualidade de produto |
+
+OpenRouter e OmniRoute não entram nesta tabela porque não são um modelo — são agregadores que dão acesso a dezenas/centenas de modelos de terceiros, escolhidos por você em `config/routing.json` → `customModels`; o modelo específico que você conectar por eles é que participa do conselho, não o agregador em si.
 
 **Co-autoria de código** — modelos que ajudaram a escrever o próprio Quorum aparecem como `Co-Authored-By` nos commits em que trabalharam, e por isso somam no painel *Contributors* do GitHub.
 
