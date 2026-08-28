@@ -97,7 +97,7 @@ O painel mostra quais integrações estão prontas. Não armazene chaves no repo
 4. O Líder cruza o relatório do Juiz, verifica achados de alta severidade, mantém divergências decisórias abertas e grava `runs/<run-id>/FINAL_REPORT.md`.
 
 <p align="center">
-  <img src="docs/fluxo-conselho.svg" alt="Fluxo do Conselho">
+  <img src="docs/fluxo-conselho.svg?v=2" alt="Fluxo do Conselho">
 </p>
 
 Também é possível rodar sem o painel:
