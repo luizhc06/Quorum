@@ -987,18 +987,30 @@ function renderProvidersModal() {
   backdrop.classList.toggle('show', STATE.providersOpen);
   if (!STATE.providersOpen) return;
   const grid = document.getElementById('providersGrid');
-  grid.innerHTML = STATE.providers.map((provider) => `
+  grid.innerHTML = STATE.providers.map((provider) => {
+    const canConfigure = !provider.available && provider.howTo;
+    const stateTag = provider.available ? 'span' : (canConfigure ? 'button' : 'span');
+    return `
     <article class="provider-card">
       <div class="provider-card-top">
         <span class="provider-orb ${provider.available ? 'ready' : ''}"></span>
-        <span class="provider-state ${provider.available ? 'ready' : 'optional'}">${provider.available ? 'PRONTO' : 'CONFIGURAR'}</span>
+        <${stateTag} class="provider-state ${provider.available ? 'ready' : 'optional'}" ${canConfigure ? `data-copy-howto="${escapeHtml(provider.howTo)}"` : ''}>${provider.available ? 'PRONTO' : 'CONFIGURAR'}</${stateTag}>
       </div>
       <h3>${escapeHtml(provider.name)}</h3>
       <div class="provider-model">${escapeHtml(provider.model || '')}</div>
       <p>${escapeHtml(provider.free || '')}</p>
       <div class="provider-detail">${escapeHtml(provider.detail || '')}</div>
-      ${!provider.available && provider.howTo ? `<div class="provider-howto">→ ${escapeHtml(provider.howTo)}</div>` : ''}
-    </article>`).join('');
+      ${canConfigure ? `<div class="provider-howto">→ ${escapeHtml(provider.howTo)}</div>` : ''}
+    </article>`;
+  }).join('');
+  grid.querySelectorAll('button[data-copy-howto]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(btn.dataset.copyHowto).catch(() => {});
+      const original = btn.textContent;
+      btn.textContent = 'COPIADO';
+      setTimeout(() => { btn.textContent = original; }, 1500);
+    });
+  });
 }
 
 /* ---------- painel de configuração do conselho ---------- */

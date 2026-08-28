@@ -48,7 +48,12 @@ Produza `runs/<run-id>/FINAL_REPORT.md` e apresente o mesmo conteúdo diretament
 
 ## Cobertura e limites desta rodada
 <O que não foi coberto, o que falhou, timeouts — nunca finja cobertura completa.>
+
+## Memória e contexto (para a próxima rodada)
+<Cada rodada é potencialmente um trabalho diferente — não é um histórico contínuo. Registre aqui só o que uma rodada FUTURA sobre este mesmo escopo precisaria saber pra não redescobrir do zero: decisões tomadas, fatos confirmados sobre o código/domínio, e o que ficou pendente. Se não houver nada que valha a pena carregar adiante, diga isso numa linha ("nada relevante pra próxima rodada") em vez de inventar contexto.>
 ```
+
+O bloco final "Memória e contexto" é salvo à parte, em `CONTEXT.md`, pra poder ser passado como `--context-path` de uma rodada futura — mantenha-o compacto e independente do resto do relatório (alguém deve conseguir ler só ele).
 
 ## Segurança e escopo (obrigatório)
 

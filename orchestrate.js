@@ -535,7 +535,7 @@ async function main() {
     pushActivity('Líder/Sintetizador começou a síntese final.');
     const leaderTask =
       `## Relatório do Juiz\n\n${judgeResult.status === 'ok' ? judgeResult.finalText : `(status: ${judgeResult.status})`}\n\n` +
-      `Produza o relatório final seguindo exatamente o formato pedido no seu prompt de sistema (headline, lede, blocos P0/P1/DESCARTADO, e uma seção de divergência não resolvida se houver).`;
+      `Produza o relatório final seguindo exatamente o formato pedido no seu prompt de sistema (headline, lede, blocos P0/P1/DESCARTADO, divergência não resolvida se houver, e a seção final de Memória e contexto).`;
     const leaderResult = await registry.run(leaderModel, {
       name: 'leader-synthesizer', persona: leaderPersona, task: leaderTask,
       limits: limits.claude_leader || limits.claude_judge, outDir,
@@ -548,6 +548,7 @@ async function main() {
         state.synthBlocks = parsed.synthBlocks; state.dissent = parsed.dissent;
       });
       fs.writeFileSync(path.join(outDir, 'FINAL_REPORT.md'), leaderResult.finalText);
+      if (parsed.memory) fs.writeFileSync(path.join(outDir, 'CONTEXT.md'), parsed.memory);
     }
     updateArbiter('lider', { state: leaderResult.status === 'ok' ? 'done' : leaderResult.status, role: 'Síntese final entregue.' });
     pushActivity(`Líder/Sintetizador concluiu (status: ${leaderResult.status}).`);
@@ -592,7 +593,9 @@ function parseLeaderOutput(text) {
   };
   const synthBlocks = [];
   let dissent = null;
+  let memory = null;
   for (const sec of sections) {
+    if (/mem[oó]ria|contexto/i.test(sec.title)) { memory = sec.body; continue; }
     const tag = tagFor(sec.title);
     if (tag) {
       const items = sec.body.split(/\n(?=-\s)/).filter((l) => l.trim().startsWith('-')).map((l) => {
@@ -606,7 +609,7 @@ function parseLeaderOutput(text) {
       dissent = { text: lines[0] || sec.body, note: lines.slice(1).join(' ').trim() };
     }
   }
-  return { headline, lede, synthBlocks, dissent };
+  return { headline, lede, synthBlocks, dissent, memory };
 }
 
 main().catch((err) => {
