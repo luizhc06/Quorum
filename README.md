@@ -72,7 +72,7 @@ Abra [http://127.0.0.1:7331](http://127.0.0.1:7331). O servidor escuta somente n
 4. Para o OpenRouter, gere uma chave em [openrouter.ai](https://openrouter.ai/) e defina `OPENROUTER_API_KEY`.
 5. Para o OmniRoute, instale e rode o gateway local (`npm install -g omniroute && omniroute`) — funciona zero-config, sem chave obrigatória.
 
-O painel mostra quais integrações estão prontas. Não armazene chaves no repositório; use o ambiente do sistema ou um `.env` local ignorado pelo Git.
+O painel mostra quais integrações estão prontas — na primeira vez que você abre, a modal "MODELOS" já abre sozinha; depois é só clicar em "MODELOS" no cabeçalho. Cada provedor pendente mostra um botão **CONFIGURAR** que copia o comando de setup certo (`ollama pull ...`, `ollama signin`, etc.) direto pra área de transferência. Não armazene chaves no repositório; use o ambiente do sistema ou um `.env` local ignorado pelo Git.
 
 <details>
 <summary><strong>Chaves de API opcionais</strong></summary>
@@ -94,7 +94,7 @@ O painel mostra quais integrações estão prontas. Não armazene chaves no repo
 1. O Líder faz o kickoff: pesquisa rápida no escopo, monta o brief da rodada e decide a **alocação dinâmica** — quais especialidades do catálogo esta tarefa precisa e qual modelo disponível roda cada uma (respeitando pins definidos no painel "Configurar Conselho").
 2. Os especialistas alocados rodam em paralelo — podem ser de fornecedores diferentes na mesma rodada.
 3. Um **Juiz único** (modelo configurável) consolida todos os relatórios, elimina duplicação e descarta achados sem evidência.
-4. O Líder cruza o relatório do Juiz, verifica achados de alta severidade, mantém divergências decisórias abertas e grava `runs/<run-id>/FINAL_REPORT.md`.
+4. O Líder cruza o relatório do Juiz, verifica achados de alta severidade, mantém divergências decisórias abertas e grava `runs/<run-id>/FINAL_REPORT.md`. Uma seção final compacta de memória/contexto (o que vale carregar pra uma rodada futura sobre o mesmo escopo — cada rodada é um trabalho potencialmente diferente, não um histórico contínuo) sai separada em `runs/<run-id>/CONTEXT.md`, pronta pra ser passada como `--context-path` numa próxima rodada.
 
 <p align="center">
   <img src="docs/fluxo-conselho.svg" alt="Fluxo do Conselho">
