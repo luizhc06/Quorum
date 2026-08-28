@@ -39,7 +39,7 @@ function extractText(content) {
  * removido antes de mover pro novo — nunca mais de 2 breakpoints por
  * requisição (system + 1 no histórico), bem abaixo do limite de 4.
  */
-async function runAgentLoop({ client, model, systemPrompt, userPrompt, tools, toolHandlers, limits, onEvent, onTranscriptLine }) {
+async function runAgentLoop({ client, model, systemPrompt, userPrompt, tools, toolHandlers, limits, onEvent, onTranscriptLine, signal }) {
   let messages = [{ role: 'user', content: userPrompt }];
   const startedAt = Date.now();
   const costTracker = new CostTracker(model, limits.maxCostUsd);
@@ -58,6 +58,7 @@ async function runAgentLoop({ client, model, systemPrompt, userPrompt, tools, to
   }
 
   for (let iter = 0; iter < limits.maxIterations; iter++) {
+    if (signal?.aborted) throw new AgentAbortedError('aborted', { iter });
     if (Date.now() - startedAt > limits.maxWallClockMs) {
       throw new AgentAbortedError('wall_clock_exceeded', { iter, elapsedMs: Date.now() - startedAt });
     }
@@ -73,8 +74,9 @@ async function runAgentLoop({ client, model, systemPrompt, userPrompt, tools, to
         messages,
         tools,
         tool_choice: { type: 'auto' },
-      });
+      }, { signal });
     } catch (err) {
+      if (err.name === 'AbortError' || signal?.aborted) throw new AgentAbortedError('aborted', { iter });
       throw new AgentAbortedError('api_error', { message: err.message, status: err.status });
     }
 

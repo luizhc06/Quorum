@@ -1,0 +1,54 @@
+{
+  "_comment": "Catálogo ÚNICO de especialidades do conselho — substitui os arrays 'specialists' antes duplicados em claude-side/config/agents.json e openai-side/config/agents.json (mesmas 6 lentes espelhadas em ambos, sempre rodando as 6, em toda rodada, mesmo quando a tarefa não pedia). Os prompts vivem em config/specialists/*.md, um por especialidade, provider-agnósticos (nenhuma referência a 'lado Claude'/'lado OpenAI' dentro deles). 'strengths' é o ponto de partida que o kickoff (ver orchestrate.js) usa pra decidir, por rodada, quais especialidades importam pra tarefa pedida e qual modelo disponível é mais forte em cada uma — não é uma trava: config/routing.json.pinned pode forçar um modelo específico por especialidade, e o kickoff só pode escolher entre modelos que o snapshot de provider-health.js marcar como disponíveis naquele momento.",
+  "_niveis": "'alta'/'media'/'baixa' — usado só como sinal de prioridade pro alocador, nunca é uma trava rígida. Um modelo ausente do mapa de uma especialidade não está proibido de rodá-la, só não é a primeira escolha.",
+  "specialties": [
+    {
+      "key": "arquitetura",
+      "titulo": "Arquitetura",
+      "promptFile": "arquitetura.md",
+      "strengths": { "claude-sonnet-5": "alta", "claude-opus-5": "alta", "gpt-5.6-terra": "media" }
+    },
+    {
+      "key": "seguranca",
+      "titulo": "Segurança",
+      "promptFile": "seguranca.md",
+      "strengths": { "deepseek-r1:8b": "alta", "claude-sonnet-5": "alta", "gpt-5.6-terra": "media" }
+    },
+    {
+      "key": "regras-negocio",
+      "titulo": "Regras de negócio",
+      "promptFile": "regras-negocio.md",
+      "strengths": { "claude-sonnet-5": "alta", "claude-opus-5": "media" }
+    },
+    {
+      "key": "bug-hunter",
+      "titulo": "Bug Hunter",
+      "promptFile": "bug-hunter.md",
+      "strengths": { "gpt-5.6-terra": "alta", "claude-sonnet-5": "alta" }
+    },
+    {
+      "key": "engenharia-software",
+      "titulo": "Engenharia de software",
+      "promptFile": "engenharia-software.md",
+      "strengths": { "claude-sonnet-5": "media", "gpt-5.6-terra": "media", "deepseek-r1:8b": "media" }
+    },
+    {
+      "key": "dados",
+      "titulo": "Dados",
+      "promptFile": "dados.md",
+      "strengths": { "claude-sonnet-5": "media", "gpt-5.6-terra": "media" }
+    },
+    {
+      "key": "docs-legibilidade",
+      "titulo": "Documentação & Legibilidade",
+      "promptFile": "docs-legibilidade.md",
+      "strengths": { "nvidia/nemotron-3-super-120b-a12b": "alta", "kimi-k2.6:cloud": "media" }
+    },
+    {
+      "key": "design-produto",
+      "titulo": "Qualidade & Design de Produto",
+      "promptFile": "design-produto.md",
+      "strengths": { "kimi-k2.6:cloud": "alta", "gemini-3.7-flash-high": "media" }
+    }
+  ]
+}

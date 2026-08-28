@@ -76,7 +76,7 @@ function quoteArg(value) {
   return /\s/.test(value) ? `"${value}"` : value;
 }
 
-function runClaudeExec({ model, scope, contextPath, systemPromptFile, prompt, timeoutMs, maxCostUsd }) {
+function runClaudeExec({ model, scope, contextPath, systemPromptFile, prompt, timeoutMs, maxCostUsd, signal }) {
   validateNoShellMetacharacters(scope, 'scope');
   if (contextPath) validateNoShellMetacharacters(contextPath, 'contextPath');
   if (model) validateNoShellMetacharacters(model, 'model');
@@ -98,12 +98,15 @@ function runClaudeExec({ model, scope, contextPath, systemPromptFile, prompt, ti
     if (contextPath) args.push('--add-dir', quoteArg(contextPath));
     if (maxCostUsd) args.push('--max-budget-usd', String(maxCostUsd));
 
+    let abortedByUser = false;
     const child = execFile(
       CLAUDE_BINARY,
       args,
       { cwd: scope, timeout: timeoutMs, maxBuffer: 20_000_000, windowsHide: true, shell: true },
       (err, stdout, stderr) => {
+        signal?.removeEventListener('abort', onAbort);
         if (err) {
+          if (abortedByUser) return reject(Object.assign(new Error('cancelado pelo usuário'), { aborted: true }));
           if (err.killed) return reject(new Error('tempo esgotado'));
           const lastLine = stderr.trim().split('\n').filter(Boolean).pop() || err.message;
           return reject(new Error(lastLine.slice(0, 500)));
@@ -111,12 +114,14 @@ function runClaudeExec({ model, scope, contextPath, systemPromptFile, prompt, ti
         resolve({ stdout, stderr });
       }
     );
+    const onAbort = () => { abortedByUser = true; child.kill(); };
+    signal?.addEventListener('abort', onAbort);
     child.stdin.write(prompt);
     child.stdin.end();
   });
 }
 
-async function runClaudeCodeAgent({ name, model, systemPrompt, task, scope, contextPath, limits, outDir }) {
+async function runClaudeCodeAgent({ name, model, systemPrompt, task, scope, contextPath, limits, outDir, signal }) {
   const startedAt = Date.now();
   fs.mkdirSync(outDir, { recursive: true });
   const systemPromptFile = path.join(outDir, `${name}.system-prompt.md`);
@@ -125,7 +130,7 @@ async function runClaudeCodeAgent({ name, model, systemPrompt, task, scope, cont
   try {
     const { stdout } = await runClaudeExec({
       model, scope, contextPath, systemPromptFile, prompt: task,
-      timeoutMs: limits.maxWallClockMs, maxCostUsd: limits.maxCostUsd,
+      timeoutMs: limits.maxWallClockMs, maxCostUsd: limits.maxCostUsd, signal,
     });
 
     let parsed;
@@ -163,7 +168,7 @@ async function runClaudeCodeAgent({ name, model, systemPrompt, task, scope, cont
       model: model || 'claude-code-local',
       status: 'failed',
       provider: 'claude-code-local',
-      reason: 'claude_exec_error',
+      reason: err.aborted ? 'aborted' : 'claude_exec_error',
       error: err.message,
       elapsedMs: Date.now() - startedAt,
     };

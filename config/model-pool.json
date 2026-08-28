@@ -1,0 +1,18 @@
+{
+  "_comment": "Todo modelo que o conselho pode alocar (como especialista, juiz ou líder) precisa aparecer aqui, com o 'engine' que diz a providers/registry.js qual motor de execução usar: 'claude' (claude-side/engine, via claude-code-local ou claude-api), 'openai' (openai-side/src, via codex-local ou openai-api), 'nvidia' (openai-side/src/providers/nvidia-solenne.js — Chat Completions direto, integração já estável, não passou a compartilhar o laço genérico) ou 'community' (openai-side/src/providers/community.js::runCommunityAgent, que despacha por 'provider': 'ollama'/'openrouter'/'omniroute' — todos via o laço genérico em openai-compat.js — ou 'antigravity-cli', que é um motor headless à parte). Modelos de OpenRouter/OmniRoute NÃO ficam fixos aqui (são agregadores com dezenas/centenas de ids, escolhidos pelo usuário) — esses vivem em config/routing.json → 'customModels', resolvidos em runtime pelo mesmo registry.js.",
+  "models": [
+    { "id": "claude-opus-5", "label": "Claude Opus 5", "engine": "claude", "roles": ["judge", "leader", "specialist"] },
+    { "id": "claude-sonnet-5", "label": "Claude Sonnet 5", "engine": "claude", "roles": ["specialist", "judge", "leader"] },
+    { "id": "claude-haiku-4-5-20251001", "label": "Claude Haiku 4.5", "engine": "claude", "roles": ["specialist"] },
+
+    { "id": "gpt-5.6-terra", "label": "GPT-5.6 Terra", "engine": "openai", "roles": ["specialist"] },
+    { "id": "gpt-5.6-sol", "label": "GPT-5.6 Sol", "engine": "openai", "roles": ["judge", "specialist"] },
+    { "id": "gpt-5.6-luna", "label": "GPT-5.6 Luna", "engine": "openai", "roles": ["specialist"] },
+
+    { "id": "nvidia/nemotron-3-super-120b-a12b", "label": "Nemotron 3 Super", "engine": "nvidia", "roles": ["specialist"], "free": "NVIDIA NIM free tier — sem custo por token, limite de 40 req/min." },
+    { "id": "deepseek-r1:8b", "label": "DeepSeek R1 8B", "engine": "community", "provider": "ollama", "roles": ["specialist"], "free": "Ollama local — sem custo, precisa `ollama pull deepseek-r1:8b`." },
+    { "id": "kimi-k2.6:cloud", "label": "Kimi K2.6", "engine": "community", "provider": "ollama", "roles": ["specialist"], "free": "Ollama Cloud Free — precisa `ollama signin`, sujeito à quota do plano." },
+
+    { "id": "gemini-3.7-flash-high", "label": "Gemini (Antigravity)", "engine": "community", "provider": "antigravity-cli", "roles": ["specialist"], "free": "Quota da conta Antigravity." }
+  ]
+}

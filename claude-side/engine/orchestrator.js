@@ -30,15 +30,18 @@ function countFindings(text) {
   return matches ? matches.length : 0;
 }
 
-async function runOneAgent({ client, name, model, systemPrompt, task, schemas, handlers, limits, outDir, onStateChange }) {
+async function runOneAgent({ client, name, model, systemPrompt, task, schemas, handlers, limits, outDir, onStateChange, onEvent, signal }) {
   const startedAt = Date.now();
   const logger = createTranscriptLogger(outDir, name);
   onStateChange?.({ state: 'running' });
   try {
     const loopResult = await runAgentLoop({
-      client, model, systemPrompt, userPrompt: task, tools: schemas, toolHandlers: handlers, limits,
+      client, model, systemPrompt, userPrompt: task, tools: schemas, toolHandlers: handlers, limits, signal,
       onTranscriptLine: (line) => logger.append(line),
-      onEvent: (ev) => onStateChange?.({ event: ev }),
+      onEvent: (ev) => {
+        if (ev.type === 'tool_call') onEvent?.({ type: 'tool-call-start', tool: ev.tool });
+        else onEvent?.(ev);
+      },
     });
     const result = { agent: name, model, ...loopResult, elapsedMs: Date.now() - startedAt, chatFile: logger.filePath };
     fs.mkdirSync(outDir, { recursive: true });
@@ -69,10 +72,11 @@ async function runOneAgent({ client, name, model, systemPrompt, task, schemas, h
 // openai-side/src/orchestrator.js → runOneAgentAny. Ver
 // claude-side/engine/providers/claude-code-local.js pras diferenças de
 // garantia de segurança entre os dois.
-async function runOneAgentAny({ client, name, model, systemPrompt, task, schemas, handlers, limits, outDir, scope, contextPath, provider, onStateChange }) {
+async function runOneAgentAny({ client, name, model, systemPrompt, task, schemas, handlers, limits, outDir, scope, contextPath, provider, onStateChange, onEvent, signal }) {
   if (provider === 'claude-code-local') {
     onStateChange?.({ state: 'running' });
-    const result = await runClaudeCodeAgent({ name, model, systemPrompt, task, scope, contextPath, limits, outDir });
+    onEvent?.({ type: 'state-change', state: 'running' });
+    const result = await runClaudeCodeAgent({ name, model, systemPrompt, task, scope, contextPath, limits, outDir, signal });
     fs.mkdirSync(outDir, { recursive: true });
     fs.writeFileSync(path.join(outDir, `${name}.json`), JSON.stringify(result, null, 2));
     onStateChange?.({
@@ -81,6 +85,10 @@ async function runOneAgentAny({ client, name, model, systemPrompt, task, schemas
       usage: result.usage,
       elapsedMs: result.elapsedMs,
     });
+    // claude-code-local roda como processo único, sem streaming possível —
+    // um único evento de conclusão é a granularidade honesta disponível
+    // (ver providers/openai-compat.js pro motor que tem streaming de verdade).
+    onEvent?.({ type: 'done', status: result.status, finalText: result.finalText });
     return result;
   }
   if (!client) {
@@ -90,7 +98,7 @@ async function runOneAgentAny({ client, name, model, systemPrompt, task, schemas
     onStateChange?.({ state: 'failed', elapsedMs: 0 });
     return result;
   }
-  return runOneAgent({ client, name, model, systemPrompt, task, schemas, handlers, limits, outDir, onStateChange });
+  return runOneAgent({ client, name, model, systemPrompt, task, schemas, handlers, limits, outDir, onStateChange, onEvent, signal });
 }
 
 /**

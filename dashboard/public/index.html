@@ -28,10 +28,20 @@ html,body{margin:0;padding:0;background:var(--bg)}
 body{color:var(--text);font-family:var(--sans);font-size:14px}
 a{color:var(--accent);text-decoration:none}
 a:hover{color:var(--accent-4)}
+/* O popup nativo de <option> não herda fundo/cor translúcidos do controle
+   fechado (a caixa .run-selector usa rgba sobre o fundo do app, que o
+   navegador não consegue resolver pra a lista suspensa) — sem isso, o
+   Chrome/Edge caem no tema claro padrão do SO pro popup, ilegível sobre o
+   resto da UI escura. select/option precisam de cor OPACA explícita. */
+select{color:var(--text-2);background-color:var(--bg-5);color-scheme:dark}
+select option{color:var(--text-2);background-color:var(--bg-6)}
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-track{background:var(--bg-4)}
 ::-webkit-scrollbar-thumb{background:var(--border-5);border:2px solid var(--bg-4);border-radius:6px}
 @keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes cardPulse{0%,100%{box-shadow:0 0 0 rgba(103,232,249,0)}50%{box-shadow:0 0 0 3px rgba(103,232,249,.10)}}
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes caretBlink{0%,100%{opacity:1}50%{opacity:0}}
 
 .app{height:100vh;max-height:100vh;overflow:hidden;display:grid;grid-template-rows:auto auto minmax(0,1fr);background:var(--bg)}
 
@@ -91,20 +101,25 @@ main{min-height:0;overflow-y:auto;padding:24px 28px 96px}
 .group-head .sub{font-family:var(--mono);font-size:11px;color:var(--text-8)}
 .group-done{font-family:var(--mono);font-size:11px}
 .agent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:12px}
-.agent-card{appearance:none;text-align:left;cursor:pointer;background:var(--bg-6);border:1px solid var(--border-2);border-radius:6px;padding:13px 14px 12px;display:flex;flex-direction:column;gap:9px;min-height:118px;font-family:var(--sans)}
+.agent-card{appearance:none;text-align:left;cursor:pointer;background:var(--bg-6);border:1px solid var(--border-2);border-radius:6px;padding:13px 14px 12px;display:flex;flex-direction:column;gap:9px;min-height:118px;font-family:var(--sans);transition:border-color .25s ease,background-color .25s ease}
 .agent-card.openai{background:#110f0b}
 .agent-card.nvidia{background:#0f110b}
 .agent-card:hover{border-color:#6b4f33}
 .agent-card.openai:hover{border-color:#2c4a5c}
 .agent-card.nvidia:hover{border-color:#4a5a2c}
+.agent-card.is-running{animation:cardPulse 2.6s ease-in-out infinite}
 .agent-top{display:flex;align-items:flex-start;gap:10px}
-.agent-dot{flex:0 0 auto;width:20px;height:20px;border-radius:50%;margin-top:1px}
+.agent-dot{flex:0 0 auto;width:20px;height:20px;border-radius:50%;margin-top:1px;transition:background-color .3s ease}
 .agent-mid{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
 .agent-name{font-size:14px;font-weight:500;color:#e9e2d5;line-height:1.25}
-.agent-state{font-family:var(--mono);font-size:10px;letter-spacing:.6px}
+.agent-state{font-family:var(--mono);font-size:10px;letter-spacing:.6px;transition:color .3s ease}
 .agent-findings{font-family:var(--mono);font-size:15px;color:var(--text-3)}
 .agent-lens{font-size:12px;color:var(--text-6);line-height:1.45}
 .agent-foot{margin-top:auto;font-family:var(--mono);font-size:10px;color:var(--text-11);display:flex;gap:10px}
+.agent-controls{display:flex;gap:6px;margin-top:2px}
+.agent-ctrl-btn{appearance:none;background:rgba(255,255,255,.03);border:1px solid var(--border-5);color:var(--text-6);border-radius:4px;padding:3px 7px;cursor:pointer;font-family:var(--mono);font-size:9.5px;letter-spacing:.3px}
+.agent-ctrl-btn:hover{border-color:#6b4f33;color:var(--accent-2)}
+.agent-ctrl-select{appearance:none;background:rgba(255,255,255,.03);border:1px solid var(--border-5);color:var(--text-6);border-radius:4px;padding:3px 5px;font-family:var(--mono);font-size:9.5px;max-width:120px}
 
 /* juizes */
 .arbiter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
@@ -198,9 +213,29 @@ aside{min-height:0;border-left:1px solid var(--border);background:#0a0908;displa
 .finding-text{font-size:12.5px;color:#ded7c9;line-height:1.45}
 .finding-at{font-family:var(--mono);font-size:10px;color:var(--text-8)}
 .activity-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.8px;color:var(--text-9)}
-.activity-item{display:flex;gap:9px;align-items:baseline}
+.activity-item{display:flex;gap:9px;align-items:baseline;animation:fadeSlideIn .3s ease}
 .activity-time{flex:0 0 auto;font-family:var(--mono);font-size:10px;color:var(--text-13)}
 .activity-text{font-size:12px;line-height:1.5}
+
+/* painel "Ao vivo" + chat pós-conclusão (sidebar de seleção) */
+.sel-tabs{display:flex;gap:4px;margin-top:2px}
+.sel-tab-btn{appearance:none;background:transparent;border:1px solid var(--border-4);color:var(--text-7);border-radius:4px;padding:4px 9px;cursor:pointer;font-family:var(--mono);font-size:10px;letter-spacing:.3px}
+.sel-tab-btn.active{border-color:#6b4f33;color:var(--accent-2)}
+.live-panel{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;background:var(--bg-5);border:1px solid var(--border-3);border-radius:5px;padding:10px 11px;font-family:var(--mono);font-size:11px;line-height:1.55}
+.live-line{color:var(--text-4);animation:fadeSlideIn .25s ease}
+.live-line.tool{color:var(--blue)}
+.live-line.tool-result{color:var(--text-8)}
+.live-cursor{display:inline-block;width:6px;height:12px;background:var(--accent-2);margin-left:2px;vertical-align:text-bottom;animation:caretBlink 1s step-end infinite}
+.live-empty{color:var(--text-9);font-style:italic}
+.chat-thread{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto}
+.chat-msg{border-radius:6px;padding:8px 10px;font-size:12px;line-height:1.5;animation:fadeSlideIn .25s ease}
+.chat-msg.user{background:rgba(255,255,255,.03);color:var(--text-2);align-self:flex-end;max-width:88%}
+.chat-msg.assistant{background:var(--bg-5);color:var(--text-3);border:1px solid var(--border-3);max-width:92%}
+.chat-input-row{display:flex;gap:6px;margin-top:6px}
+.chat-input-row textarea{flex:1;min-width:0;background:var(--bg-5);border:1px solid var(--border-4);border-radius:4px;padding:7px 9px;color:var(--text);font-family:var(--sans);font-size:12px;resize:vertical;min-height:34px;outline:none}
+.chat-input-row textarea:focus{border-color:#6b4f33}
+.chat-input-row button{appearance:none;background:var(--accent);border:0;border-radius:4px;color:#17130d;padding:0 12px;cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:600}
+.chat-input-row button:disabled{opacity:.5;cursor:default}
 
 .aside-input{border-top:1px solid var(--border);padding:14px 18px 16px;background:var(--bg);display:flex;flex-direction:column;gap:9px}
 .input-row{display:flex;gap:8px}
@@ -313,6 +348,8 @@ aside{background:rgba(5,6,9,.7);border-color:rgba(255,255,255,.065)}
       <select id="runSelector" class="run-selector"></select>
       <button class="btn-new-round" id="btnNewRound">+ NOVA RODADA</button>
       <button class="btn-providers" id="btnProviders">MODELOS <span class="provider-count" id="providerCount">verificando</span></button>
+      <button class="btn-providers" id="btnSettings">CONFIGURAR CONSELHO</button>
+      <button class="btn-providers" id="btnPlayground">PLAYGROUND</button>
     </div>
     <div class="stats">
       <div class="stats-col">
@@ -323,8 +360,8 @@ aside{background:rgba(5,6,9,.7);border-color:rgba(255,255,255,.065)}
         </div>
         <div class="stats-row">
           <div class="stat"><span class="label">TOKENS</span><span class="value" id="tokensTotal"></span></div>
-          <div class="stat"><span class="label">% ANTHROPIC</span><span class="value" id="pctAnthropic" style="color:var(--accent-2)"></span></div>
-          <div class="stat"><span class="label">% OPENAI</span><span class="value" id="pctOpenai" style="color:var(--blue)"></span></div>
+          <div class="stat"><span class="label">ESPECIALISTAS</span><span class="value" id="statSpecialists" style="color:var(--accent-2)"></span></div>
+          <div class="stat"><span class="label">PROVEDORES</span><span class="value" id="statProviders" style="color:var(--blue)"></span></div>
         </div>
       </div>
       <div class="status-live"><span class="status-dot" id="statusDot"></span><span id="statusLabel">conectado</span></div>
@@ -342,51 +379,18 @@ aside{background:rgba(5,6,9,.7);border-color:rgba(255,255,255,.065)}
         <section>
           <div class="group-head">
             <div class="group-head-left">
-              <h2>Grupo Anthropic</h2>
-              <span class="sub">especialistas em paralelo · Sonnet/Haiku · todos com leitura de arquivos</span>
+              <h2>Especialistas alocados</h2>
+              <span class="sub" id="allocationSub">o Líder decide, a cada rodada, quais especialidades a tarefa precisa e qual modelo disponível roda cada uma</span>
             </div>
-            <span class="group-done" id="claudeDone" style="color:var(--green-3)"></span>
+            <span class="group-done" id="specialistDone" style="color:var(--accent-2)"></span>
           </div>
-          <div class="agent-grid" id="claudeGrid"></div>
-        </section>
-
-        <section>
-          <div class="group-head">
-            <div class="group-head-left">
-              <h2>Grupo OpenAI</h2>
-              <span class="sub">especialistas em paralelo · GPT-5.6 Terra/Luna · sandbox só-leitura</span>
-            </div>
-            <span class="group-done" id="openaiDone" style="color:var(--accent-5)"></span>
-          </div>
-          <div class="agent-grid" id="openaiGrid"></div>
-        </section>
-
-        <section>
-          <div class="group-head">
-            <div class="group-head-left">
-              <h2>Grupo NVIDIA / Hermes</h2>
-              <span class="sub">fornecedor independente · Nemotron 3 Super 120B · validação consolidada por juiz próprio</span>
-            </div>
-            <span class="group-done" id="nvidiaDone" style="color:var(--nvidia)"></span>
-          </div>
-          <div class="agent-grid" id="nvidiaGrid"></div>
-        </section>
-
-        <section>
-          <div class="group-head">
-            <div class="group-head-left">
-              <h2>Conselheiros independentes</h2>
-              <span class="sub">DeepSeek local · Kimi free · Antigravity/Gemini · skills especializadas</span>
-            </div>
-            <span class="group-done" id="communityDone" style="color:var(--community)"></span>
-          </div>
-          <div class="agent-grid" id="communityGrid"></div>
+          <div class="agent-grid" id="specialistGrid"></div>
         </section>
 
         <section>
           <div class="group-head" style="border-bottom:1px solid var(--border-2)">
             <div class="group-head-left">
-              <h2>Juízes e síntese</h2>
+              <h2>Juiz e síntese</h2>
               <span class="sub">nenhum juiz opina sem antes reler a fonte</span>
             </div>
           </div>
@@ -510,6 +514,96 @@ aside{background:rgba(5,6,9,.7);border-color:rgba(255,255,255,.065)}
       <div class="modal-foot">
         <span class="modal-path" id="newRoundStatus"></span>
         <button class="btn-primary" id="btnStartRound">Iniciar rodada</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="settingsModal">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">Configurar conselho</div>
+          <div class="modal-sub">quem julga, quem sintetiza, e qual modelo fica fixo em cada especialidade</div>
+        </div>
+        <button class="btn-close" id="btnCloseSettings">FECHAR</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="free-note">"Automático" deixa o Líder decidir a cada rodada, com base na disponibilidade e na força conhecida de cada modelo. Fixar um modelo aqui sempre vence o que o Líder sugerir.</div>
+          <div class="form-field">
+            <label>JUIZ</label>
+            <select id="settingsJudge" class="run-selector" style="width:100%"></select>
+          </div>
+          <div class="form-field">
+            <label>LÍDER / SINTETIZADOR</label>
+            <select id="settingsLeader" class="run-selector" style="width:100%"></select>
+          </div>
+          <div class="form-field">
+            <label>MÁXIMO DE ESPECIALIDADES POR RODADA</label>
+            <input type="number" id="settingsMaxSpecialties" min="1" max="20" style="max-width:120px">
+          </div>
+          <div class="form-field">
+            <label>FIXAR MODELO POR ESPECIALIDADE (opcional)</label>
+            <div id="settingsPins" style="display:flex;flex-direction:column;gap:8px"></div>
+          </div>
+          <div class="form-field">
+            <label>MODELOS AVULSOS (OpenRouter / OmniRoute)</label>
+            <div id="settingsCustomModels" style="display:flex;flex-direction:column;gap:8px"></div>
+            <div style="display:flex;gap:8px;margin-top:4px">
+              <select id="settingsCustomProvider" class="run-selector">
+                <option value="openrouter">OpenRouter</option>
+                <option value="omniroute">OmniRoute</option>
+              </select>
+              <input type="text" id="settingsCustomModelId" placeholder="ex.: deepseek/deepseek-chat-v3.1:free ou auto" style="flex:1">
+              <button class="btn-copy" id="btnAddCustomModel">Adicionar</button>
+            </div>
+            <div class="form-hint">OpenRouter precisa de OPENROUTER_API_KEY no ambiente. OmniRoute precisa do gateway local rodando (ver `npm run doctor`).</div>
+          </div>
+          <div class="form-error" id="settingsError" style="display:none"></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <span class="modal-path" id="settingsStatus"></span>
+        <button class="btn-primary" id="btnSaveSettings">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="playgroundModal">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">Playground</div>
+          <div class="modal-sub">chat avulso com qualquer modelo do pool, sem revisão de código nenhuma</div>
+        </div>
+        <button class="btn-close" id="btnClosePlayground">FECHAR</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div id="playgroundSetup" style="display:flex;flex-direction:column;gap:14px">
+            <div class="form-field">
+              <label>MODELO</label>
+              <select id="playgroundModelSelect" class="run-selector" style="width:100%"></select>
+            </div>
+            <div class="form-field">
+              <label>SYSTEM PROMPT (opcional)</label>
+              <textarea id="playgroundSystemPrompt" rows="2" placeholder="Ex.: Você é um revisor de arquitetura de software, direto e cético."></textarea>
+            </div>
+            <button class="btn-primary" id="btnStartPlayground" style="align-self:flex-start">Começar</button>
+          </div>
+          <div id="playgroundChatArea" style="display:none;flex-direction:column;gap:10px">
+            <div class="chat-thread" id="playgroundThread"></div>
+            <div class="chat-input-row">
+              <textarea id="playgroundInput" rows="2" placeholder="Mensagem…"></textarea>
+              <button id="btnPlaygroundSend">Enviar</button>
+            </div>
+          </div>
+          <div class="form-error" id="playgroundError" style="display:none"></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <span class="modal-path" id="playgroundStatus"></span>
+        <button class="btn-copy" id="btnResetPlayground">Nova sessão</button>
       </div>
     </div>
   </div>

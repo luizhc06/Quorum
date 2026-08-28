@@ -8,45 +8,24 @@ const POLL_MS = 3000;
 const DEMO = {
   run: {
     runId: 'a3f0-2608', round: 2, task: 'demo — exemplo ilustrativo, não é uma rodada real',
-    status: 'done', parallelism: '21 agentes', elapsed: '04:12', cost: 'US$ 0,38',
+    status: 'done', parallelism: '4 especialistas em 4 especialidades', elapsed: '04:12', cost: 'US$ 0,38',
   },
-  claudeAgents: [
-    { key: 'arquitetura', name: 'Arquitetura', model: 'Sonnet 5', state: 'done', findings: 3, lens: 'Mapeia módulos, acoplamento e limites de responsabilidade.', elapsed: '58s', usage: { inputTokens: 18400, outputTokens: 2100, estimatedUsd: 0.058 } },
-    { key: 'seguranca', name: 'Segurança', model: 'Sonnet 5', state: 'done', findings: 4, lens: 'Injeção, autenticação, segredos em texto plano.', elapsed: '1m 12s', usage: { inputTokens: 24100, outputTokens: 2800, estimatedUsd: 0.076 } },
-    { key: 'regras-negocio', name: 'Regras de negócio', model: 'Sonnet 5', state: 'done', findings: 2, lens: 'Logística, fluxo de pedido, consistência de estado.', elapsed: '49s', usage: { inputTokens: 15200, outputTokens: 1700, estimatedUsd: 0.047 } },
-    { key: 'bug-hunter', name: 'Bug Hunter', model: 'Sonnet 5', state: 'done', findings: 2, lens: 'Condição de corrida, exceção engolida, off-by-one.', elapsed: '1m 01s', usage: { inputTokens: 17300, outputTokens: 1900, estimatedUsd: 0.057 } },
-    { key: 'melhorias', name: 'Melhorias gerais', model: 'Sonnet 5', state: 'done', findings: 3, lens: 'Duplicação, complexidade desnecessária, simplificação.', elapsed: '55s', usage: { inputTokens: 17600, outputTokens: 1900, estimatedUsd: 0.054 } },
-    { key: 'engenharia-software', name: 'Engenharia de software', model: 'Sonnet 5', state: 'done', findings: 2, lens: 'Testabilidade, tratamento de erro, dívida técnica.', elapsed: '1m 03s', usage: { inputTokens: 20500, outputTokens: 2300, estimatedUsd: 0.064 } },
-    { key: 'qa', name: 'Qualidade / QA', model: 'Haiku 4.5', state: 'done', findings: 2, lens: 'Cobertura de teste, casos de borda não exercitados.', elapsed: '22s', usage: { inputTokens: 14700, outputTokens: 1600, estimatedUsd: 0.008 } },
-    { key: 'dados', name: 'Dados', model: 'Sonnet 5', state: 'done', findings: 3, lens: 'Modelagem, migrações, integridade referencial.', elapsed: '1m 20s', usage: { inputTokens: 26300, outputTokens: 2900, estimatedUsd: 0.082 } },
-    { key: 'dependencias', name: 'Dependências', model: 'Haiku 4.5', state: 'done', findings: 1, lens: 'Supply-chain, versões travadas, ausência de lockfile.', elapsed: '28s', usage: { inputTokens: 28900, outputTokens: 3100, estimatedUsd: 0.016 } },
-    { key: 'infraestrutura-deploy', name: 'Infraestrutura / Deploy', model: 'Sonnet 5', state: 'done', findings: 2, lens: 'CI/CD, gestão de segredos em produção, rollback.', elapsed: '2m 41s', usage: { inputTokens: 34800, outputTokens: 3600, estimatedUsd: 0.106 } },
+  allocation: [
+    { key: 'seguranca', models: ['claude-sonnet-5', 'gpt-5.6-terra'] },
+    { key: 'dados', models: ['claude-sonnet-5'] },
+    { key: 'docs-legibilidade', models: ['nvidia/nemotron-3-super-120b-a12b'] },
+    { key: 'design-produto', models: ['kimi-k2.6:cloud'] },
   ],
-  openaiAgents: [
-    { key: 'arquitetura', name: 'Arquitetura', model: 'GPT-5.6 Terra', state: 'done', findings: 2, lens: 'Mapeia módulos, acoplamento e limites de responsabilidade.', elapsed: '1m 02s', usage: { inputTokens: 18900, outputTokens: 2000, estimatedUsd: 0.062 } },
-    { key: 'seguranca', name: 'Segurança', model: 'GPT-5.6 Terra', state: 'done', findings: 3, lens: 'Vulnerabilidades citáveis por arquivo e linha.', elapsed: '1m 08s', usage: { inputTokens: 19800, outputTokens: 2200, estimatedUsd: 0.066 } },
-    { key: 'regras-negocio', name: 'Regras de negócio', model: 'GPT-5.6 Terra', state: 'done', findings: 1, lens: 'Logística, fluxo de pedido, consistência de estado.', elapsed: '51s', usage: { inputTokens: 15600, outputTokens: 1700, estimatedUsd: 0.051 } },
-    { key: 'bug-hunter', name: 'Bug Hunter', model: 'GPT-5.6 Terra', state: 'done', findings: 2, lens: 'Condição de corrida, exceção engolida, off-by-one.', elapsed: '1m 01s', usage: { inputTokens: 17300, outputTokens: 1900, estimatedUsd: 0.057 } },
-    { key: 'melhorias', name: 'Melhorias gerais', model: 'GPT-5.6 Terra', state: 'done', findings: 2, lens: 'Padrões já usados em um lugar, não replicados em outro.', elapsed: '46s', usage: { inputTokens: 13600, outputTokens: 1500, estimatedUsd: 0.045 } },
-    { key: 'engenharia-software', name: 'Engenharia de software', model: 'GPT-5.6 Terra', state: 'done', findings: 1, lens: 'Testabilidade, tratamento de erro, dívida técnica.', elapsed: '58s', usage: { inputTokens: 19100, outputTokens: 2100, estimatedUsd: 0.063 } },
-    { key: 'qa', name: 'Qualidade / QA', model: 'GPT-5.6 Luna', state: 'done', findings: 1, lens: 'Cobertura de teste, casos de borda não exercitados.', elapsed: '19s', usage: { inputTokens: 14200, outputTokens: 1500, estimatedUsd: 0.005 } },
-    { key: 'dados', name: 'Dados', model: 'GPT-5.6 Terra', state: 'done', findings: 2, lens: 'Modelagem, migrações, integridade referencial.', elapsed: '1m 15s', usage: { inputTokens: 25100, outputTokens: 2700, estimatedUsd: 0.082 } },
-    { key: 'dependencias', name: 'Dependências', model: 'GPT-5.6 Luna', state: 'done', findings: 1, lens: 'Supply-chain, versões travadas, ausência de lockfile.', elapsed: '25s', usage: { inputTokens: 28900, outputTokens: 3100, estimatedUsd: 0.009 } },
-    { key: 'infraestrutura-deploy', name: 'Infraestrutura / Deploy', model: 'GPT-5.6 Terra', state: 'done', findings: 2, lens: 'CI/CD, gestão de segredos em produção, rollback.', elapsed: '2m 05s', usage: { inputTokens: 32100, outputTokens: 3400, estimatedUsd: 0.104 } },
-  ],
-  nvidiaAgents: [
-    { key: 'hermes-docs', name: 'Documentação & Legibilidade (Hermes)', model: 'Nemotron 3 Super', state: 'done', findings: 1, lens: 'README/comentários batendo com o código real, nomes que escondem o que fazem.', elapsed: '31s', usage: { source: 'plano free NVIDIA (sem custo)' } },
-  ],
-  communityAgents: [
-    { key: 'deepseek-local', name: 'DeepSeek · Segurança & Performance', model: 'deepseek-r1:8b', state: 'done', findings: 2, lens: 'Vulnerabilidades verificáveis, gargalos e economia de tokens.', elapsed: '44s', free: 'Ollama local' },
-    { key: 'kimi-free', name: 'Kimi · Qualidade & Design', model: 'kimi-k2.6:cloud', state: 'done', findings: 2, lens: 'Qualidade de produto, interface e refinamento visual.', elapsed: '39s', free: 'Ollama Cloud Free' },
-    { key: 'antigravity-free', name: 'Antigravity · Revisão Gemini', model: 'gemini-3.7-flash-high', state: 'done', findings: 1, lens: 'Revisão independente dos relatórios consolidados.', elapsed: '36s', free: 'Quota Antigravity' },
+  specialistAgents: [
+    { key: 'seguranca', name: 'Segurança', model: 'claude-sonnet-5', engine: 'claude', provider: 'claude', group: 'claude', state: 'done', findings: 4, lens: 'Injeção, autenticação, segredos em texto plano.', elapsed: '1m 12s', usage: { inputTokens: 24100, outputTokens: 2800, estimatedUsd: 0.076 } },
+    { key: 'seguranca__gpt-5-6-terra', name: 'Segurança', model: 'gpt-5.6-terra', engine: 'openai', provider: 'openai', group: 'openai', state: 'done', findings: 3, lens: 'Vulnerabilidades citáveis por arquivo e linha, segundo parecer independente.', elapsed: '1m 08s', usage: { inputTokens: 19800, outputTokens: 2200, estimatedUsd: 0.066 } },
+    { key: 'dados', name: 'Dados', model: 'claude-sonnet-5', engine: 'claude', provider: 'claude', group: 'claude', state: 'done', findings: 3, lens: 'Modelagem, migrações, integridade referencial.', elapsed: '1m 20s', usage: { inputTokens: 26300, outputTokens: 2900, estimatedUsd: 0.082 } },
+    { key: 'docs-legibilidade', name: 'Documentação & Legibilidade', model: 'nvidia/nemotron-3-super-120b-a12b', engine: 'nvidia', provider: 'nvidia', group: 'nvidia', state: 'done', findings: 1, lens: 'README/comentários batendo com o código real, nomes que escondem o que fazem.', elapsed: '31s', usage: { source: 'plano free NVIDIA (sem custo)' } },
+    { key: 'design-produto', name: 'Qualidade & Design de Produto', model: 'kimi-k2.6:cloud', engine: 'community', provider: 'ollama', group: 'community', state: 'done', findings: 2, lens: 'Qualidade de produto, interface e refinamento visual.', elapsed: '39s', free: 'Ollama Cloud Free' },
   ],
   arbiters: [
-    { key: 'juiz-claude', name: 'Juiz Claude', model: 'Opus 5 · com leitura', state: 'done', role: 'Consolidou os 10 relatórios, descartou 3 achados de baixa confiança, checou pessoalmente os de severidade alta antes de aceitar.', chips: ['10 relatórios lidos', '3 descartados', '15 confirmados'], usage: { inputTokens: 48200, outputTokens: 5100, estimatedUsd: 0.369 } },
-    { key: 'juiz-openai', name: 'Juiz OpenAI', model: 'GPT-5.6 Sol · com leitura', state: 'done', role: 'Consolidou os 10 relatórios, checou o achado de dependência travada contra o lockfile antes de aceitar.', chips: ['10 relatórios lidos', '1 rebaixado'], usage: { inputTokens: 31500, outputTokens: 3400, estimatedUsd: 0.26 } },
-    { key: 'juiz-nvidia', name: 'Juiz NVIDIA', model: 'Sonnet 5 · com leitura', state: 'done', role: 'Consolidou o relatório do Hermes.', chips: ['1 relatório lido'], usage: { inputTokens: 4200, outputTokens: 600, estimatedUsd: 0.024 } },
-    { key: 'lider', name: 'Líder / Sintetizador', model: 'Opus 5', state: 'done', role: 'Cruzou os três lados, verificou pessoalmente os achados de severidade alta, decidiu o que vai para a síntese final.', chips: ['9/12 pontos convergentes', '1 divergência aberta'], usage: { inputTokens: 22100, outputTokens: 2600, estimatedUsd: 0.176 } },
+    { key: 'juiz', name: 'Juiz', model: 'Opus 5 · com leitura', state: 'done', role: 'Consolidou os 5 relatórios, descartou 1 achado de baixa confiança, checou pessoalmente os de severidade alta antes de aceitar.', chips: ['5 relatórios lidos', '1 descartado', '6 confirmados'], usage: { inputTokens: 48200, outputTokens: 5100, estimatedUsd: 0.369 } },
+    { key: 'lider', name: 'Líder / Sintetizador', model: 'Opus 5', state: 'done', role: 'Decidiu a alocação desta rodada, cruzou os relatórios, verificou pessoalmente os achados de severidade alta.', chips: ['6/7 pontos convergentes', '1 divergência aberta'], usage: { inputTokens: 22100, outputTokens: 2600, estimatedUsd: 0.176 } },
   ],
   debate: [
     { time: '14:02:11', author: 'Claude · segurança', side: 'claude', kind: 'afirmação',
@@ -74,10 +53,7 @@ const DEMO = {
       text: 'Não temos como resolver isso lendo mais código — os dois lados têm evidência válida, e o desempate depende de uma projeção de negócio que nenhum agente tem. Isso vai para divergência aberta na síntese.', evidence: null },
   ],
   judgeReports: {
-    claude: '## Resumo\nConsolidação dos 10 especialistas Claude. 2 achados de severidade alta checados pessoalmente antes de aceitar.\n\n## Achados\n\n### SQL injection em /api/pedidos/buscar\n- Severidade: alto\n- Evidência: app/Controllers/PedidoController.php:212\n- Confiança: alta (reli o arquivo pessoalmente)\n\n(relatório completo omitido no exemplo demo)',
-    openai: '## Resumo\nConsolidação dos 10 especialistas GPT/Codex. Confirmo o achado de SQL injection do lado Claude a partir de ângulo diferente.\n\n## Achados\n\n### .env.production copiado no build\n- Severidade: alto\n- Evidência: ci/build.yml:34\n- Confiança: alta\n\n(relatório completo omitido no exemplo demo)',
-    nvidia: '## Resumo\nO Hermes revisou documentação/legibilidade. 1 achado confirmado.\n\n## Achados\n\n### README desatualizado sobre o fluxo de reenvio\n- Severidade: baixo\n- Evidência: README.md:88\n- Confiança: média',
-    community: '## Resumo\nDeepSeek, Kimi e Antigravity acrescentaram uma leitura independente, com foco em segurança, desempenho, qualidade e experiência visual.\n\n## Achados\n\n### Redução de contexto repetido\n- Impacto: médio\n- Evidência: prompts compartilhados entre especialistas\n- Confiança: alta',
+    unified: '## Resumo\nConsolidação dos 5 especialistas alocados nesta rodada (Claude, GPT, Nemotron e Kimi). 2 achados de severidade alta checados pessoalmente antes de aceitar; 1 achado descartado por falta de evidência.\n\n## Achados\n\n### SQL injection em /api/pedidos/buscar\n- Severidade: alto\n- Evidência: app/Controllers/PedidoController.php:212\n- Confiança: alta (reli o arquivo pessoalmente)\n- Origem: Segurança (Claude) + Segurança (GPT), segundo parecer independente confirmou o mesmo padrão em outros controllers\n\n### README desatualizado sobre o fluxo de reenvio\n- Severidade: baixo\n- Evidência: README.md:88\n- Confiança: média\n- Origem: Documentação & Legibilidade (Nemotron)\n\n(relatório completo omitido no exemplo demo)',
   },
   headline: 'Deploy pode seguir, com um bloqueio: segredos ainda saem no build.',
   lede: 'Os dois grupos convergiram em 9 dos 12 pontos materiais. A divergência que importa é sobre o custo de migrar o schema agora — e ela não é resolvível com leitura de código, precisa de um número seu.',
@@ -136,22 +112,34 @@ const STATE = {
   providers: [],
   providersOpen: false,
   selectedProviders: new Set(['deepseek-local', 'kimi-free', 'antigravity-free']),
+  settingsOpen: false,
+  settingsLoaded: false,
+  settingsSpecialties: [],
+  settingsModelPool: [],
+  settingsProviderModels: { openrouter: [], omniroute: [] },
+  settingsDraft: { judgeModel: '', leaderModel: '', pinned: {}, maxSpecialtiesPerRound: 6, omnirouteBaseUrl: '', customModels: [] },
+  selTab: 'findings',
+  liveSource: null,
+  liveKey: null,
+  liveLines: [],
+  chatThread: [],
+  chatSending: false,
+  playgroundOpen: false,
+  playgroundSessionId: null,
+  playgroundThread: [],
+  playgroundSending: false,
 };
 
 const STAGES = [
-  { key: 'conselho', num: '01', title: 'Rodada paralela', state: () => {
-    const all = [...STATE.data.claudeAgents, ...STATE.data.openaiAgents, ...STATE.data.nvidiaAgents, ...(STATE.data.communityAgents || [])];
+  { key: 'conselho', num: '01', title: 'Alocação dinâmica', state: () => {
+    const all = STATE.data.specialistAgents || [];
     const total = all.length;
     const done = all.filter(a => a.state === 'done').length;
-    return `${total} agentes · ${done} concluídos`;
+    return total ? `${total} especialista(s) · ${done} concluído(s)` : 'aguardando alocação';
   } },
   { key: 'debate', num: '02', title: 'Debate cruzado', state: () => `${(STATE.data.debate || []).length} mensagens` },
-  { key: 'verify', num: '04', title: 'Juízes', state: () => {
-    const jr = STATE.data.judgeReports || {};
-    const n = ['claude', 'openai', 'nvidia', 'community'].filter((k) => jr[k]).length;
-    return n ? `${n}/4 relatórios` : 'aguardando';
-  } },
-  { key: 'synth', num: '05', title: 'Síntese Opus', state: () => STATE.data.headline ? (STATE.data.dissent ? '1 divergência aberta' : 'sem divergência') : 'aguardando' },
+  { key: 'verify', num: '04', title: 'Juiz', state: () => (STATE.data.judgeReports || {}).unified ? '1/1 relatório' : 'aguardando' },
+  { key: 'synth', num: '05', title: 'Síntese', state: () => STATE.data.headline ? (STATE.data.dissent ? '1 divergência aberta' : 'sem divergência') : 'aguardando' },
 ];
 
 /* ---------- helpers ---------- */
@@ -184,12 +172,7 @@ function tagColor(tag) {
 }
 function findingsFor(key) {
   const claims = STATE.data.claims || [];
-  const all = [
-    ...STATE.data.claudeAgents.map(a => ({ ...a, side: 'claude' })),
-    ...STATE.data.openaiAgents.map(a => ({ ...a, side: 'openai' })),
-    ...(STATE.data.communityAgents || []).map(a => ({ ...a, side: 'community' })),
-  ];
-  const agent = all.find(a => a.key === key);
+  const agent = (STATE.data.specialistAgents || []).find(a => a.key === key);
   if (!agent || !agent.findings) return [];
   const firstName = agent.name.toLowerCase().split(' ')[0];
   return claims.filter(c => c.origin.toLowerCase().includes(firstName)).slice(0, agent.findings);
@@ -259,15 +242,37 @@ async function loadRun(runId) {
   }
 }
 
+// Refaz só o fetch do state.json atual e renderiza — usado depois de uma
+// ação de controle (pausar/cancelar/trocar modelo), pra refletir na hora
+// sem esperar o próximo tick do polling nem resetar view/seleção como
+// loadRun() faria.
+async function refreshCurrentRun() {
+  if (STATE.currentRunId === DEMO_RUN_ID) return;
+  try {
+    const res = await fetch(`/api/runs/${encodeURIComponent(STATE.currentRunId)}`);
+    if (res.ok) { STATE.data = normalizeRunData(await res.json()); render(); }
+  } catch (e) { /* o próximo tick do polling cobre */ }
+}
+
 function normalizeRunData(raw) {
+  // specialistAgents é o formato atual (um array só, qualquer proveniência).
+  // Runs gravadas pela arquitetura antiga (grupos fixos por fornecedor)
+  // caem no fallback abaixo, achatando os 4 arrays separados num só —
+  // assim uma rodada antiga ainda abre no painel em vez de aparecer vazia.
+  const specialistAgents = raw.specialistAgents || [
+    ...(raw.claudeAgents || []).map(a => ({ ...a, group: 'claude', provider: 'claude' })),
+    ...(raw.openaiAgents || []).map(a => ({ ...a, group: 'openai', provider: 'openai' })),
+    ...(raw.nvidiaAgents || []).map(a => ({ ...a, group: 'nvidia', provider: 'nvidia' })),
+    ...(raw.communityAgents || []).map(a => ({ ...a, group: 'community', provider: a.provider || 'community' })),
+  ];
+  const judgeReports = raw.judgeReports && raw.judgeReports.unified !== undefined
+    ? raw.judgeReports
+    : { unified: [raw.judgeReports?.claude, raw.judgeReports?.openai, raw.judgeReports?.nvidia, raw.judgeReports?.community].filter(Boolean).join('\n\n---\n\n') };
   return {
     run: raw.run || {},
-    claudeAgents: raw.claudeAgents || [],
-    openaiAgents: raw.openaiAgents || [],
-    nvidiaAgents: raw.nvidiaAgents || [],
-    communityAgents: raw.communityAgents || [],
+    specialistAgents,
     arbiters: raw.arbiters || [],
-    judgeReports: raw.judgeReports || { claude: '', openai: '', nvidia: '', community: '' },
+    judgeReports,
     debate: raw.debate || [],
     claims: raw.claims || [],
     headline: raw.headline || '',
@@ -276,6 +281,8 @@ function normalizeRunData(raw) {
     dissent: raw.dissent || null,
     activity: raw.activity || [],
     decisions: raw.decisions || {},
+    allocation: raw.allocation || null,
+    roundBrief: raw.roundBrief || null,
   };
 }
 
@@ -300,25 +307,14 @@ function stopPolling() {
 /* ---------- render: header/nav ---------- */
 
 function computeTokenTotals(data) {
-  let claudeIn = 0, claudeOut = 0, claudeCost = 0;
-  let openaiIn = 0, openaiOut = 0, openaiCost = 0;
-  (data.claudeAgents || []).forEach((a) => { if (a.usage) { claudeIn += a.usage.inputTokens || 0; claudeOut += a.usage.outputTokens || 0; claudeCost += a.usage.estimatedUsd || 0; } });
-  (data.openaiAgents || []).forEach((a) => { if (a.usage) { openaiIn += a.usage.inputTokens || 0; openaiOut += a.usage.outputTokens || 0; openaiCost += a.usage.estimatedUsd || 0; } });
-  (data.arbiters || []).forEach((a) => {
+  let grandTotal = 0, totalCost = 0;
+  const allAgents = [...(data.specialistAgents || []), ...(data.arbiters || [])];
+  allAgents.forEach((a) => {
     if (!a.usage) return;
-    const isOpenai = (a.key || '').includes('openai');
-    if (isOpenai) { openaiIn += a.usage.inputTokens || 0; openaiOut += a.usage.outputTokens || 0; openaiCost += a.usage.estimatedUsd || 0; }
-    else { claudeIn += a.usage.inputTokens || 0; claudeOut += a.usage.outputTokens || 0; claudeCost += a.usage.estimatedUsd || 0; }
+    grandTotal += (a.usage.inputTokens || 0) + (a.usage.outputTokens || 0);
+    totalCost += a.usage.estimatedUsd || 0;
   });
-  const claudeTotal = claudeIn + claudeOut;
-  const openaiTotal = openaiIn + openaiOut;
-  const grandTotal = claudeTotal + openaiTotal;
-  return {
-    claudeTotal, openaiTotal, grandTotal,
-    claudeCost, openaiCost, totalCost: claudeCost + openaiCost,
-    pctClaude: grandTotal ? Math.round((claudeTotal / grandTotal) * 100) : 0,
-    pctOpenai: grandTotal ? Math.round((openaiTotal / grandTotal) * 100) : 0,
-  };
+  return { grandTotal, totalCost };
 }
 function fmtTokens(n) {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
@@ -337,8 +333,10 @@ function renderHeader() {
 
   const totals = computeTokenTotals(STATE.data);
   document.getElementById('tokensTotal').textContent = totals.grandTotal ? fmtTokens(totals.grandTotal) : '—';
-  document.getElementById('pctAnthropic').textContent = totals.grandTotal ? `${totals.pctClaude}%` : '—';
-  document.getElementById('pctOpenai').textContent = totals.grandTotal ? `${totals.pctOpenai}%` : '—';
+  const specialists = STATE.data.specialistAgents || [];
+  const distinctProviders = new Set(specialists.map((a) => a.provider || a.group).filter(Boolean));
+  document.getElementById('statSpecialists').textContent = specialists.length ? String(specialists.length) : '—';
+  document.getElementById('statProviders').textContent = distinctProviders.size ? String(distinctProviders.size) : '—';
 
   const dot = document.getElementById('statusDot');
   const label = document.getElementById('statusLabel');
@@ -371,8 +369,28 @@ function renderTabs() {
 
 /* ---------- render: view 01 conselho ---------- */
 
+async function controlAction(action, key, body) {
+  try {
+    const res = await fetch(`/api/runs/${encodeURIComponent(STATE.currentRunId)}/agents/${encodeURIComponent(key)}/${action}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}),
+    });
+    return await res.json();
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
 function agentCard(agent, side) {
-  const card = el('button', `agent-card${side === 'openai' ? ' openai' : side === 'nvidia' ? ' nvidia' : side === 'community' ? ' community' : ''}`);
+  // <div>, não <button> — os controles (pausar/cancelar/trocar modelo) têm
+  // seus próprios <button>/<select>, e aninhar elemento interativo dentro de
+  // <button> é HTML inválido (o navegador "escapa" o filho pra fora, quebrando clique).
+  const card = el('div', `agent-card${side === 'openai' ? ' openai' : side === 'nvidia' ? ' nvidia' : side === 'community' ? ' community' : ''}${agent.state === 'running' ? ' is-running' : ''}`);
+  card.setAttribute('role', 'button');
+  card.setAttribute('tabindex', '0');
+  const isDemo = STATE.currentRunId === DEMO_RUN_ID;
+  const modelOptions = STATE.settingsModelPool.length
+    ? STATE.settingsModelPool.map((m) => `<option value="${escapeHtml(m.id)}" ${m.id === agent.model ? 'selected' : ''}>${escapeHtml(m.label || m.id)}</option>`).join('')
+    : '';
   card.innerHTML = `
     <div class="agent-top">
       <span class="agent-dot" style="background:${stateColor(agent.state)}"></span>
@@ -383,33 +401,63 @@ function agentCard(agent, side) {
       <span class="agent-findings">${agent.findings ?? 0}</span>
     </div>
     <div class="agent-lens">${escapeHtml(agent.lens || '')}</div>
-    <div class="agent-foot"><span>${escapeHtml(agent.model || '')}</span><span>${escapeHtml(agent.elapsed || '')}</span></div>`;
-  card.addEventListener('click', () => { STATE.sel = { ...agent, side }; render(); });
+    <div class="agent-foot"><span>${escapeHtml(agent.model || '')}</span><span>${escapeHtml(agent.elapsed || '')}</span></div>
+    ${!isDemo && agent.state === 'running' ? `
+    <div class="agent-controls">
+      <button class="agent-ctrl-btn" data-act="pause" title="Pausa (recomeça do zero se retomar)">PAUSAR</button>
+      <button class="agent-ctrl-btn" data-act="cancel" title="Cancela de vez">CANCELAR</button>
+      ${modelOptions ? `<select class="agent-ctrl-select" data-act="reassign">${modelOptions}</select>` : ''}
+    </div>` : ''}
+    ${!isDemo && agent.state === 'paused' ? `
+    <div class="agent-controls">
+      <button class="agent-ctrl-btn" data-act="resume" title="Recomeça do zero">RETOMAR</button>
+    </div>` : ''}`;
+  card.addEventListener('click', (e) => {
+    if (e.target.closest('.agent-controls')) return;
+    STATE.sel = { ...agent, side };
+    STATE.selTab = 'findings';
+    render();
+  });
+  card.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.agent-controls')) {
+      e.preventDefault();
+      STATE.sel = { ...agent, side };
+      STATE.selTab = 'findings';
+      render();
+    }
+  });
+  const controls = card.querySelector('.agent-controls');
+  if (controls) {
+    controls.addEventListener('click', (e) => e.stopPropagation());
+    const pauseBtn = controls.querySelector('[data-act="pause"]');
+    const cancelBtn = controls.querySelector('[data-act="cancel"]');
+    const resumeBtn = controls.querySelector('[data-act="resume"]');
+    const reassignSel = controls.querySelector('[data-act="reassign"]');
+    pauseBtn?.addEventListener('click', async () => { await controlAction('pause', agent.key); await refreshCurrentRun(); });
+    cancelBtn?.addEventListener('click', async () => { await controlAction('cancel', agent.key); await refreshCurrentRun(); });
+    resumeBtn?.addEventListener('click', async () => { await controlAction('resume', agent.key); await refreshCurrentRun(); });
+    reassignSel?.addEventListener('change', async () => { await controlAction('reassign', agent.key, { model: reassignSel.value }); await refreshCurrentRun(); });
+  }
   return card;
 }
 
 function renderConselho() {
   const container = document.getElementById('view-conselho');
-  const hasAny = STATE.data.claudeAgents.length || STATE.data.openaiAgents.length || STATE.data.nvidiaAgents.length || (STATE.data.communityAgents || []).length;
-  if (!hasAny) {
+  const specialists = STATE.data.specialistAgents || [];
+  if (!specialists.length) {
     container.innerHTML = '';
-    container.appendChild(emptyState('Nenhuma rodada iniciada ainda para este run. O painel atualiza sozinho assim que os agentes começarem.'));
+    container.appendChild(emptyState('Nenhuma rodada iniciada ainda para este run. O painel atualiza sozinho assim que o Líder decidir a alocação e os especialistas começarem.'));
     return;
   }
 
-  const cGrid = document.getElementById('claudeGrid'); cGrid.innerHTML = '';
-  STATE.data.claudeAgents.forEach(a => cGrid.appendChild(agentCard(a, 'claude')));
-  const oGrid = document.getElementById('openaiGrid'); oGrid.innerHTML = '';
-  STATE.data.openaiAgents.forEach(a => oGrid.appendChild(agentCard(a, 'openai')));
-  const nGrid = document.getElementById('nvidiaGrid'); nGrid.innerHTML = '';
-  STATE.data.nvidiaAgents.forEach(a => nGrid.appendChild(agentCard(a, 'nvidia')));
-  const communityGrid = document.getElementById('communityGrid'); communityGrid.innerHTML = '';
-  (STATE.data.communityAgents || []).forEach(a => communityGrid.appendChild(agentCard(a, 'community')));
-
-  document.getElementById('claudeDone').textContent = `${STATE.data.claudeAgents.filter(a => a.state === 'done').length}/${STATE.data.claudeAgents.length} concluídos`;
-  document.getElementById('openaiDone').textContent = `${STATE.data.openaiAgents.filter(a => a.state === 'done').length}/${STATE.data.openaiAgents.length} concluídos`;
-  document.getElementById('nvidiaDone').textContent = `${STATE.data.nvidiaAgents.filter(a => a.state === 'done').length}/${STATE.data.nvidiaAgents.length} concluídos`;
-  document.getElementById('communityDone').textContent = `${(STATE.data.communityAgents || []).filter(a => a.state === 'done').length}/${(STATE.data.communityAgents || []).length} concluídos`;
+  const grid = document.getElementById('specialistGrid'); grid.innerHTML = '';
+  specialists.forEach(a => grid.appendChild(agentCard(a, a.group || a.provider)));
+  document.getElementById('specialistDone').textContent = `${specialists.filter(a => a.state === 'done').length}/${specialists.length} concluídos`;
+  const sub = document.getElementById('allocationSub');
+  if (sub) {
+    const specialtyCount = new Set(specialists.map((a) => a.specialty || a.key)).size;
+    sub.textContent = `${specialists.length} especialista(s) em ${specialtyCount} especialidade(s) — decidido pelo Líder nesta rodada`;
+  }
 
   const aGrid = document.getElementById('arbiterGrid'); aGrid.innerHTML = '';
   STATE.data.arbiters.forEach(a => {
@@ -465,32 +513,23 @@ function renderDebate() {
 function renderVerify() {
   const view = document.getElementById('view-verify');
   const jr = STATE.data.judgeReports || {};
-  if (!jr.claude && !jr.openai && !jr.nvidia && !jr.community) {
+  if (!jr.unified) {
     view.innerHTML = '';
-    view.appendChild(emptyState('Nenhum juiz concluiu ainda nesta rodada. Esta tela popula conforme cada grupo termina.'));
+    view.appendChild(emptyState('O Juiz ainda não concluiu nesta rodada. Esta tela popula assim que ele terminar.'));
     return;
   }
-  const panels = [
-    { key: 'claude', label: 'Juiz Claude', color: 'var(--accent-2)' },
-    { key: 'openai', label: 'Juiz OpenAI', color: 'var(--blue)' },
-    { key: 'nvidia', label: 'Juiz NVIDIA', color: 'var(--nvidia)' },
-    { key: 'community', label: 'Conselheiros independentes', color: 'var(--community)' },
-  ];
   view.innerHTML = `
     <div style="display:flex;flex-direction:column;gap:16px">
-      <p class="verify-lede">A verificação cruzada entre os três lados agora é feita pelo Líder/Sintetizador (não há mais uma etapa separada com veredito por afirmação) — aqui embaixo estão os relatórios consolidados que ele recebe de cada grupo, antes da síntese final.</p>
+      <p class="verify-lede">O Juiz consolida os relatórios de todos os especialistas alocados nesta rodada (podem vir de fornecedores diferentes) antes da síntese final do Líder — não há mais um juiz por fornecedor.</p>
       <div id="judgeReportPanels" style="display:flex;flex-direction:column;gap:14px"></div>
     </div>`;
   const wrap = document.getElementById('judgeReportPanels');
-  panels.forEach(p => {
-    const text = jr[p.key];
-    const card = el('div', 'judge-report-card');
-    card.style.cssText = 'border:1px solid var(--border-2);border-radius:8px;padding:14px 16px;background:var(--bg-6)';
-    card.innerHTML = `
-      <div style="font-size:13px;font-weight:600;color:${p.color};margin-bottom:8px">${p.label}</div>
-      <div style="white-space:pre-wrap;font-size:12.5px;line-height:1.6;color:var(--text-3);max-height:340px;overflow-y:auto">${text ? escapeHtml(text) : '<span style="color:var(--text-9)">aguardando…</span>'}</div>`;
-    wrap.appendChild(card);
-  });
+  const card = el('div', 'judge-report-card');
+  card.style.cssText = 'border:1px solid var(--border-2);border-radius:8px;padding:14px 16px;background:var(--bg-6)';
+  card.innerHTML = `
+    <div style="font-size:13px;font-weight:600;color:var(--accent-2);margin-bottom:8px">Juiz — relatório consolidado</div>
+    <div style="white-space:pre-wrap;font-size:12.5px;line-height:1.6;color:var(--text-3);max-height:480px;overflow-y:auto">${escapeHtml(jr.unified)}</div>`;
+  wrap.appendChild(card);
 }
 
 /* ---------- decisões (implementar / revisar) por item de síntese ---------- */
@@ -630,10 +669,17 @@ function renderSidebar() {
 
     const a = STATE.sel;
     const findings = findingsFor(a.key);
+    const eyebrowColor = a.side === 'claude' ? 'var(--accent-2)' : a.side === 'openai' ? 'var(--blue)' : a.side === 'nvidia' ? 'var(--nvidia)' : 'var(--community)';
+    const isDemo = STATE.currentRunId === DEMO_RUN_ID;
+    const tabs = [
+      { key: 'findings', label: 'ACHADOS' },
+      { key: 'live', label: 'AO VIVO' },
+      { key: 'chat', label: 'CHAT' },
+    ];
     selPanel.innerHTML = `
       <div class="sel-head">
         <div>
-          <div class="sel-eyebrow" style="color:${a.side === 'claude' ? 'var(--accent-2)' : 'var(--blue)'}">${a.side === 'claude' ? 'GRUPO ANTHROPIC' : 'GRUPO OPENAI'}</div>
+          <div class="sel-eyebrow" style="color:${eyebrowColor}">${escapeHtml((a.provider || a.side || '').toUpperCase())}</div>
           <div class="sel-name">${escapeHtml(a.name)}</div>
           <div class="sel-meta">${escapeHtml(a.model || '')} · ${stateLabel(a.state)}</div>
           ${a.usage?.cacheReadTokens ? `<div class="sel-meta" style="color:var(--green-3)">${fmtTokens(a.usage.cacheReadTokens)} tokens do cache (economizou ~US$ ${a.usage.cacheSavedUsd?.toFixed(3) ?? '0'})</div>` : ''}
@@ -642,26 +688,47 @@ function renderSidebar() {
       </div>
       <div class="sel-lens">${escapeHtml(a.lens || '')}</div>
       <div class="hr"></div>
-      <div class="activity-eyebrow">ACHADOS (${a.findings ?? 0})</div>
-      <div style="display:flex;flex-direction:column;gap:9px" id="selFindings"></div>`;
+      ${isDemo ? '' : `<div class="sel-tabs">${tabs.map((t) => `<button class="sel-tab-btn${STATE.selTab === t.key ? ' active' : ''}" data-tab="${t.key}">${t.label}</button>`).join('')}</div>`}
+      <div id="selTabBody"></div>`;
 
-    const findWrap = selPanel.querySelector('#selFindings');
-    if (findings.length === 0 && a.findings > 0) {
-      findWrap.innerHTML = `<div class="sel-lens">Detalhe consolidado no relatório do juiz — ainda não desmembrado por afirmação individual.</div>`;
-    } else if (findings.length === 0) {
-      findWrap.innerHTML = `<div class="sel-lens">Nenhum achado reportado por este agente.</div>`;
-    } else {
-      findings.forEach(f => {
-        const vc = verdictColor(f.verdict);
-        const card = el('div', 'finding-card');
-        card.innerHTML = `
-          <div class="finding-top"><span class="sev-pill" style="color:${vc.color};border-color:${vc.border}">${escapeHtml(f.verdict || '')}</span></div>
-          <div class="finding-text">${escapeHtml(f.text || '')}</div>
-          <div class="finding-at">${escapeHtml(f.origin || '')}</div>`;
-        findWrap.appendChild(card);
-      });
+    const body = selPanel.querySelector('#selTabBody');
+    const effectiveTab = isDemo ? 'findings' : STATE.selTab;
+
+    if (effectiveTab === 'findings') {
+      body.innerHTML = `<div class="activity-eyebrow">ACHADOS (${a.findings ?? 0})</div><div style="display:flex;flex-direction:column;gap:9px;margin-top:9px" id="selFindings"></div>`;
+      const findWrap = body.querySelector('#selFindings');
+      if (findings.length === 0 && a.findings > 0) {
+        findWrap.innerHTML = `<div class="sel-lens">Detalhe consolidado no relatório do juiz — ainda não desmembrado por afirmação individual.</div>`;
+      } else if (findings.length === 0) {
+        findWrap.innerHTML = `<div class="sel-lens">Nenhum achado reportado por este agente.</div>`;
+      } else {
+        findings.forEach(f => {
+          const vc = verdictColor(f.verdict);
+          const card = el('div', 'finding-card');
+          card.innerHTML = `
+            <div class="finding-top"><span class="sev-pill" style="color:${vc.color};border-color:${vc.border}">${escapeHtml(f.verdict || '')}</span></div>
+            <div class="finding-text">${escapeHtml(f.text || '')}</div>
+            <div class="finding-at">${escapeHtml(f.origin || '')}</div>`;
+          findWrap.appendChild(card);
+        });
+      }
+    } else if (effectiveTab === 'live') {
+      renderLivePanel(body, a);
+    } else if (effectiveTab === 'chat') {
+      renderChatPanel(body, a);
     }
-    document.getElementById('btnCloseSel').addEventListener('click', () => { STATE.sel = null; render(); });
+
+    selPanel.querySelectorAll('.sel-tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        if (tab === STATE.selTab) return;
+        STATE.selTab = tab;
+        if (tab === 'live') openLiveStream(a.key); else closeLiveStream();
+        if (tab === 'chat') loadChatThread(a.key);
+        render();
+      });
+    });
+    document.getElementById('btnCloseSel').addEventListener('click', () => { closeLiveStream(); STATE.sel = null; render(); });
   } else {
     selPanel.style.display = 'none';
     actPanel.style.display = 'block';
@@ -678,6 +745,116 @@ function renderSidebar() {
       });
     }
   }
+}
+
+/* ---------- painel "Ao vivo" (SSE) ---------- */
+
+function openLiveStream(key) {
+  closeLiveStream();
+  STATE.liveKey = key;
+  STATE.liveLines = [];
+  try {
+    const es = new EventSource(`/api/runs/${encodeURIComponent(STATE.currentRunId)}/stream?key=${encodeURIComponent(key)}`);
+    es.onmessage = (ev) => {
+      let evt;
+      try { evt = JSON.parse(ev.data); } catch (e) { return; }
+      STATE.liveLines.push(evt);
+      if (STATE.liveLines.length > 400) STATE.liveLines.shift();
+      if (STATE.sel && STATE.sel.key === key && STATE.selTab === 'live') {
+        const body = document.getElementById('selTabBody');
+        if (body) renderLivePanel(body, STATE.sel);
+      }
+    };
+    es.onerror = () => { /* o navegador tenta reconectar sozinho; se a rodada acabou, o servidor fecha e paramos de tentar ao trocar de aba/seleção */ };
+    STATE.liveSource = es;
+  } catch (e) { /* EventSource indisponível — painel mostra vazio */ }
+}
+function closeLiveStream() {
+  STATE.liveSource?.close();
+  STATE.liveSource = null;
+  STATE.liveKey = null;
+}
+
+function liveLineLabel(evt) {
+  if (evt.type === 'text-delta') return { cls: '', text: evt.text };
+  if (evt.type === 'tool-call-start') return { cls: 'tool', text: `→ ${evt.tool}(${evt.argsPreview || ''})` };
+  if (evt.type === 'tool-call-result') return { cls: 'tool-result', text: `← ${evt.tool} (${evt.resultChars ?? 0} chars)` };
+  if (evt.type === 'state-change') return { cls: 'tool-result', text: `[estado: ${evt.state}]` };
+  if (evt.type === 'done') return { cls: 'tool-result', text: `[concluído: ${evt.status}]` };
+  if (evt.type === 'chat-done') return { cls: '', text: evt.text };
+  return null;
+}
+
+function renderLivePanel(body, agent) {
+  const isRunning = agent.state === 'running';
+  body.innerHTML = `
+    <div class="activity-eyebrow">AO VIVO ${isRunning ? '· transmitindo' : ''}</div>
+    <div class="live-panel" id="liveLines" style="margin-top:9px"></div>
+    ${agent.engine && agent.engine !== 'community' && agent.engine !== 'nvidia' ? '<div class="form-hint" style="margin-top:6px">Este motor não transmite token a token — o texto aparece de uma vez quando a chamada de ferramenta ou a resposta termina.</div>' : ''}`;
+  const wrap = body.querySelector('#liveLines');
+  // agrupa text-delta consecutivos numa única linha (senão vira uma linha por token)
+  const grouped = [];
+  for (const evt of STATE.liveLines) {
+    const label = liveLineLabel(evt);
+    if (!label) continue;
+    const last = grouped[grouped.length - 1];
+    if (evt.type === 'text-delta' && last && last.type === 'text-delta') last.text += label.text;
+    else grouped.push({ type: evt.type, cls: label.cls, text: label.text });
+  }
+  if (!grouped.length) {
+    wrap.innerHTML = `<div class="live-empty">${isRunning ? 'aguardando os primeiros eventos…' : 'nenhum evento registrado pra este especialista ainda.'}</div>`;
+  } else {
+    wrap.innerHTML = grouped.map((g, i) => {
+      const isLastText = i === grouped.length - 1 && g.type === 'text-delta' && isRunning;
+      return `<div class="live-line ${g.cls}">${escapeHtml(g.text)}${isLastText ? '<span class="live-cursor"></span>' : ''}</div>`;
+    }).join('');
+    wrap.scrollTop = wrap.scrollHeight;
+  }
+}
+
+/* ---------- chat pós-conclusão ---------- */
+
+async function loadChatThread(key) {
+  STATE.chatThread = [];
+  if (STATE.sel) render();
+  // Não há endpoint dedicado de histórico — a primeira mensagem enviada já
+  // persiste no runs/<id>/chats/<key>.jsonl; carregar o que já existe antes
+  // da primeira mensagem desta sessão do painel não é crítico (o histórico
+  // sobrevive no arquivo de qualquer forma, só a tela começa em branco).
+}
+
+function renderChatPanel(body, agent) {
+  const canChat = agent.state === 'done';
+  body.innerHTML = `
+    <div class="activity-eyebrow">CHAT COM O ESPECIALISTA</div>
+    <div class="chat-thread" id="chatThread" style="margin-top:9px"></div>
+    ${canChat ? `
+    <div class="chat-input-row">
+      <textarea id="chatInput" placeholder="Pergunta de acompanhamento…"></textarea>
+      <button id="btnChatSend" ${STATE.chatSending ? 'disabled' : ''}>${STATE.chatSending ? '...' : 'Enviar'}</button>
+    </div>` : '<div class="form-hint" style="margin-top:6px">Só dá pra conversar depois que o especialista concluir com sucesso.</div>'}`;
+  const threadWrap = body.querySelector('#chatThread');
+  if (!STATE.chatThread.length) {
+    threadWrap.innerHTML = '<div class="live-empty">Nenhuma mensagem ainda — pergunte algo sobre o relatório dele.</div>';
+  } else {
+    threadWrap.innerHTML = STATE.chatThread.map((m) => `<div class="chat-msg ${m.role}">${escapeHtml(m.content)}</div>`).join('');
+    threadWrap.scrollTop = threadWrap.scrollHeight;
+  }
+  const sendBtn = body.querySelector('#btnChatSend');
+  const input = body.querySelector('#chatInput');
+  const send = async () => {
+    const text = input?.value.trim();
+    if (!text || STATE.chatSending) return;
+    STATE.chatThread.push({ role: 'user', content: text });
+    STATE.chatSending = true;
+    render();
+    const res = await controlAction('chat', agent.key, { message: text });
+    STATE.chatThread.push({ role: 'assistant', content: res.ok ? res.reply : `(erro: ${res.error || 'falha ao conversar'})` });
+    STATE.chatSending = false;
+    render();
+  };
+  sendBtn?.addEventListener('click', send);
+  input?.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
 }
 
 /* ---------- exportação (gerada a partir dos dados carregados, reais ou demo) ---------- */
@@ -725,7 +902,7 @@ function buildExportFormats(data) {
 
   const jsonObj = {
     run: data.run.runId, round: data.run.round,
-    agents: { claude: data.claudeAgents.length, openai: data.openaiAgents.length, nvidia: data.nvidiaAgents.length, juizes_e_lider: data.arbiters.length },
+    agents: { especialistas: (data.specialistAgents || []).length, juiz_e_lider: (data.arbiters || []).length },
     verdicts: {
       confirmados: byVerdict('CONFIRMADO').length, parciais: byVerdict('PARCIAL').length,
       improcedentes: byVerdict('IMPROCEDENTE').length, nao_verificaveis: byVerdict('NÃO VERIFICÁVEL').length,
@@ -786,7 +963,7 @@ async function loadProviderHealth() {
 function renderProviderChoices() {
   const target = document.getElementById('newRoundProviders');
   if (!target) return;
-  const optional = STATE.providers.filter((provider) => ['deepseek-local', 'kimi-free', 'antigravity-free'].includes(provider.key));
+  const optional = STATE.providers.filter((provider) => ['deepseek-local', 'kimi-free', 'antigravity-free', 'openrouter-free', 'omniroute-free'].includes(provider.key));
   target.innerHTML = optional.map((provider) => `
     <label class="provider-choice">
       <input type="checkbox" value="${escapeHtml(provider.key)}" ${STATE.selectedProviders.has(provider.key) ? 'checked' : ''}>
@@ -824,6 +1001,139 @@ function renderProvidersModal() {
     </article>`).join('');
 }
 
+/* ---------- painel de configuração do conselho ---------- */
+
+async function loadSettingsConfig() {
+  try {
+    const res = await fetch('/api/config');
+    if (!res.ok) return;
+    const data = await res.json();
+    STATE.settingsSpecialties = data.specialties || [];
+    STATE.settingsModelPool = data.modelPool || [];
+    STATE.settingsProviderModels = data.providerModels || { openrouter: [], omniroute: [] };
+    const routing = data.routing || {};
+    STATE.settingsDraft = {
+      judgeModel: routing.judgeModel || '',
+      leaderModel: routing.leaderModel || '',
+      pinned: { ...(routing.pinned || {}) },
+      maxSpecialtiesPerRound: routing.maxSpecialtiesPerRound || 6,
+      omnirouteBaseUrl: routing.omnirouteBaseUrl || 'http://localhost:20128/v1',
+      customModels: [...(routing.customModels || [])],
+    };
+    STATE.settingsLoaded = true;
+  } catch (e) {
+    // painel de config indisponível — modal mostra o que já tiver (provavelmente nada ainda)
+  }
+}
+
+function allSettingsModelOptions() {
+  return [...STATE.settingsModelPool, ...STATE.settingsDraft.customModels];
+}
+
+function renderSettingsModal() {
+  const backdrop = document.getElementById('settingsModal');
+  if (!backdrop) return;
+  backdrop.classList.toggle('show', STATE.settingsOpen);
+  if (!STATE.settingsOpen) return;
+
+  const options = allSettingsModelOptions();
+  const optionsHtml = (selected) => [
+    `<option value="" ${!selected ? 'selected' : ''}>Automático</option>`,
+    ...options.map((m) => `<option value="${escapeHtml(m.id)}" ${selected === m.id ? 'selected' : ''}>${escapeHtml(m.label || m.id)}</option>`),
+  ].join('');
+
+  const judgeSel = document.getElementById('settingsJudge');
+  const leaderSel = document.getElementById('settingsLeader');
+  if (judgeSel) judgeSel.innerHTML = optionsHtml(STATE.settingsDraft.judgeModel);
+  if (leaderSel) leaderSel.innerHTML = optionsHtml(STATE.settingsDraft.leaderModel);
+  const maxInput = document.getElementById('settingsMaxSpecialties');
+  if (maxInput) maxInput.value = STATE.settingsDraft.maxSpecialtiesPerRound;
+
+  renderSettingsPins(options);
+  renderSettingsCustomModels();
+}
+
+function renderSettingsPins(options) {
+  const wrap = document.getElementById('settingsPins');
+  if (!wrap) return;
+  const opts = options || allSettingsModelOptions();
+  wrap.innerHTML = STATE.settingsSpecialties.map((s) => {
+    const pinned = (STATE.settingsDraft.pinned[s.key] || [])[0] || '';
+    const optionsHtml = [
+      `<option value="">Automático</option>`,
+      ...opts.map((m) => `<option value="${escapeHtml(m.id)}" ${pinned === m.id ? 'selected' : ''}>${escapeHtml(m.label || m.id)}</option>`),
+    ].join('');
+    return `
+      <label class="provider-choice" style="cursor:default">
+        <span class="provider-choice-copy">
+          <span class="provider-choice-title">${escapeHtml(s.titulo)}</span>
+        </span>
+        <select class="run-selector" data-pin-key="${escapeHtml(s.key)}" style="min-width:220px">${optionsHtml}</select>
+      </label>`;
+  }).join('') || '<div class="form-hint">Catálogo de especialidades indisponível.</div>';
+  wrap.querySelectorAll('select[data-pin-key]').forEach((sel) => {
+    sel.addEventListener('change', () => {
+      const key = sel.dataset.pinKey;
+      if (sel.value) STATE.settingsDraft.pinned[key] = [sel.value];
+      else delete STATE.settingsDraft.pinned[key];
+    });
+  });
+}
+
+function renderSettingsCustomModels() {
+  const wrap = document.getElementById('settingsCustomModels');
+  if (!wrap) return;
+  const list = STATE.settingsDraft.customModels;
+  wrap.innerHTML = list.length ? list.map((m, i) => `
+    <div class="provider-choice" style="cursor:default">
+      <span class="provider-choice-copy">
+        <span class="provider-choice-title">${escapeHtml(m.id)}</span>
+        <span class="provider-choice-meta">${escapeHtml(m.provider)}</span>
+      </span>
+      <button class="btn-close" data-remove-idx="${i}">REMOVER</button>
+    </div>`).join('') : '<div class="form-hint">Nenhum modelo avulso adicionado ainda.</div>';
+  wrap.querySelectorAll('button[data-remove-idx]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      list.splice(Number(btn.dataset.removeIdx), 1);
+      renderSettingsCustomModels();
+    });
+  });
+}
+
+async function saveSettings() {
+  const errBox = document.getElementById('settingsError');
+  const statusBox = document.getElementById('settingsStatus');
+  const btn = document.getElementById('btnSaveSettings');
+  errBox.style.display = 'none';
+  btn.disabled = true;
+  statusBox.textContent = 'salvando…';
+  const draft = STATE.settingsDraft;
+  const maxInput = document.getElementById('settingsMaxSpecialties');
+  draft.maxSpecialtiesPerRound = Number(maxInput.value) || 6;
+  try {
+    const res = await fetch('/api/config', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        judgeModel: document.getElementById('settingsJudge').value || null,
+        leaderModel: document.getElementById('settingsLeader').value || null,
+        pinned: draft.pinned,
+        maxSpecialtiesPerRound: draft.maxSpecialtiesPerRound,
+        omnirouteBaseUrl: draft.omnirouteBaseUrl,
+        customModels: draft.customModels,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'falha ao salvar');
+    statusBox.textContent = 'salvo';
+    setTimeout(() => { statusBox.textContent = ''; }, 2000);
+  } catch (e) {
+    errBox.textContent = e.message;
+    errBox.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 /* ---------- render principal ---------- */
 
 function render() {
@@ -842,6 +1152,8 @@ function render() {
   renderSidebar();
   renderModal();
   renderProvidersModal();
+  renderSettingsModal();
+  renderPlaygroundModal();
 }
 
 /* ---------- eventos fixos (fora das views que são reconstruídas) ---------- */
@@ -882,6 +1194,112 @@ document.getElementById('btnProviders').addEventListener('click', async () => {
 document.getElementById('btnCloseProviders').addEventListener('click', () => { STATE.providersOpen = false; render(); });
 document.getElementById('providersModal').addEventListener('click', (event) => {
   if (event.target.id === 'providersModal') { STATE.providersOpen = false; render(); }
+});
+document.getElementById('btnSettings').addEventListener('click', async () => {
+  if (!STATE.settingsLoaded) await loadSettingsConfig();
+  STATE.settingsOpen = true;
+  render();
+});
+document.getElementById('btnCloseSettings').addEventListener('click', () => { STATE.settingsOpen = false; render(); });
+document.getElementById('settingsModal').addEventListener('click', (event) => {
+  if (event.target.id === 'settingsModal') { STATE.settingsOpen = false; render(); }
+});
+document.getElementById('btnSaveSettings').addEventListener('click', saveSettings);
+document.getElementById('btnAddCustomModel').addEventListener('click', () => {
+  const provider = document.getElementById('settingsCustomProvider').value;
+  const idInput = document.getElementById('settingsCustomModelId');
+  const id = idInput.value.trim();
+  if (!id) return;
+  STATE.settingsDraft.customModels.push({ id, provider, label: id, engine: 'community' });
+  idInput.value = '';
+  renderSettingsCustomModels();
+  renderSettingsPins();
+});
+
+/* ---------- playground ---------- */
+
+function renderPlaygroundModal() {
+  const backdrop = document.getElementById('playgroundModal');
+  backdrop.classList.toggle('show', STATE.playgroundOpen);
+  if (!STATE.playgroundOpen) return;
+
+  const setupWrap = document.getElementById('playgroundSetup');
+  const chatWrap = document.getElementById('playgroundChatArea');
+  const started = !!STATE.playgroundSessionId;
+  setupWrap.style.display = started ? 'none' : 'flex';
+  chatWrap.style.display = started ? 'flex' : 'none';
+
+  if (!started) {
+    const select = document.getElementById('playgroundModelSelect');
+    const options = [...STATE.settingsModelPool, ...(STATE.settingsDraft.customModels || [])];
+    select.innerHTML = options.map((m) => `<option value="${escapeHtml(m.id)}">${escapeHtml(m.label || m.id)}</option>`).join('') || '<option value="">(nenhum modelo carregado ainda)</option>';
+  } else {
+    const threadWrap = document.getElementById('playgroundThread');
+    threadWrap.innerHTML = STATE.playgroundThread.length
+      ? STATE.playgroundThread.map((m) => `<div class="chat-msg ${m.role}">${escapeHtml(m.content)}</div>`).join('')
+      : '<div class="live-empty">Comece a conversa abaixo.</div>';
+    threadWrap.scrollTop = threadWrap.scrollHeight;
+  }
+  document.getElementById('btnPlaygroundSend').disabled = STATE.playgroundSending;
+  document.getElementById('playgroundStatus').textContent = STATE.playgroundSending ? 'pensando…' : '';
+}
+
+document.getElementById('btnPlayground').addEventListener('click', async () => {
+  if (!STATE.settingsLoaded) await loadSettingsConfig();
+  STATE.playgroundOpen = true;
+  render();
+});
+document.getElementById('btnClosePlayground').addEventListener('click', () => { STATE.playgroundOpen = false; render(); });
+document.getElementById('playgroundModal').addEventListener('click', (event) => {
+  if (event.target.id === 'playgroundModal') { STATE.playgroundOpen = false; render(); }
+});
+document.getElementById('btnResetPlayground').addEventListener('click', () => {
+  STATE.playgroundSessionId = null;
+  STATE.playgroundThread = [];
+  render();
+});
+document.getElementById('btnStartPlayground').addEventListener('click', async () => {
+  const model = document.getElementById('playgroundModelSelect').value;
+  const systemPrompt = document.getElementById('playgroundSystemPrompt').value.trim();
+  const errBox = document.getElementById('playgroundError');
+  errBox.style.display = 'none';
+  if (!model) { errBox.textContent = 'Escolha um modelo.'; errBox.style.display = 'block'; return; }
+  try {
+    const res = await fetch('/api/sessions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model, systemPrompt }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'falha ao criar sessão');
+    STATE.playgroundSessionId = data.sessionId;
+    STATE.playgroundThread = [];
+    render();
+  } catch (e) {
+    errBox.textContent = e.message;
+    errBox.style.display = 'block';
+  }
+});
+document.getElementById('btnPlaygroundSend').addEventListener('click', async () => {
+  const input = document.getElementById('playgroundInput');
+  const text = input.value.trim();
+  if (!text || STATE.playgroundSending || !STATE.playgroundSessionId) return;
+  input.value = '';
+  STATE.playgroundThread.push({ role: 'user', content: text });
+  STATE.playgroundSending = true;
+  render();
+  try {
+    const res = await fetch(`/api/sessions/${encodeURIComponent(STATE.playgroundSessionId)}/chat`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text }),
+    });
+    const data = await res.json();
+    STATE.playgroundThread.push({ role: 'assistant', content: res.ok ? data.reply : `(erro: ${data.error || 'falha ao conversar'})` });
+  } catch (e) {
+    STATE.playgroundThread.push({ role: 'assistant', content: `(erro: ${e.message})` });
+  }
+  STATE.playgroundSending = false;
+  render();
+});
+document.getElementById('playgroundInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('btnPlaygroundSend').click(); }
 });
 
 async function sendDraft() {
@@ -972,6 +1390,9 @@ async function boot() {
     render();
     if (document.getElementById('newRoundModal').classList.contains('show')) renderProviderChoices();
   });
+  // Carrega o pool de modelos cedo (não só quando o modal de config abre) —
+  // é o que alimenta o <select> de troca de modelo nos cards em execução.
+  loadSettingsConfig().then(() => render());
   await loadRunsList();
   const latestReal = STATE.runsList[0];
   await loadRun(latestReal ? latestReal.runId : DEMO_RUN_ID);

@@ -14,7 +14,7 @@ function buildSystemPrompt(persona, outputContract, hasContext) {
   return `${persona}\n\nExplore o código real dentro do escopo usando as ferramentas disponíveis antes de concluir qualquer coisa — nunca opine sem checar. Ao final, siga este contrato de saída:\n\n${outputContract}${hasContext ? CONTEXT_NOTE : ''}`;
 }
 
-async function runOneAgent({ client, name, model, systemPrompt, task, schemas, handlers, limits, outDir }) {
+async function runOneAgent({ client, name, model, systemPrompt, task, schemas, handlers, limits, outDir, onEvent, signal }) {
   const startedAt = Date.now();
   try {
     const loopResult = await runAgentLoop({
@@ -25,6 +25,11 @@ async function runOneAgent({ client, name, model, systemPrompt, task, schemas, h
       tools: schemas,
       toolHandlers: handlers,
       limits,
+      signal,
+      onEvent: (ev) => {
+        if (ev.type === 'tool_call') onEvent?.({ type: 'tool-call-start', tool: ev.tool });
+        else onEvent?.(ev);
+      },
     });
     const result = { agent: name, model, ...loopResult, elapsedMs: Date.now() - startedAt };
     writeAgentResult(outDir, name, result);
@@ -45,7 +50,7 @@ async function runOneAgent({ client, name, model, systemPrompt, task, schemas, h
 // mantido como opção pra ambientes sem Codex logado, ex. servidor/CI).
 // Ver openai-side/src/providers/codex-local.js para as diferenças de
 // garantia de segurança entre os dois.
-async function runOneAgentAny({ client, name, model, persona, task, schemas, handlers, limits, outDir, scope, provider, outputContract, hasContext }) {
+async function runOneAgentAny({ client, name, model, persona, task, schemas, handlers, limits, outDir, scope, provider, outputContract, hasContext, onEvent, signal }) {
   if (provider === 'codex-local') {
     // Limitação conhecida: o Codex CLI usa suas próprias ferramentas
     // internas confinadas só a --cd <scope> — não há como estender pra uma
@@ -54,8 +59,11 @@ async function runOneAgentAny({ client, name, model, persona, task, schemas, han
     // pros especialistas OpenAI ainda; só funciona com o provedor
     // openai-api. Não finjo cobertura completa — documentado aqui e no
     // relatório de qualquer rodada que usar --context-path.
-    const result = await runCodexAgent({ name, model, persona, task, scope, limits, outDir, outputContract });
+    const result = await runCodexAgent({ name, model, persona, task, scope, limits, outDir, outputContract, signal });
     writeAgentResult(outDir, name, result);
+    // codex-local roda como processo único, sem streaming possível — um
+    // único evento de conclusão é a granularidade honesta disponível.
+    onEvent?.({ type: 'done', status: result.status, finalText: result.finalText });
     return result;
   }
   if (!client) {
@@ -63,7 +71,7 @@ async function runOneAgentAny({ client, name, model, persona, task, schemas, han
     writeAgentResult(outDir, name, result);
     return result;
   }
-  return runOneAgent({ client, name, model, systemPrompt: buildSystemPrompt(persona, outputContract, hasContext), task, schemas, handlers, limits, outDir });
+  return runOneAgent({ client, name, model, systemPrompt: buildSystemPrompt(persona, outputContract, hasContext), task, schemas, handlers, limits, outDir, onEvent, signal });
 }
 
 /**
@@ -178,4 +186,4 @@ async function runOrchestration({ client, agentsConfig, models, limits, scope, t
   return { specialists: specialistResults, judge: judgeResult };
 }
 
-module.exports = { runOrchestration };
+module.exports = { runOrchestration, runOneAgentAny, buildSystemPrompt };
