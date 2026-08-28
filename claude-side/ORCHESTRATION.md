@@ -51,18 +51,18 @@ Cada agente carrega um status (`ok`/`failed`/`timeout`, conforme `contracts/outp
 
 O painel (`dashboard/public/`) lê `runs/<run-id>/state.json` via `GET /api/runs/:id` (servido por `dashboard/server.js`) e faz polling a cada 3s enquanto a rodada não estiver `"status":"done"`. **Não existe nenhum processo automático escrevendo esse arquivo** — durante uma rodada real, é o próprio Claude Code (orquestrador) quem cria e atualiza `runs/<run-id>/state.json` a cada passo, usando Write/Edit como em qualquer outro arquivo. Não há CLI nem script auxiliar — o schema é simples o bastante pra editar direto.
 
-Schema (todos os campos exceto `run` são opcionais/podem começar vazios):
+Schema atual (todos os campos exceto `run` são opcionais/podem começar vazios) — reflete a alocação dinâmica: uma lista única de especialistas (não mais separada por fornecedor) e um Juiz único, ambos configuráveis via `config/routing.json`:
 
 ```json
 {
-  "run": { "runId": "...", "round": 1, "task": "...", "status": "running|done",
-           "startedAt": "2026-08-04T18:00:00", "parallelism": "15 agentes", "elapsed": "—", "cost": "US$ 0,00" },
-  "claudeAgents": [ { "key": "seguranca", "name": "Segurança", "model": "Sonnet 5",
-                       "state": "queued|running|done|failed|refused", "findings": 0, "lens": "texto curto", "elapsed": "—" } ],
-  "openaiAgents": [ /* mesma forma */ ],
-  "arbiters": [ { "key": "juiz-claude", "name": "Juiz Claude", "model": "Opus 5 · com leitura",
-                   "state": "...", "role": "texto", "chips": ["..."] } ],
-  "claims": [ { "text": "...", "origin": "Claude · segurança", "check": "...", "verdict": "CONFIRMADO|PARCIAL|IMPROCEDENTE|NÃO VERIFICÁVEL" } ],
+  "run": { "runId": "...", "round": 1, "task": "...", "status": "running|done|failed",
+           "startedAt": "2026-08-04T18:00:00", "parallelism": "3 especialista(s) em 2 especialidade(s)", "elapsed": "—", "cost": "US$ 0,00" },
+  "allocation": [ { "key": "seguranca", "models": ["deepseek-r1:8b", "claude-sonnet-5"] } ],
+  "specialistAgents": [ { "key": "seguranca", "name": "Segurança", "model": "deepseek-r1:8b", "engine": "community", "provider": "ollama", "specialty": "seguranca",
+                            "state": "queued|running|done|failed|refused|skipped", "findings": 0, "lens": "texto curto", "elapsed": "—" } ],
+  "arbiters": [ { "key": "juiz", "name": "Juiz", "model": "Opus 5 · com leitura", "state": "...", "role": "texto", "chips": ["..."] },
+                 { "key": "lider", "name": "Líder / Sintetizador", "model": "Opus 5", "state": "...", "role": "texto", "chips": ["..."] } ],
+  "judgeReports": { "unified": "..." },
   "headline": "", "lede": "",
   "synthBlocks": [ { "tag": "P0 · BLOQUEIA|P1 · ALTO RETORNO|DESCARTADO", "title": "...", "items": [ { "text": "...", "source": "..." } ] } ],
   "dissent": { "text": "...", "note": "..." },
@@ -70,14 +70,16 @@ Schema (todos os campos exceto `run` são opcionais/podem começar vazios):
 }
 ```
 
+`dashboard/public/app.js::normalizeRunData` ainda aceita o schema antigo (`claudeAgents`/`openaiAgents`/`nvidiaAgents`/`communityAgents`, `arbiters` com `juiz-claude`/`juiz-openai`/`juiz-nvidia`) e o achata em `specialistAgents`, pra runs gravadas antes desta mudança não sumirem do painel.
+
 Pontos de atualização recomendados (cada um é um `Edit` no `state.json`, não precisa reescrever o arquivo inteiro):
-1. **Início da rodada**: crie o arquivo com `run` preenchido e os 15 agentes em `claudeAgents`/`openaiAgents` já listados com `"state":"queued"` — isso é o que faz a tela 01 mostrar a lista completa desde o primeiro segundo, mesmo antes de qualquer um terminar.
-2. **Cada agente que dispara**: mude o `state` dele pra `"running"`.
-3. **Cada agente que termina**: mude pra `"done"` (ou `"failed"`/`"refused"`), preencha `findings` (contagem de achados no relatório dele) e `elapsed`. Adicione uma entrada em `activity`.
-4. **Juízes**: mesma lógica em `arbiters`.
-5. **Verificação adversarial**: preencha `claims` com um item por afirmação verificada (mapeia direto do formato de saída de `verifier-adversarial.md`).
-6. **Líder/Sintetizador**: preencha `headline`, `lede`, `synthBlocks` e `dissent` (ou omita `dissent` se não houver divergência genuína nesta rodada) — isso mapeia direto do formato de saída de `leader-synthesizer.md`.
-7. **Fim**: `run.status = "done"`, `run.elapsed`/`run.cost` finais.
+1. **Início da rodada**: crie o arquivo com `run` preenchido; `specialistAgents` só é populado DEPOIS do kickoff decidir a alocação (ver `orchestrate.js::runRound`) — antes disso a lista fica vazia, é esperado.
+2. **Cada especialista que dispara**: mude o `state` dele pra `"running"`.
+3. **Cada especialista que termina**: mude pra `"done"` (ou `"failed"`/`"refused"`/`"skipped"`), preencha `findings` e `elapsed`. Adicione uma entrada em `activity`.
+4. **Juiz e Líder**: mesma lógica em `arbiters` (agora só 2 entradas, `juiz` e `lider`).
+5. **Juiz**: preencha `judgeReports.unified` com o relatório consolidado único.
+6. **Líder/Sintetizador**: preencha `headline`, `lede`, `synthBlocks` e `dissent` (ou omita `dissent` se não houver divergência genuína nesta rodada).
+7. **Fim**: `run.status = "done"` (ou `"failed"`), `run.elapsed`/`run.cost` finais.
 
 O painel tolera campos ausentes/arrays vazios (mostra um estado vazio explicando o que falta) — não é preciso preencher tudo de uma vez.
 

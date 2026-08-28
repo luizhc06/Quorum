@@ -34,7 +34,38 @@ function ollamaProbe(model) {
   };
 }
 
-function getProviderHealth() {
+// OpenRouter é cloud+chave (como o Grupo NVIDIA): não faz sentido nenhum
+// sondar processo local, só checar se a env var existe.
+function openRouterProbe() {
+  const available = Boolean(process.env.OPENROUTER_API_KEY);
+  return { available, detail: available ? 'chave configurada' : 'OPENROUTER_API_KEY ausente' };
+}
+
+// OmniRoute é local+zero-config (como o Ollama): a checagem real é o
+// gateway responder, não presença de chave — fetch direto (Node 20+ já traz
+// fetch global), sem depender de curl instalado nem de spawnSync com
+// interpolação de URL numa string de shell.
+async function omniRouteProbe(baseUrl) {
+  const url = (baseUrl || process.env.OMNIROUTE_BASE_URL || 'http://localhost:20128/v1').replace(/\/$/, '');
+  try {
+    const response = await fetch(`${url}/models`, { signal: AbortSignal.timeout(2000) });
+    return { available: response.ok, detail: response.ok ? `respondendo em ${url}` : `HTTP ${response.status} em ${url}` };
+  } catch (e) {
+    return { available: false, detail: `sem resposta em ${url}` };
+  }
+}
+
+// Este ternário antes assumia "não é ollama, então é agy" — passou a ser
+// switch explícito quando OpenRouter/OmniRoute entraram, senão os dois
+// seriam erroneamente sondados como binário do Antigravity.
+async function probeFor(spec) {
+  if (spec.provider === 'ollama') return ollamaProbe(spec.model);
+  if (spec.provider === 'openrouter') return openRouterProbe();
+  if (spec.provider === 'omniroute') return omniRouteProbe(spec.baseUrl);
+  return commandProbe('agy');
+}
+
+async function getProviderHealth() {
   const community = JSON.parse(fs.readFileSync(path.join(ROOT, 'config', 'community-agents.json'), 'utf8')).agents;
   const fixed = [
     { key: 'claude-local', name: 'Claude Code', model: 'configuração local', free: 'Usa a sessão local autenticada.', ...commandProbe('claude') },
@@ -45,11 +76,10 @@ function getProviderHealth() {
       available: Boolean(process.env.NVIDIA_API_KEY), detail: process.env.NVIDIA_API_KEY ? 'chave configurada' : 'NVIDIA_API_KEY ausente',
     },
   ];
-  const optional = community.map((spec) => {
-    const probe = spec.provider === 'ollama' ? ollamaProbe(spec.model) : commandProbe('agy');
-    return { key: spec.key, name: spec.name, model: spec.model, provider: spec.provider, free: spec.free, ...probe };
-  });
+  const optional = await Promise.all(community.map(async (spec) => ({
+    key: spec.key, name: spec.name, model: spec.model, provider: spec.provider, free: spec.free, ...(await probeFor(spec)),
+  })));
   return [...fixed, ...optional];
 }
 
-module.exports = { commandProbe, ollamaProbe, getProviderHealth };
+module.exports = { commandProbe, ollamaProbe, openRouterProbe, omniRouteProbe, getProviderHealth };

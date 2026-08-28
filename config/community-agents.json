@@ -33,6 +33,30 @@
       "free": "Quota da conta no Antigravity; não habilita fallback pago automaticamente.",
       "skills": ["quality-engineering", "product-design", "visual-polish", "token-economy"],
       "focus": "Atue como revisor independente dos relatórios já consolidados. Identifique lacunas, contradições e melhorias de produto de alto retorno sem inventar evidência nova."
+    },
+    {
+      "_comment": "OpenRouter (openrouter.ai) — agregador cloud, precisa de OPENROUTER_API_KEY (ver .env.example). 'model' abaixo é só um ponto de partida — modelos free do OpenRouter mudam com frequência; confira a lista atual em GET https://openrouter.ai/api/v1/models (campo 'pricing', ids com sufixo ':free') antes de confiar neste id, ou escolha outro no painel (config/routing.json → customModels). defaultEnabled:false até o usuário confirmar um id válido.",
+      "key": "openrouter-free",
+      "name": "OpenRouter · modelo gratuito",
+      "provider": "openrouter",
+      "model": "deepseek/deepseek-chat-v3.1:free",
+      "stage": "exploration",
+      "defaultEnabled": false,
+      "free": "Camada gratuita do OpenRouter (sufixo \":free\"); sujeita a rate limit, verifique o id atual antes de habilitar.",
+      "skills": ["security-audit", "performance"],
+      "focus": "Revise o código com foco em vulnerabilidades verificáveis e gargalos estruturais, como um segundo parecer independente do conselho."
+    },
+    {
+      "_comment": "OmniRoute (omniroute.online, pacote npm 'omniroute') — gateway LOCAL self-hosted, zero-config (npm install -g omniroute && omniroute), roda em http://localhost:20128 por padrão. 'auto' deixa o próprio OmniRoute escolher o melhor upstream entre os 90+ que ele agrega, em vez do Quorum tentar prever qual está saudável. defaultEnabled:false até o usuário confirmar que o gateway está rodando (npm run doctor mostra o status).",
+      "key": "omniroute-free",
+      "name": "OmniRoute · roteador automático",
+      "provider": "omniroute",
+      "model": "auto",
+      "stage": "exploration",
+      "defaultEnabled": false,
+      "free": "Pool gratuito agregado do OmniRoute (~90 provedores com camada free); precisa do gateway local rodando.",
+      "skills": ["quality-engineering", "token-economy"],
+      "focus": "Revise o código com foco em qualidade geral e oportunidades de economia, como um segundo parecer independente do conselho."
     }
   ]
 }

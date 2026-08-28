@@ -57,7 +57,7 @@ function buildFullPrompt(persona, task, outputContract) {
   return `${persona}\n\nTarefa: ${task}\n\nAo final, siga este contrato de saída:\n\n${outputContract}`;
 }
 
-function runCodexExec({ model, scope, prompt, outputFile, timeoutMs }) {
+function runCodexExec({ model, scope, prompt, outputFile, timeoutMs, signal }) {
   validateNoShellMetacharacters(scope, 'scope');
   validateNoShellMetacharacters(outputFile, 'outputFile');
   if (model) validateNoShellMetacharacters(model, 'model');
@@ -66,10 +66,13 @@ function runCodexExec({ model, scope, prompt, outputFile, timeoutMs }) {
     if (model) args.push('-m', quoteArg(model));
     args.push('-'); // lê o prompt do stdin — evita limite de tamanho de argumento de linha de comando
 
+    let abortedByUser = false;
     const child = execFile(CODEX_BINARY, args, { timeout: timeoutMs, maxBuffer: 20_000_000, windowsHide: true, shell: true }, (err, stdout, stderr) => {
+      signal?.removeEventListener('abort', onAbort);
       if (err && !fs.existsSync(outputFile)) {
         // só trata como falha de verdade se nem o arquivo de saída foi escrito —
         // o codex às vezes retorna código de saída != 0 mesmo tendo concluído
+        if (abortedByUser) return reject(Object.assign(new Error('cancelado pelo usuário'), { aborted: true }));
         if (err.killed) return reject(new Error('tempo esgotado'));
         if (/out of credits/i.test(stderr)) {
           return reject(new Error('cota do plano ChatGPT/Codex esgotada — espere o plano renovar (ou peça pro dono do workspace reabastecer) antes de tentar de novo'));
@@ -81,19 +84,21 @@ function runCodexExec({ model, scope, prompt, outputFile, timeoutMs }) {
       }
       resolve({ stdout, stderr });
     });
+    const onAbort = () => { abortedByUser = true; child.kill(); };
+    signal?.addEventListener('abort', onAbort);
     child.stdin.write(prompt);
     child.stdin.end();
   });
 }
 
-async function runCodexAgent({ name, model, persona, task, scope, limits, outDir, outputContract }) {
+async function runCodexAgent({ name, model, persona, task, scope, limits, outDir, outputContract, signal }) {
   const startedAt = Date.now();
   const outputFile = path.join(outDir, `${name}.codex-output.md`);
   fs.mkdirSync(outDir, { recursive: true });
   const prompt = buildFullPrompt(persona, task, outputContract);
 
   try {
-    const { stdout } = await runCodexExec({ model, scope, prompt, outputFile, timeoutMs: limits.maxWallClockMs });
+    const { stdout } = await runCodexExec({ model, scope, prompt, outputFile, timeoutMs: limits.maxWallClockMs, signal });
     const finalText = fs.existsSync(outputFile) ? fs.readFileSync(outputFile, 'utf8') : '';
     const tokensMatch = stdout.match(/tokens used[^\d]*([\d.,]+)/i);
     return {
@@ -111,7 +116,7 @@ async function runCodexAgent({ name, model, persona, task, scope, limits, outDir
       model: model || 'codex-local',
       status: 'failed',
       provider: 'codex-local',
-      reason: 'codex_exec_error',
+      reason: err.aborted ? 'aborted' : 'codex_exec_error',
       error: err.message,
       elapsedMs: Date.now() - startedAt,
     };

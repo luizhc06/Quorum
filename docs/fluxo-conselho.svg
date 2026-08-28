@@ -1,147 +1,199 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1000" font-family="'IBM Plex Sans','Segoe UI',sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1440" font-family="'IBM Plex Sans','Segoe UI',sans-serif">
   <defs>
-    <marker id="arrow-claude" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <marker id="arrow-flow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#67e8f9"/>
+    </marker>
+    <marker id="arrow-control" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
       <path d="M0,0 L10,5 L0,10 z" fill="#e0a55c"/>
     </marker>
-    <marker id="arrow-openai" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#7fa9c9"/>
+    <marker id="arrow-neutral" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#525a68"/>
     </marker>
-    <marker id="arrow-nvidia" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#9dbb4f"/>
-    </marker>
-    <marker id="arrow-neutral" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#86806f"/>
-    </marker>
-    <marker id="arrow-leader" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#8fae76"/>
-    </marker>
+
+    <radialGradient id="glowCyan" cx="6%" cy="0%" r="55%">
+      <stop offset="0%" stop-color="#67e8f9" stop-opacity="0.09"/>
+      <stop offset="100%" stop-color="#67e8f9" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowPurple" cx="94%" cy="4%" r="50%">
+      <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.09"/>
+      <stop offset="100%" stop-color="#a78bfa" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="titleRule" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#67e8f9" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#a78bfa" stop-opacity=".7"/>
+      <stop offset="100%" stop-color="#67e8f9" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="cardShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
   </defs>
 
-  <rect x="0" y="0" width="1440" height="1000" fill="#0c0b09"/>
+  <!-- fundo: mesmo tratamento do dashboard (2 glows radiais sobre quase-preto) -->
+  <rect x="0" y="0" width="1440" height="1440" fill="#07080b"/>
+  <rect x="0" y="0" width="1440" height="1440" fill="url(#glowCyan)"/>
+  <rect x="0" y="0" width="1440" height="1440" fill="url(#glowPurple)"/>
 
-  <text x="720" y="40" text-anchor="middle" font-size="26" font-weight="600" fill="#f2ece0">Quorum — Fluxo do Conselho</text>
-  <text x="720" y="63" text-anchor="middle" font-size="13" fill="#86806f">kickoff do Líder monta o brief → 3 grupos rodam o MESMO brief em paralelo → cada grupo tem juiz próprio → Líder cruza os 3 e sintetiza</text>
+  <text x="720" y="44" text-anchor="middle" font-size="28" font-weight="600" fill="#f8fafc">Quorum — Fluxo do Conselho</text>
+  <rect x="520" y="58" width="400" height="2" fill="url(#titleRule)"/>
+  <text x="720" y="80" text-anchor="middle" font-size="13.5" fill="#7f8797">o Líder decide o brief E a alocação na mesma chamada → especialistas variam por rodada, qualquer modelo do pool → Juiz único → Líder sintetiza</text>
 
-  <!-- ===== Kickoff / Brief ===== -->
-  <g>
-    <rect x="505" y="86" width="430" height="86" rx="8" fill="#121109" stroke="#8fae76" stroke-width="1.4"/>
-    <rect x="505" y="86" width="5" height="86" rx="2" fill="#8fae76"/>
-    <text x="527" y="112" font-size="15" font-weight="600" fill="#f2ece0">Líder — Kickoff</text>
-    <text x="527" y="131" font-size="11" fill="#b5ad9d">Opus 5 · pesquisa rápida no código (e contexto extra, se houver)</text>
-    <text x="527" y="149" font-size="11" fill="#86806f">Monta o brief que os 3 grupos recebem como tarefa — isso É a</text>
-    <text x="527" y="164" font-size="11" fill="#86806f">liberação da rodada, sem gate humano no meio</text>
+  <!-- estilo de card único, neutro, igual ao resto do app (sem cor por bloco) -->
+  <g id="cards" fill="#12141a" stroke="#262b34">
+
+  <!-- ===== Kickoff + Alocação dinâmica ===== -->
+  <rect x="370" y="106" width="700" height="112" rx="10" filter="url(#cardShadow)"/>
+  </g>
+  <text x="404" y="134" font-size="17" font-weight="600" fill="#f8fafc">Líder — Kickoff &amp; Alocação Dinâmica</text>
+  <text x="404" y="156" font-size="12.5" fill="#a1a9b8">Modelo configurável (padrão Opus 5) · pesquisa rápida no código antes de decidir</text>
+  <text x="404" y="177" font-size="12.5" fill="#8791a2">Decide, na mesma resposta: o BRIEF da rodada + QUAIS especialidades a tarefa precisa</text>
+  <text x="404" y="198" font-size="12.5" fill="#8791a2">e QUAL modelo disponível roda cada uma — nunca "roda tudo em tudo" por padrão</text>
+
+  <path d="M720,218 L720,252" stroke="#67e8f9" stroke-width="1.8" fill="none" marker-end="url(#arrow-flow)"/>
+
+  <!-- ===== Especialistas alocados ===== -->
+  <rect x="80" y="256" width="1280" height="246" rx="10" fill="#12141a" stroke="#262b34" filter="url(#cardShadow)"/>
+  <text x="104" y="286" font-size="18" font-weight="600" fill="#f8fafc">Especialistas alocados — 1 a N por rodada, decidido pelo Líder</text>
+  <text x="104" y="309" font-size="12.5" fill="#8791a2">Catálogo único de especialidades (config/specialties.json) — não mais grupos fixos duplicados por fornecedor.</text>
+  <text x="104" y="328" font-size="12.5" fill="#8791a2">Uma tarefa estreita aloca 1-2 especialistas; uma ampla escala pra mais — cada um no modelo mais forte disponível.</text>
+
+  <!-- grade 4×2, uniforme e centralizada — mesmo card neutro, só o nome muda -->
+  <g font-size="14" font-weight="500">
+    <rect x="104" y="348" width="273" height="46" rx="8" fill="#171a21" stroke="#2c313c"/>
+    <circle cx="122" cy="371" r="3.5" fill="#67e8f9"/>
+    <text x="134" y="376" fill="#e7ebf1">Claude</text>
+
+    <rect x="397" y="348" width="273" height="46" rx="8" fill="#171a21" stroke="#2c313c"/>
+    <circle cx="415" cy="371" r="3.5" fill="#67e8f9"/>
+    <text x="427" y="376" fill="#e7ebf1">GPT / Codex</text>
+
+    <rect x="690" y="348" width="273" height="46" rx="8" fill="#171a21" stroke="#2c313c"/>
+    <circle cx="708" cy="371" r="3.5" fill="#67e8f9"/>
+    <text x="720" y="376" fill="#e7ebf1">Nemotron (NVIDIA)</text>
+
+    <rect x="983" y="348" width="273" height="46" rx="8" fill="#171a21" stroke="#2c313c"/>
+    <circle cx="1001" cy="371" r="3.5" fill="#a78bfa"/>
+    <text x="1013" y="376" fill="#e7ebf1">DeepSeek (Ollama)</text>
+
+    <rect x="104" y="406" width="273" height="46" rx="8" fill="#171a21" stroke="#2c313c"/>
+    <circle cx="122" cy="429" r="3.5" fill="#a78bfa"/>
+    <text x="134" y="434" fill="#e7ebf1">Kimi (Ollama)</text>
+
+    <rect x="397" y="406" width="273" height="46" rx="8" fill="#171a21" stroke="#2c313c"/>
+    <circle cx="415" cy="429" r="3.5" fill="#a78bfa"/>
+    <text x="427" y="434" fill="#e7ebf1">OpenRouter</text>
+
+    <rect x="690" y="406" width="273" height="46" rx="8" fill="#171a21" stroke="#2c313c"/>
+    <circle cx="708" cy="429" r="3.5" fill="#a78bfa"/>
+    <text x="720" y="434" fill="#e7ebf1">OmniRoute</text>
+
+    <rect x="983" y="406" width="273" height="46" rx="8" fill="#171a21" stroke="#2c313c"/>
+    <circle cx="1001" cy="429" r="3.5" fill="#a78bfa"/>
+    <text x="1013" y="434" fill="#e7ebf1">Antigravity / Gemini</text>
+  </g>
+  <text x="720" y="482" text-anchor="middle" font-size="11" fill="#667085" font-style="italic">motor certo escolhido por config/model-pool.json — Claude/GPT/NVIDIA direto, os demais via laço Chat Completions compartilhado</text>
+
+  <path d="M720,502 L720,536" stroke="#67e8f9" stroke-width="1.8" fill="none" marker-end="url(#arrow-flow)"/>
+
+  <!-- ===== Ao vivo &amp; Controle — mecanismo ===== -->
+  <rect x="80" y="540" width="1280" height="290" rx="10" fill="#12141a" stroke="#262b34" filter="url(#cardShadow)"/>
+  <text x="104" y="570" font-size="18" font-weight="600" fill="#f8fafc">Ao vivo &amp; Controle — o mecanismo por trás do painel</text>
+
+  <!-- 4 nós, mesmo card neutro -->
+  <g fill="#171a21" stroke="#2c313c">
+    <rect x="100" y="592" width="270" height="112" rx="8"/>
+    <rect x="410" y="592" width="200" height="112" rx="8"/>
+    <rect x="650" y="592" width="270" height="112" rx="8"/>
+    <rect x="960" y="592" width="380" height="112" rx="8"/>
+  </g>
+  <g font-size="13" font-weight="600" fill="#f8fafc">
+    <text x="120" y="617">Especialista (rodando)</text>
+    <text x="430" y="617">events.ndjson</text>
+    <text x="670" y="617">dashboard/server.js</text>
+    <text x="980" y="614">Painel (navegador)</text>
+  </g>
+  <g font-size="10.5" fill="#8791a2">
+    <text x="120" y="638">qualquer motor do pool</text>
+    <text x="120" y="655">Claude/GPT/Nemotron/Ollama/</text>
+    <text x="120" y="670">OpenRouter/OmniRoute/Antigravity</text>
+
+    <text x="430" y="638">1 linha por evento</text>
+    <text x="430" y="655">text-delta · tool-call ·</text>
+    <text x="430" y="670">state-change · chat-done</text>
+
+    <text x="670" y="638">tail do arquivo (poll 500ms)</text>
+    <text x="670" y="655">GET .../stream (SSE)</text>
+    <text x="670" y="670">POST .../agents/:key/* (proxy)</text>
   </g>
 
-  <path d="M627,172 C627,196 300,196 255,210" stroke="#8fae76" stroke-width="1.4" fill="none" marker-end="url(#arrow-leader)"/>
-  <path d="M720,172 L720,210" stroke="#8fae76" stroke-width="1.4" fill="none" marker-end="url(#arrow-leader)"/>
-  <path d="M813,172 C813,196 1140,196 1185,210" stroke="#8fae76" stroke-width="1.4" fill="none" marker-end="url(#arrow-leader)"/>
-  <text x="720" y="192" text-anchor="middle" font-size="10" fill="#6b8a5c" font-style="italic">mesmo brief pros 3 grupos</text>
-
-  <!-- ===== Linha 1: grupos de especialistas (paralelo) ===== -->
-  <g>
-    <rect x="40" y="214" width="430" height="148" rx="8" fill="#121109" stroke="#2c2921"/>
-    <rect x="40" y="214" width="5" height="148" rx="2" fill="#e0a55c"/>
-    <text x="62" y="240" font-size="17" font-weight="600" fill="#e0a55c">Grupo Claude</text>
-    <text x="62" y="259" font-size="12" fill="#b5ad9d">6 especialistas · Sonnet 5 · Read/Grep/Glob</text>
-    <text x="62" y="281" font-size="11" fill="#86806f">arquitetura · segurança · regras de negócio</text>
-    <text x="62" y="298" font-size="11" fill="#86806f">bug hunter · engenharia de software · dados</text>
-    <text x="62" y="322" font-size="10.5" fill="#6b8a5c">via `claude -p` (claude-code-local) — assinatura</text>
-    <text x="62" y="337" font-size="10.5" fill="#6b8a5c">Claude Code, sem custo de API</text>
-    <text x="62" y="354" font-size="10" fill="#605a4f" font-style="italic">fallback: claude-api (Messages API, cobra por token)</text>
+  <!-- mini-mockup do painel, cores reais do CSS: cursor âmbar, linha de ferramenta azul, texto cinza -->
+  <rect x="980" y="628" width="204" height="58" rx="5" fill="#0a0b0e" stroke="#232833"/>
+  <rect x="990" y="638" width="160" height="6" rx="3" fill="#3a4250"/>
+  <rect x="990" y="651" width="100" height="6" rx="3" fill="#7fa9c9"/>
+  <rect x="990" y="664" width="66" height="6" rx="3" fill="#3a4250"/>
+  <rect x="1059" y="663" width="3" height="8" fill="#e0a55c"/>
+  <g font-size="10" fill="#96a0b0">
+    <circle cx="1197" cy="637" r="2" fill="#e0a55c"/>
+    <text x="1206" y="640">pausar</text>
+    <circle cx="1197" cy="652" r="2" fill="#e0a55c"/>
+    <text x="1206" y="655">cancelar</text>
+    <circle cx="1197" cy="667" r="2" fill="#e0a55c"/>
+    <text x="1206" y="670">trocar modelo</text>
+    <circle cx="1197" cy="682" r="2" fill="#e0a55c"/>
+    <text x="1206" y="685">chat pós-conclusão</text>
   </g>
 
-  <g>
-    <rect x="505" y="214" width="430" height="148" rx="8" fill="#110f0b" stroke="#2c2921"/>
-    <rect x="505" y="214" width="5" height="148" rx="2" fill="#7fa9c9"/>
-    <text x="527" y="240" font-size="17" font-weight="600" fill="#7fa9c9">Grupo OpenAI / Codex</text>
-    <text x="527" y="259" font-size="12" fill="#b5ad9d">6 especialistas · GPT-5.6 Terra/Luna</text>
-    <text x="527" y="281" font-size="11" fill="#86806f">mesmas 6 lentes espelhadas do Grupo Claude</text>
-    <text x="527" y="298" font-size="11" fill="#86806f">(mesmo tópico, ângulo de fornecedor diferente)</text>
-    <text x="527" y="322" font-size="10.5" fill="#5f84a3">via `codex exec` (codex-local) — assinatura</text>
-    <text x="527" y="337" font-size="10.5" fill="#5f84a3">ChatGPT/Codex, sem custo de API</text>
-    <text x="527" y="354" font-size="10" fill="#605a4f" font-style="italic">fallback: openai-api (Responses API, cobra por token)</text>
-  </g>
+  <!-- ida: evento → arquivo → servidor → painel (ciano, o mesmo acento "ao vivo" do resto do fluxo) -->
+  <path d="M370,648 L406,648" stroke="#67e8f9" stroke-width="1.6" fill="none" marker-end="url(#arrow-flow)"/>
+  <text x="388" y="640" text-anchor="middle" font-size="9" fill="#67e8f9" font-style="italic">evento</text>
+  <path d="M610,648 L646,648" stroke="#67e8f9" stroke-width="1.6" fill="none" marker-end="url(#arrow-flow)"/>
+  <text x="628" y="640" text-anchor="middle" font-size="9" fill="#67e8f9" font-style="italic">tail</text>
+  <path d="M920,648 L956,648" stroke="#67e8f9" stroke-width="1.6" fill="none" marker-end="url(#arrow-flow)"/>
+  <text x="938" y="640" text-anchor="middle" font-size="9" fill="#67e8f9" font-style="italic">SSE</text>
 
-  <g>
-    <rect x="970" y="214" width="430" height="148" rx="8" fill="#0f110b" stroke="#2c2921"/>
-    <rect x="970" y="214" width="5" height="148" rx="2" fill="#9dbb4f"/>
-    <text x="992" y="240" font-size="17" font-weight="600" fill="#9dbb4f">Grupo NVIDIA / Hermes</text>
-    <text x="992" y="259" font-size="12" fill="#b5ad9d">1 especialista · Nemotron 3 Super 120B</text>
-    <text x="992" y="281" font-size="11" fill="#86806f">documentação &amp; legibilidade — escopo básico</text>
-    <text x="992" y="298" font-size="11" fill="#86806f">fornecedor independente (reduz viés Claude/OpenAI)</text>
-    <text x="992" y="322" font-size="10.5" fill="#7a9a48">via plano free NVIDIA NIM</text>
-    <text x="992" y="337" font-size="10.5" fill="#7a9a48">40 req/min, sem custo por token</text>
-    <text x="992" y="354" font-size="10" fill="#605a4f" font-style="italic">chave ausente → agente marca "pulado", rodada segue</text>
-  </g>
+  <!-- volta: controle (âmbar — a mesma cor de uma ação/comando disparado pelo usuário) -->
+  <path d="M1050,704 C 1050,764 420,764 235,704" stroke="#e0a55c" stroke-width="1.6" fill="none" stroke-dasharray="5,4" marker-end="url(#arrow-control)"/>
+  <text x="642" y="782" text-anchor="middle" font-size="11" fill="#e0a55c">controle: pausar · cancelar · trocar modelo · chat — via dashboard/server.js + canal TCP local (127.0.0.1)</text>
 
-  <!-- ===== Setas linha 1 → juízes ===== -->
-  <path d="M255,362 L255,394" stroke="#e0a55c" stroke-width="1.6" fill="none" marker-end="url(#arrow-claude)"/>
-  <path d="M720,362 L720,394" stroke="#7fa9c9" stroke-width="1.6" fill="none" marker-end="url(#arrow-openai)"/>
-  <path d="M1185,362 L1185,394" stroke="#9dbb4f" stroke-width="1.6" fill="none" marker-end="url(#arrow-nvidia)"/>
+  <path d="M720,830 L720,864" stroke="#67e8f9" stroke-width="1.8" fill="none" marker-end="url(#arrow-flow)"/>
+  <text x="720" y="854" text-anchor="middle" font-size="10.5" fill="#667085" font-style="italic">um único relatório consolidado, não mais um por lado</text>
 
-  <!-- ===== Linha 2: um juiz por grupo — os 3 lados agora são simétricos ===== -->
-  <g>
-    <rect x="40" y="398" width="430" height="88" rx="8" fill="#121109" stroke="#e0a55c" stroke-width="1.2"/>
-    <text x="62" y="425" font-size="15" font-weight="600" fill="#f2ece0">Juiz Claude</text>
-    <text x="62" y="444" font-size="11" fill="#b5ad9d">Opus 5 · relê o código, não confia cego no relatório</text>
-    <text x="62" y="461" font-size="11" fill="#86806f">Consolida os 6 relatórios, descarta baixa confiança</text>
-    <text x="62" y="477" font-size="10" fill="#605a4f" font-style="italic">também julga o helper (mutual-aid) se um especialista travou</text>
-  </g>
+  <!-- ===== Juiz único ===== -->
+  <rect x="440" y="868" width="560" height="110" rx="10" fill="#12141a" stroke="#262b34" filter="url(#cardShadow)"/>
+  <text x="474" y="896" font-size="17" font-weight="600" fill="#f8fafc">Juiz</text>
+  <text x="474" y="918" font-size="12.5" fill="#a1a9b8">Modelo configurável (padrão Opus 5) · relê o código, não confia cego no relatório</text>
+  <text x="474" y="939" font-size="12.5" fill="#8791a2">Consolida TODOS os relatórios (podem vir de fornecedores diferentes na mesma rodada)</text>
+  <text x="474" y="960" font-size="12.5" fill="#8791a2">Elimina duplicação, descarta achado sem evidência, sinaliza o que não checou pessoalmente</text>
 
-  <g>
-    <rect x="505" y="398" width="430" height="88" rx="8" fill="#110f0b" stroke="#7fa9c9" stroke-width="1.2"/>
-    <text x="527" y="425" font-size="15" font-weight="600" fill="#f2ece0">Juiz OpenAI</text>
-    <text x="527" y="444" font-size="11" fill="#b5ad9d">GPT-5.6 Sol · relê o código antes de aceitar achado</text>
-    <text x="527" y="461" font-size="11" fill="#86806f">Consolida os 6 relatórios GPT/Codex</text>
-    <text x="527" y="477" font-size="10" fill="#605a4f" font-style="italic">mesma regra de confiança/evidência dos outros dois juízes</text>
-  </g>
-
-  <g>
-    <rect x="970" y="398" width="430" height="88" rx="8" fill="#0f110b" stroke="#9dbb4f" stroke-width="1.2"/>
-    <text x="992" y="425" font-size="15" font-weight="600" fill="#f2ece0">Juiz NVIDIA</text>
-    <text x="992" y="444" font-size="11" fill="#b5ad9d">Sonnet 5 · filtra e confirma (normalmente só 1 relatório)</text>
-    <text x="992" y="461" font-size="11" fill="#86806f">Hermes roda modelo bem menor — checagem mais cautelosa</text>
-    <text x="992" y="477" font-size="10" fill="#605a4f" font-style="italic">antes um único juiz — hoje simétrico com os outros dois lados</text>
-  </g>
-
-  <!-- ===== Convergência dos 3 juízes → Líder ===== -->
-  <path d="M255,486 C255,540 500,566 570,580" stroke="#e0a55c" stroke-width="1.4" fill="none" marker-end="url(#arrow-claude)"/>
-  <path d="M720,486 L720,580" stroke="#7fa9c9" stroke-width="1.6" fill="none" marker-end="url(#arrow-openai)"/>
-  <path d="M1185,486 C1185,540 940,566 870,580" stroke="#9dbb4f" stroke-width="1.4" fill="none" marker-end="url(#arrow-nvidia)"/>
-  <text x="720" y="514" text-anchor="middle" font-size="10" fill="#86806f" font-style="italic">3 relatórios consolidados — um por lado</text>
+  <path d="M720,978 L720,1012" stroke="#67e8f9" stroke-width="1.8" fill="none" marker-end="url(#arrow-flow)"/>
 
   <!-- ===== Líder / Sintetizador ===== -->
-  <g>
-    <rect x="505" y="584" width="430" height="120" rx="8" fill="#121109" stroke="#8fae76" stroke-width="1.6"/>
-    <rect x="505" y="584" width="5" height="120" rx="2" fill="#8fae76"/>
-    <text x="527" y="612" font-size="17" font-weight="600" fill="#f2ece0">Líder / Sintetizador</text>
-    <text x="527" y="631" font-size="11" fill="#b5ad9d">Opus 5 · relê o código antes de aceitar achado de risco alto</text>
-    <text x="527" y="652" font-size="11" fill="#86806f">Cruza os 3 lados — isto SUBSTITUIU a etapa separada de</text>
-    <text x="527" y="668" font-size="11" fill="#86806f">"verificação adversarial" que existia antes</text>
-    <text x="527" y="686" font-size="10.5" fill="#8a7fc9" font-style="italic">divergência de FATO: resolve sozinho · divergência de</text>
-    <text x="527" y="699" font-size="10.5" fill="#8a7fc9" font-style="italic">DECISÃO: nunca decide — vai pro usuário</text>
-  </g>
+  <rect x="440" y="1016" width="560" height="128" rx="10" fill="#12141a" stroke="#262b34" filter="url(#cardShadow)"/>
+  <text x="474" y="1045" font-size="18" font-weight="600" fill="#f8fafc">Líder / Sintetizador</text>
+  <text x="474" y="1066" font-size="12.5" fill="#a1a9b8">Mesmo modelo do kickoff · relê o código antes de aceitar achado de risco alto</text>
+  <text x="474" y="1088" font-size="12.5" fill="#8791a2">Cruza o relatório do Juiz — não existe mais verificação adversarial separada</text>
+  <text x="474" y="1111" font-size="11.5" fill="#a78bfa" font-style="italic">divergência de FATO: resolve sozinho · divergência de DECISÃO: nunca decide, vai pro usuário</text>
 
-  <!-- ===== Seta Líder → Relatório Final ===== -->
-  <path d="M720,704 L720,736" stroke="#8fae76" stroke-width="1.8" fill="none" marker-end="url(#arrow-leader)"/>
+  <path d="M720,1144 L720,1178" stroke="#67e8f9" stroke-width="1.8" fill="none" marker-end="url(#arrow-flow)"/>
 
   <!-- ===== Relatório Final ===== -->
-  <g>
-    <rect x="430" y="740" width="580" height="132" rx="8" fill="#121109" stroke="#e6e0d4" stroke-width="1.2"/>
-    <text x="452" y="766" font-size="17" font-weight="600" fill="#f2ece0">Relatório Final</text>
-    <text x="452" y="788" font-size="12" fill="#b5ad9d">Headline + lede — resumo executivo em 1 parágrafo</text>
-    <text x="452" y="807" font-size="12" fill="#d4694a">P0 · BLOQUEIA — precisa de ação antes de seguir</text>
-    <text x="452" y="826" font-size="12" fill="#d99b52">P1 · ALTO RETORNO — vale a pena, não é urgente</text>
-    <text x="452" y="845" font-size="12" fill="#605a4f">DESCARTADO — com motivo, nunca silenciosamente</text>
-    <text x="452" y="864" font-size="12" fill="#8a7fc9">Divergência não resolvida — pergunta exata pro usuário</text>
-  </g>
+  <rect x="400" y="1182" width="640" height="140" rx="10" fill="#12141a" stroke="#3a3f4a" stroke-width="1.2" filter="url(#cardShadow)"/>
+  <text x="424" y="1210" font-size="18" font-weight="600" fill="#f8fafc">Relatório Final</text>
+  <text x="424" y="1234" font-size="13" fill="#a1a9b8">Headline + lede — resumo executivo em 1 parágrafo</text>
+  <text x="424" y="1255" font-size="13" fill="#d4694a">P0 · BLOQUEIA — precisa de ação antes de seguir</text>
+  <text x="424" y="1276" font-size="13" fill="#d99b52">P1 · ALTO RETORNO — vale a pena, não é urgente</text>
+  <text x="424" y="1297" font-size="13" fill="#667085">DESCARTADO — com motivo, nunca silenciosamente</text>
+  <text x="424" y="1318" font-size="13" fill="#a78bfa">Divergência não resolvida — pergunta exata pro usuário</text>
 
-  <!-- ===== Painel ao vivo ===== -->
-  <path d="M720,872 L720,900" stroke="#605a4f" stroke-width="1.4" fill="none" stroke-dasharray="4,4" marker-end="url(#arrow-neutral)"/>
-  <g>
-    <rect x="520" y="904" width="400" height="58" rx="6" fill="#0e0d0a" stroke="#33302a" stroke-dasharray="4,4"/>
-    <text x="720" y="927" text-anchor="middle" font-size="13" fill="#e6e0d4">Painel ao vivo — localhost:7331</text>
-    <text x="720" y="946" text-anchor="middle" font-size="11" fill="#86806f">dashboard/server.js dá spawn de `node orchestrate.js` por rodada ·</text>
-  </g>
-  <text x="720" y="978" text-anchor="middle" font-size="11" fill="#86806f">runs/&lt;id&gt;/state.json escrito pelo orchestrate.js, painel faz polling a cada 3s</text>
+  <!-- ===== Painel ao vivo + Playground ===== -->
+  <path d="M720,1322 L720,1352" stroke="#525a68" stroke-width="1.4" fill="none" stroke-dasharray="4,4" marker-end="url(#arrow-neutral)"/>
+  <rect x="380" y="1356" width="460" height="72" rx="8" fill="#0e0f13" stroke="#262b34" stroke-dasharray="4,4" filter="url(#cardShadow)"/>
+  <text x="610" y="1380" text-anchor="middle" font-size="13.5" fill="#e7ebf1">Painel ao vivo — localhost:7331</text>
+  <text x="610" y="1400" text-anchor="middle" font-size="11" fill="#8791a2">dashboard/server.js dá spawn de `node orchestrate.js` por rodada (processo destacado)</text>
+  <text x="610" y="1416" text-anchor="middle" font-size="11" fill="#8791a2">sobrevive a reiniciar o dashboard — o canal de controle é quem religa os dois</text>
+
+  <path d="M840,1392 L892,1392" stroke="#525a68" stroke-width="1.2" fill="none" stroke-dasharray="3,3" marker-end="url(#arrow-neutral)"/>
+  <rect x="896" y="1356" width="220" height="72" rx="8" fill="#0e0f13" stroke="#262b34" stroke-dasharray="4,4" filter="url(#cardShadow)"/>
+  <text x="1006" y="1382" text-anchor="middle" font-size="13" fill="#e7ebf1">Playground</text>
+  <text x="1006" y="1402" text-anchor="middle" font-size="10.5" fill="#8791a2">chat avulso com qualquer</text>
+  <text x="1006" y="1417" text-anchor="middle" font-size="10.5" fill="#8791a2">modelo — sem rodada nenhuma</text>
 </svg>

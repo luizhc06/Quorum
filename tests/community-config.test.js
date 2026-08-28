@@ -19,7 +19,7 @@ test('configuração comunitária usa ids únicos e transportes conhecidos', () 
   assert.equal(new Set(ids).size, ids.length);
   for (const agent of config.agents) {
     assert.match(agent.key, /^[a-z0-9-]+$/);
-    assert.ok(['ollama', 'antigravity-cli'].includes(agent.provider));
+    assert.ok(['ollama', 'antigravity-cli', 'openrouter', 'omniroute'].includes(agent.provider));
     assert.ok(['exploration', 'post-judge'].includes(agent.stage));
     assert.ok(agent.model);
     assert.ok(agent.free);
