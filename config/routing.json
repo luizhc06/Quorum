@@ -1,0 +1,9 @@
+{
+  "_comment": "Overrides do usuário sobre a alocação dinâmica do conselho. Gravado/lido pelo dashboard via GET/POST /api/config (dashboard/server.js) — nunca edite os outros arquivos de config/ pelo painel, só este. Valores 'null' significam 'automático' (o kickoff decide sozinho, ver orchestrate.js::parseAllocation). SEMPRE que presentes, os campos daqui vencem a sugestão do alocador — isso é o que dá ao usuário controle real, não só uma sugestão da IA.",
+  "judgeModel": null,
+  "leaderModel": null,
+  "pinned": {},
+  "maxSpecialtiesPerRound": 6,
+  "omnirouteBaseUrl": "http://localhost:20128/v1",
+  "customModels": []
+}

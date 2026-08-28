@@ -21,7 +21,7 @@ function truncate(text, maxChars) {
  * histórico reenviado). Três tetos independentes: iterações, relógio e
  * custo em USD — nenhum sozinho basta (ver plano de segurança).
  */
-async function runAgentLoop({ client, model, systemPrompt, userPrompt, tools, toolHandlers, limits, onEvent }) {
+async function runAgentLoop({ client, model, systemPrompt, userPrompt, tools, toolHandlers, limits, onEvent, signal }) {
   let input = [
     { role: 'system', content: systemPrompt },
     { role: 'user', content: userPrompt },
@@ -31,6 +31,7 @@ async function runAgentLoop({ client, model, systemPrompt, userPrompt, tools, to
   const transcript = [];
 
   for (let iter = 0; iter < limits.maxIterations; iter++) {
+    if (signal?.aborted) throw new AgentAbortedError('aborted', { iter });
     if (Date.now() - startedAt > limits.maxWallClockMs) {
       throw new AgentAbortedError('wall_clock_exceeded', { iter, elapsedMs: Date.now() - startedAt });
     }
@@ -43,12 +44,13 @@ async function runAgentLoop({ client, model, systemPrompt, userPrompt, tools, to
         tools,
         tool_choice: 'auto',
         max_output_tokens: limits.maxOutputTokensPerTurn,
-      });
+      }, { signal });
     } catch (err) {
       // Recusa de modelo (ex.: análise de segurança recusada) chega como
       // conteúdo normal (200), não como exceção — ver checagem de `refusal`
       // logo abaixo. Erros pegos AQUI são falha de rede/API de verdade, já
       // passaram pelo retry do SDK.
+      if (err.name === 'AbortError' || signal?.aborted) throw new AgentAbortedError('aborted', { iter });
       throw new AgentAbortedError('api_error', { message: err.message, status: err.status });
     }
 
